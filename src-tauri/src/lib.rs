@@ -16,7 +16,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(DatabaseWrapper { connection })
+        .manage(Db { connection })
         .invoke_handler(tauri::generate_handler![
             features::tasks::get_tasks,
             features::tasks::create_task,
@@ -29,6 +29,7 @@ pub fn run() {
             features::tasks::restore_task,
             features::tasks::delete_task,
             features::tasks::edit_task,
+            features::settings::get_user_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

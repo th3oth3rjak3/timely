@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use tauri::State;
 
 use super::*;
-use crate::{DatabaseWrapper, PagedData, SortDirection};
+use crate::{Db, PagedData, SortDirection};
 use ::entity::task::{self, Entity as Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -25,7 +25,7 @@ pub struct TaskSearchParams {
 /// * state - The database state used to query a connection.
 /// * params - The search parameters used to filter/sort the results.
 pub async fn search_for_tasks(
-    state: State<'_, DatabaseWrapper>,
+    state: State<'_, Db>,
     params: TaskSearchParams,
 ) -> Result<PagedData<task::Model>, String> {
     let mut search_expr = Expr::col(task::Column::Status).is_in(params.statuses);
@@ -104,7 +104,7 @@ pub struct EditTask {
 
 pub async fn create_task(
     new_task: NewTask,
-    state: State<'_, DatabaseWrapper>,
+    state: State<'_, Db>,
 ) -> Result<(), String> {
     let new_task = task::ActiveModel {
         id: ActiveValue::NotSet,
@@ -128,7 +128,7 @@ pub async fn create_task(
 
 pub async fn edit_task(
     edit_task: EditTask,
-    state: State<'_, DatabaseWrapper>,
+    state: State<'_, Db>,
 ) -> Result<(), String> {
     match find_task(edit_task.id, &state).await? {
         Some(model) => {
@@ -207,7 +207,7 @@ fn update_active_elapsed(
     task
 }
 
-pub async fn start_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn start_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
@@ -218,7 +218,7 @@ pub async fn start_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Resu
     }
 }
 
-pub async fn pause_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn pause_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Paused);
@@ -228,7 +228,7 @@ pub async fn pause_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Resu
     }
 }
 
-pub async fn resume_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn resume_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let task = set_task_model_active(model, Status::Doing);
@@ -238,7 +238,7 @@ pub async fn resume_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Res
     }
 }
 
-pub async fn finish_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn finish_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let mut task = set_task_model_inactive(model, Status::Done);
@@ -249,7 +249,7 @@ pub async fn finish_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Res
     }
 }
 
-pub async fn reopen_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn reopen_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
@@ -260,7 +260,7 @@ pub async fn reopen_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Res
     }
 }
 
-pub async fn cancel_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn cancel_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Cancelled);
@@ -270,7 +270,7 @@ pub async fn cancel_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Res
     }
 }
 
-pub async fn restore_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn restore_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let mut task: task::ActiveModel;
@@ -287,7 +287,7 @@ pub async fn restore_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Re
     }
 }
 
-pub async fn delete_task(task_id: i32, state: State<'_, DatabaseWrapper>) -> Result<(), String> {
+pub async fn delete_task(task_id: i32, state: State<'_, Db>) -> Result<(), String> {
     match find_task(task_id, &state).await? {
         Some(model) => {
             let task = model.into_active_model();
@@ -306,7 +306,7 @@ fn not_found_message(task_id: i32) -> String {
 
 async fn save_task(
     task: task::ActiveModel,
-    state: &State<'_, DatabaseWrapper>,
+    state: &State<'_, Db>,
 ) -> Result<(), String> {
     task.save(&state.connection)
         .await
@@ -317,7 +317,7 @@ async fn save_task(
 /// Find a task by its id.
 async fn find_task(
     task_id: i32,
-    state: &State<'_, DatabaseWrapper>,
+    state: &State<'_, Db>,
 ) -> Result<Option<task::Model>, String> {
     Task::find_by_id(task_id)
         .one(&state.connection)

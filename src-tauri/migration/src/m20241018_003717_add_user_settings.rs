@@ -13,6 +13,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(UserSettings::Id))
                     .col(integer(UserSettings::PageSize))
+                    .col(string(UserSettings::HomePage))
                     .to_owned(),
             )
             .await
@@ -30,4 +31,5 @@ enum UserSettings {
     Table,
     Id,
     PageSize,
+    HomePage,
 }

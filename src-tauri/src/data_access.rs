@@ -1,7 +1,7 @@
 use sea_orm::*;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 /// A wrapper around a sqlite connection pool.
-pub struct DatabaseWrapper {
+pub struct Db {
     /// The connection pool used to execute SQL queries.
     pub connection: DatabaseConnection,
 }
