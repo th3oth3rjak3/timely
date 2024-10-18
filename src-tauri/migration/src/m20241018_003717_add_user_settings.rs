@@ -11,12 +11,19 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(UserSettings::Table)
                     .if_not_exists()
-                    .col(pk_auto(UserSettings::Id))
                     .col(integer(UserSettings::PageSize))
                     .col(string(UserSettings::HomePage))
                     .to_owned(),
             )
-            .await
+            .await?;
+
+        let query = Query::insert()
+            .into_table(UserSettings::Table)
+            .columns([UserSettings::PageSize, UserSettings::HomePage])
+            .values_panic(["10".into(), "/tasks".into()])
+            .to_owned();
+
+        manager.exec_stmt(query).await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -29,7 +36,6 @@ impl MigrationTrait for Migration {
 #[derive(DeriveIden)]
 enum UserSettings {
     Table,
-    Id,
     PageSize,
     HomePage,
 }

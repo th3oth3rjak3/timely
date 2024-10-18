@@ -6,7 +6,7 @@ import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
 import { PagedData } from "../../models/PagedData.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
-import { setListItemsPerPage } from "../../redux/reducers/settingsSlice.ts";
+import { setPageSize } from "../../redux/reducers/settingsSlice.ts";
 import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
 import { maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities.ts";
@@ -22,10 +22,10 @@ function TaskList() {
     //#region State
 
     /** The globally set number of items per page in the application. */
-    const pageSize = useAppSelector(state => state.settings.listItemsPerPage);
+    const pageSize = useAppSelector(state => state.settings.pageSize);
 
     /** The globally set choices for how many items per page can be chosen. */
-    const pageSizeOptions = useAppSelector(state => state.settings.listItemsPerPageChoices);
+    const pageSizeOptions = useAppSelector(state => state.settings.pageSizeOptions);
 
     /** An app store dispatch function to update store values. */
     const dispatch = useAppDispatch();
@@ -233,7 +233,7 @@ function TaskList() {
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
         setPage(1);
-        dispatch(setListItemsPerPage(size));
+        dispatch(setPageSize(size));
     }
 
     //#endregion

@@ -18,7 +18,7 @@ import TasksList from './features/tasks/TaskList';
 import Timer from './features/timer/Timer';
 import MainLayout from './layout/MainLayout';
 import { useAppDispatch } from './redux/hooks';
-import { setListItemsPerPage, setRootRoute } from './redux/reducers/settingsSlice';
+import { setHomePage, setPageSize } from './redux/reducers/settingsSlice';
 
 function App() {
 
@@ -29,8 +29,8 @@ function App() {
     invoke<UserSettings>("get_user_settings")
       .then((userSettings) => {
         if (!!userSettings && userSettings !== null) {
-          dispatch(setListItemsPerPage(userSettings.pageSize));
-          dispatch(setRootRoute(userSettings.homePage));
+          dispatch(setPageSize(userSettings.pageSize));
+          dispatch(setHomePage(userSettings.homePage));
 
 
           const browserRouter = createBrowserRouter([
