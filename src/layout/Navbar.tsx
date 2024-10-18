@@ -1,6 +1,6 @@
 import { NavLink } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Icon, IconAlarm, IconGauge, IconListDetails } from "@tabler/icons-react";
+import { Icon, IconAlarm, IconListDetails, IconSettings } from "@tabler/icons-react";
 import { NavLink as RouterDomNavLink } from "react-router-dom";
 
 type LinkDetail = {
@@ -11,9 +11,9 @@ type LinkDetail = {
 }
 
 const navLinks: LinkDetail[] = [
-    { href: "", icon: IconGauge, label: "Dashboard" },
     { href: "/timer", icon: IconAlarm, label: "Timer" },
-    { href: "/tasks", icon: IconListDetails, label: "Tasks" }
+    { href: "/tasks", icon: IconListDetails, label: "Tasks" },
+    { href: "/settings", icon: IconSettings, label: "Settings" },
 ];
 
 type Props = {

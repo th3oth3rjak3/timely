@@ -1,20 +1,24 @@
-// import { invoke } from "@tauri-apps/api/core";
-// import "./App.css";
 import '@mantine/charts/styles.css';
 import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 import '@mantine/dropzone/styles.css';
+import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 import '@mantine/notifications/styles.css';
 import 'mantine-datatable/styles.css';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import Settings from './features/settings/Settings';
+import TasksList from './features/tasks/TaskList';
+import Timer from './features/timer/Timer';
 import MainLayout from './layout/MainLayout';
-import Home from './routes/Home';
-import Tasks from './routes/Tasks';
-import Timer from './routes/Timer';
+import { useAppSelector } from './redux/hooks';
 
 function App() {
+
+  // TODO: get user settings here to decide which page is set to home.
+
+  const rootRoute = useAppSelector(state => state.settings.rootRoute);
 
   const router = createBrowserRouter([
     {
@@ -23,7 +27,7 @@ function App() {
       children: [
         {
           path: "",
-          element: <Home />
+          element: <Navigate to={rootRoute} />
         },
         {
           path: "/timer",
@@ -31,7 +35,11 @@ function App() {
         },
         {
           path: "/tasks",
-          element: <Tasks />
+          element: <TasksList />
+        },
+        {
+          path: "/settings",
+          element: <Settings />
         }
       ]
     }
@@ -39,8 +47,10 @@ function App() {
 
   return (
     <MantineProvider defaultColorScheme="dark" >
-      <Notifications />
-      <RouterProvider router={router} />
+      <ModalsProvider>
+        <Notifications />
+        <RouterProvider router={router} />
+      </ModalsProvider>
     </MantineProvider>
   );
 }

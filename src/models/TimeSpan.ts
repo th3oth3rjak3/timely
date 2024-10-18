@@ -29,13 +29,26 @@ export class TimeSpan extends Object {
     }
 
     /**
+     * Try to create a new TimeSpan from seconds.
+     *  
+     * @param {number} seconds - The number of seconds in the time span. 
+     * */
+    static tryFromSeconds(seconds?: number | null): TimeSpan | null {
+        if (seconds === undefined || seconds === null) {
+            return null;
+        }
+
+        return TimeSpan.fromSeconds(seconds);
+    }
+
+    /**
      * Create a new TimeSpan from hours.
      * 
      * @param hours - The number of hours in the time span.
      * @returns A new TimeSpan.
      */
     static fromHours(hours: number): TimeSpan {
-        const seconds = hours * TimeSpan.hour;
+        const seconds = Math.round(hours * TimeSpan.hour);
         return new TimeSpan(seconds);
     }
 
@@ -80,6 +93,10 @@ export class TimeSpan extends Object {
 
     get totalSeconds() {
         return this._totalSeconds;
+    }
+
+    get totalHours() {
+        return this._totalSeconds / TimeSpan.hour;
     }
 
     override toString(): string {

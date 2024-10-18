@@ -22,7 +22,7 @@ function MainLayout() {
 
     useEffect(() => {
         updateMaximized();
-        navHandler.open();
+        //navHandler.open();
         const unlisten = getCurrentWindow().onResized((_) => {
             updateMaximized();
         });

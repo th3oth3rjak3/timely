@@ -42,29 +42,7 @@ impl MigrationTrait for Migration {
                     .col(integer(Task::ElapsedDuration))
                     .to_owned(),
             )
-            .await?;
-
-        let initial_tasks: Vec<String> = vec![
-            "Wire up SeaORM".into(),
-            "Write Code".into(),
-            "Make Money".into(),
-        ];
-
-        for description in initial_tasks.iter() {
-            let insert = Query::insert()
-                .into_table(Task::Table)
-                .columns([Task::Description, Task::Status, Task::ElapsedDuration])
-                .values_panic([
-                    description.into(),
-                    Status::Todo.to_string().into(),
-                    0.into(),
-                ])
-                .to_owned();
-
-            manager.exec_stmt(insert).await.unwrap();
-        }
-
-        Ok(())
+            .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {

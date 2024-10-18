@@ -1,5 +1,5 @@
-import { getSqlColumnFromPropertyName } from "../utilities/dataTableUtilities";
-import { SortDirection } from "./SortDirection";
+import { SortDirection } from "../../models/SortDirection";
+import { getSqlColumnFromPropertyName } from "../../utilities/dataTableUtilities";
 
 export type TaskSearchParams = {
     page: number;

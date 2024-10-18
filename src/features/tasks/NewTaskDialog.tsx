@@ -3,9 +3,9 @@ import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { IconPlus } from "@tabler/icons-react";
-import MyTooltip from "../components/MyTooltip";
-import { NewTask } from "../models/Task";
-import { TimeSpan } from "../models/TimeSpan";
+import MyTooltip from "../../components/MyTooltip";
+import { TimeSpan } from "../../models/TimeSpan";
+import { NewTask } from "./Task";
 
 type Props = {
     onValidSubmit: (task: NewTask) => void;
@@ -23,7 +23,7 @@ function NewTaskDialog(props: Props): JSX.Element {
             estimatedDuration: null,
         },
         validate: {
-            description: (value) => value.length > 0 && value.length < 1000 ? null : "Description must be between 1 and 1000 characters"
+            description: (value) => value.length > 0 && value.length < 2000 ? null : "Description must be between 1 and 2000 characters"
         }
     });
 
@@ -36,7 +36,6 @@ function NewTaskDialog(props: Props): JSX.Element {
         if (!!values.estimatedDuration && values.estimatedDuration !== null) {
             values.estimatedDuration = TimeSpan.fromHours(values.estimatedDuration).totalSeconds;
         }
-        console.log(values);
         props.onValidSubmit(values);
         close();
         form.reset();
@@ -44,13 +43,27 @@ function NewTaskDialog(props: Props): JSX.Element {
 
     return (
         <>
-            <Modal opened={modalOpened} onClose={closeModal} title="New Task" closeOnClickOutside={false}>
+            <Modal opened={modalOpened} onClose={closeModal} title="New Task" closeOnClickOutside={false} closeOnEscape={false}>
                 <form onSubmit={form.onSubmit(submitForm)}>
                     <Stack gap="sm">
                         <Textarea withAsterisk label="Description" key={form.key("description")} {...form.getInputProps("description")} autosize />
                         <TextInput label="Status" key={form.key("status")} {...form.getInputProps("status")} readOnly />
-                        <DateInput clearable defaultValue={new Date()} label="Scheduled Start" key={form.key("scheduledStartDate")} {...form.getInputProps("scheduledStartDate")} />
-                        <DateInput clearable defaultValue={new Date()} label="Scheduled Complete" key={form.key("scheduledCompleteDate")} {...form.getInputProps("scheduledCompleteDate")} />
+                        <DateInput
+                            valueFormat="MM/DD/YYYY"
+                            highlightToday={true}
+                            clearable
+                            defaultValue={new Date()}
+                            label="Start By"
+                            key={form.key("scheduledStartDate")}
+                            {...form.getInputProps("scheduledStartDate")} />
+                        <DateInput
+                            valueFormat="MM/DD/YYYY"
+                            highlightToday={true}
+                            clearable
+                            defaultValue={new Date()}
+                            label="Due By"
+                            key={form.key("scheduledCompleteDate")}
+                            {...form.getInputProps("scheduledCompleteDate")} />
                         <NumberInput label="Estimated Duration (Hours)" key={form.key("estimatedDuration")} {...form.getInputProps("estimatedDuration")} />
                     </Stack>
                     <Group justify="flex-end" mt="md">

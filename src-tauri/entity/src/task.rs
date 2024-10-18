@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i32,
+    pub id: i64,
     pub description: String,
     #[sea_orm(column_type = "custom(\"enum_text\")")]
     pub status: String,
@@ -17,8 +17,8 @@ pub struct Model {
     pub actual_start_date: Option<DateTimeUtc>,
     pub actual_complete_date: Option<DateTimeUtc>,
     pub last_resumed_date: Option<DateTimeUtc>,
-    pub estimated_duration: Option<i32>,
-    pub elapsed_duration: i32,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: i64,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

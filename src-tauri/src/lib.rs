@@ -1,41 +1,35 @@
 pub mod data_access;
+pub mod features;
 pub mod models;
 pub mod sql_utilties;
 
 use data_access::*;
-use entity::task;
 use models::*;
 use std::env;
-use tauri::State;
-
-#[tauri::command]
-async fn create_task(
-    new_task: NewTask,
-    params: TaskSearchParams,
-    state: State<'_, DatabaseWrapper>,
-) -> Result<PagedData<task::Model>, String> {
-    data_access::create_new_task(state, new_task, params).await
-}
-
-#[tauri::command]
-async fn get_tasks(
-    params: TaskSearchParams,
-    state: State<'_, DatabaseWrapper>,
-) -> Result<PagedData<task::Model>, String> {
-    data_access::search_for_tasks(state, params).await
-}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let connection = tauri::async_runtime::block_on(establish_connection())
         .expect("Could not connect to the database.");
 
-    //tauri::async_runtime::block_on(run_migrations(&client));
+    // TODO: add migrations.
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(DatabaseWrapper { connection })
-        .invoke_handler(tauri::generate_handler![get_tasks, create_task])
+        .invoke_handler(tauri::generate_handler![
+            features::tasks::get_tasks,
+            features::tasks::create_task,
+            features::tasks::start_task,
+            features::tasks::pause_task,
+            features::tasks::resume_task,
+            features::tasks::finish_task,
+            features::tasks::cancel_task,
+            features::tasks::reopen_task,
+            features::tasks::restore_task,
+            features::tasks::delete_task,
+            features::tasks::edit_task,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
