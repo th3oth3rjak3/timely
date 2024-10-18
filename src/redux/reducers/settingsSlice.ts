@@ -15,7 +15,7 @@ export type SettingsState = {
 const initialState: SettingsState = {
     listItemsPerPage: 5,
     listItemsPerPageChoices: [5, 10, 25, 50, 100],
-    rootRoute: "/tasks",
+    rootRoute: "",
 };
 
 export const settingsSlice = createSlice({

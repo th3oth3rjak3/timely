@@ -5,9 +5,7 @@
  *  - Update the redux store when values change.
  */
 
-
-
-
+import { Group, Stack, Text } from "@mantine/core";
 
 
 /**
@@ -16,7 +14,11 @@
 function Settings() {
 
     return (
-        <p>Settings</p>
+        <Stack>
+            <Group justify="space-between">
+                <Text size="lg">Settings</Text>
+            </Group>
+        </Stack>
     );
 }
 

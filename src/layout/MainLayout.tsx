@@ -11,6 +11,7 @@ import Navbar from "./Navbar";
 
 
 function MainLayout() {
+    /** An app store dispatch function to update store values. */
     const [navOpened, navHandler] = useDisclosure();
     const [maximized, setMaximized] = useState(false);
 
@@ -31,6 +32,7 @@ function MainLayout() {
             unlisten.then(u => u());
         }
     }, []);
+
 
     /** Close the current window and shut down the application. */
     const closeWindow = async (_: React.MouseEvent) => await getCurrentWindow().close();
