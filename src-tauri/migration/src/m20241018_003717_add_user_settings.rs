@@ -11,6 +11,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(UserSettings::Table)
                     .if_not_exists()
+                    .col(pk_auto(UserSettings::Id))
                     .col(integer(UserSettings::PageSize))
                     .col(string(UserSettings::HomePage))
                     .to_owned(),
@@ -36,6 +37,7 @@ impl MigrationTrait for Migration {
 #[derive(DeriveIden)]
 enum UserSettings {
     Table,
+    Id,
     PageSize,
     HomePage,
 }
