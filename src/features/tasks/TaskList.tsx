@@ -314,7 +314,7 @@ function TaskList() {
 
     //#region Component
     return (
-        <Stack>
+        <Stack m={10}>
             <Group justify="space-between">
                 <Text size="lg">Tasks</Text>
                 <NewTaskDialog onValidSubmit={createTask} />

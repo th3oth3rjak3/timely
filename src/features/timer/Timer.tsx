@@ -1,7 +1,11 @@
-import { Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
 
 function Timer() {
-    return <Text>Timer Page</Text>;
+    return (
+        <Stack m={10}>
+            <Text size="lg">Timer</Text>
+        </Stack>
+    );
 }
 
 export default Timer;

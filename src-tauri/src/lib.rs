@@ -30,6 +30,7 @@ pub fn run() {
             features::tasks::delete_task,
             features::tasks::edit_task,
             features::settings::get_user_settings,
+            features::settings::update_user_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -12,6 +12,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setHomePage, setPageSize } from "../../redux/reducers/settingsSlice";
 import { toSelectOptions } from "../../utilities/formUtilities";
 import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities";
+import { UserSettings } from "./UserSettings";
 
 
 /**
@@ -39,11 +40,14 @@ function Settings() {
     });
 
     function setSettingsValues(settings: Settings) {
-        dispatch(setHomePage(settings.homePage));
-        dispatch(setPageSize(Number(settings.pageSize)));
 
-        invoke<void>("update_user_settings", { settings })
-            .then(() => showSuccessNotification("Successfully updated settings."))
+        invoke<UserSettings>("update_user_settings", { settings: { homePage: settings.homePage, pageSize: Number(settings.pageSize) } })
+            .then((updated) => {
+                dispatch(setPageSize(updated.pageSize));
+                dispatch(setHomePage(updated.homePage));
+                showSuccessNotification("Successfully updated settings.")
+                form.resetDirty();
+            })
             .catch((err: string) => showErrorNotification("updating user settings", err));
     }
 
