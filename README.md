@@ -18,4 +18,4 @@ This template should help get you started developing with Tauri, React and Types
 
 
 // Helpful commands: 
-// - sea-orm-cli generate entity  -o ./entity/src -l --with-serde both --model-extra-attributes 'serde(rename_all = "camelCase")'
+// - sea-orm-cli generate entity  -o ./entity/gen -l --with-serde both --model-extra-attributes 'serde(rename_all = "camelCase")'
