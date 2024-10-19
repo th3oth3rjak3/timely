@@ -1,3 +1,5 @@
+use entity::comment;
+use sea_orm::prelude::DateTimeUtc;
 use serde::{Deserialize, Serialize};
 
 /// The status of a task.
@@ -42,4 +44,20 @@ impl From<Status> for String {
             Status::Unknown => "Unknown".to_string(),
         }
     }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskRead {
+    pub id: i64,
+    pub description: String,
+    pub status: Status,
+    pub scheduled_start_date: Option<DateTimeUtc>,
+    pub scheduled_complete_date: Option<DateTimeUtc>,
+    pub actual_start_date: Option<DateTimeUtc>,
+    pub actual_complete_date: Option<DateTimeUtc>,
+    pub last_resumed_date: Option<DateTimeUtc>,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: i64,
+    pub comments: Vec<comment::Model>,
 }

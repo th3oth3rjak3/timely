@@ -13,8 +13,10 @@ impl MigrationTrait for Migration {
                     .table(Comment::Table)
                     .if_not_exists()
                     .col(pk_auto(Comment::Id))
-                    .col(string(Comment::Message))
                     .col(integer(Comment::TaskId))
+                    .col(string(Comment::Message))
+                    .col(date_time(Comment::Created))
+                    .col(date_time_null(Comment::Modified))
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-comment-task_id")
@@ -41,4 +43,6 @@ enum Comment {
     Id,
     TaskId,
     Message,
+    Created,
+    Modified,
 }

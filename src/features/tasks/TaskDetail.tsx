@@ -4,6 +4,7 @@ import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled
 import dayjs from "dayjs";
 import { ReactNode } from "react";
 import { TimeSpan } from "../../models/TimeSpan";
+import CommentDetails from "./CommentDetails";
 import { Task } from "./Task";
 
 export type TaskDetailParams = {
@@ -17,6 +18,7 @@ export type TaskDetailParams = {
     onRestored: (task: Task) => void;
     onEdited: (task: Task) => void;
     onDeleted: (task: Task) => void;
+    onCommentChanged: () => void;
 }
 
 /**
@@ -167,6 +169,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
     return (
         <Stack gap={4} my={10}>
             {rowData.map(({ label, content }) => row(label, content))}
+            <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
             <Group gap={6} ml={10} mt={10}>
                 {buttons(props.task.status)}
             </Group>

@@ -1,4 +1,3 @@
-use entity::task;
 use tauri::State;
 
 use crate::{Db, PagedData};
@@ -17,7 +16,7 @@ pub async fn create_task(
 pub async fn get_tasks(
     params: data_access::TaskSearchParams,
     state: State<'_, Db>,
-) -> Result<PagedData<task::Model>, String> {
+) -> Result<PagedData<TaskRead>, String> {
     data_access::search_for_tasks(state, params).await
 }
 
@@ -62,9 +61,27 @@ pub async fn delete_task(task_id: i32, state: State<'_, Db>) -> Result<(), Strin
 }
 
 #[tauri::command]
-pub async fn edit_task(
-    task: data_access::EditTask,
+pub async fn edit_task(task: data_access::EditTask, state: State<'_, Db>) -> Result<(), String> {
+    data_access::edit_task(task, state).await
+}
+
+#[tauri::command]
+pub async fn add_comment(
+    comment: data_access::NewComment,
     state: State<'_, Db>,
 ) -> Result<(), String> {
-    data_access::edit_task(task, state).await
+    data_access::add_comment(comment, state).await
+}
+
+#[tauri::command]
+pub async fn update_comment(
+    comment: data_access::EditComment,
+    state: State<'_, Db>,
+) -> Result<(), String> {
+    data_access::update_comment(comment, state).await
+}
+
+#[tauri::command]
+pub async fn delete_comment(id: i64, db: State<'_, Db>) -> Result<(), String> {
+    data_access::delete_comment(id, db).await
 }

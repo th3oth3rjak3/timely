@@ -230,6 +230,11 @@ function TaskList() {
         setTaskToEdit(null);
     }
 
+    function commentChanged() {
+        let params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
+        getTasks(params);
+    }
+
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
         setPage(1);
@@ -347,7 +352,8 @@ function TaskList() {
                                 onCancelled={cancelTask}
                                 onReopened={reopenTask}
                                 onEdited={openEditDialog}
-                                onDeleted={deleteTask} />
+                                onDeleted={deleteTask}
+                                onCommentChanged={commentChanged} />
                         );
                     }
                 }}

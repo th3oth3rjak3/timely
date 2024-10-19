@@ -29,6 +29,9 @@ pub fn run() {
             features::tasks::restore_task,
             features::tasks::delete_task,
             features::tasks::edit_task,
+            features::tasks::add_comment,
+            features::tasks::update_comment,
+            features::tasks::delete_comment,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
         ])

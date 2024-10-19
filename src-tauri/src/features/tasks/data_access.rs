@@ -6,6 +6,7 @@ use tauri::State;
 
 use super::*;
 use crate::{Db, PagedData, SortDirection};
+use ::entity::comment::{self, Entity as Comment};
 use ::entity::task::{self, Entity as Task};
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
@@ -27,7 +28,7 @@ pub struct TaskSearchParams {
 pub async fn search_for_tasks(
     state: State<'_, Db>,
     params: TaskSearchParams,
-) -> Result<PagedData<task::Model>, String> {
+) -> Result<PagedData<TaskRead>, String> {
     let mut search_expr = Expr::col(task::Column::Status).is_in(params.statuses);
 
     if let Some(query) = &params.query_string {
@@ -51,7 +52,9 @@ pub async fn search_for_tasks(
 
     let paginator = task_query.paginate(&state.connection, params.page_size);
 
-    let tasks = paginator
+    let count = paginator.num_items().await.map_err(|err| err.to_string())?;
+
+    let tasks: Vec<task::Model> = paginator
         .fetch_page(params.page - 1)
         .await
         .map(|tasks| {
@@ -68,10 +71,34 @@ pub async fn search_for_tasks(
         })
         .map_err(|err| err.to_string())?;
 
-    let count = paginator.num_items().await.map_err(|err| err.to_string())?;
+    let comments = tasks
+        .load_many(Comment, &state.connection)
+        .await
+        .map_err(|err| err.to_string())?;
 
-    Ok(PagedData::<task::Model> {
-        data: tasks,
+    let tasks_with_comments: Vec<TaskRead> = tasks
+        .into_iter()
+        .zip(comments.into_iter())
+        .map(|(task, mut comments)| {
+            comments.sort_by(|a, b| a.created.cmp(&b.created));
+            TaskRead {
+                id: task.id,
+                description: task.description,
+                status: task.status.into(),
+                scheduled_start_date: task.scheduled_start_date,
+                scheduled_complete_date: task.scheduled_complete_date,
+                actual_start_date: task.actual_start_date,
+                actual_complete_date: task.actual_complete_date,
+                last_resumed_date: task.last_resumed_date,
+                estimated_duration: task.estimated_duration,
+                elapsed_duration: task.elapsed_duration,
+                comments,
+            }
+        })
+        .collect();
+
+    Ok(PagedData::<TaskRead> {
+        data: tasks_with_comments,
         page: params.page,
         page_size: params.page_size,
         total_item_count: count,
@@ -102,10 +129,7 @@ pub struct EditTask {
     pub elapsed_duration: Option<i64>,
 }
 
-pub async fn create_task(
-    new_task: NewTask,
-    state: State<'_, Db>,
-) -> Result<(), String> {
+pub async fn create_task(new_task: NewTask, state: State<'_, Db>) -> Result<(), String> {
     let new_task = task::ActiveModel {
         id: ActiveValue::NotSet,
         description: ActiveValue::Set(new_task.description),
@@ -126,10 +150,7 @@ pub async fn create_task(
         .map_err(|err| err.to_string())
 }
 
-pub async fn edit_task(
-    edit_task: EditTask,
-    state: State<'_, Db>,
-) -> Result<(), String> {
+pub async fn edit_task(edit_task: EditTask, state: State<'_, Db>) -> Result<(), String> {
     match find_task(edit_task.id, &state).await? {
         Some(model) => {
             let mut task = model.clone().into_active_model();
@@ -304,10 +325,7 @@ fn not_found_message(task_id: i32) -> String {
     format!("Task with id '{}' not found.", task_id)
 }
 
-async fn save_task(
-    task: task::ActiveModel,
-    state: &State<'_, Db>,
-) -> Result<(), String> {
+async fn save_task(task: task::ActiveModel, state: &State<'_, Db>) -> Result<(), String> {
     task.save(&state.connection)
         .await
         .map(|_| ())
@@ -315,10 +333,7 @@ async fn save_task(
 }
 
 /// Find a task by its id.
-async fn find_task(
-    task_id: i32,
-    state: &State<'_, Db>,
-) -> Result<Option<task::Model>, String> {
+async fn find_task(task_id: i32, state: &State<'_, Db>) -> Result<Option<task::Model>, String> {
     Task::find_by_id(task_id)
         .one(&state.connection)
         .await
@@ -345,4 +360,63 @@ fn set_task_model_inactive(model: task::Model, status: Status) -> task::ActiveMo
     }
 
     task
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewComment {
+    task_id: i64,
+    message: String,
+}
+
+pub async fn add_comment(comment: NewComment, db: State<'_, Db>) -> Result<(), String> {
+    let model = comment::ActiveModel {
+        id: ActiveValue::NotSet,
+        task_id: ActiveValue::Set(comment.task_id),
+        message: ActiveValue::Set(comment.message),
+        created: ActiveValue::Set(Utc::now()),
+        modified: ActiveValue::Set(None),
+    };
+
+    model
+        .save(&db.connection)
+        .await
+        .map(|_| ())
+        .map_err(|err| err.to_string())
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditComment {
+    id: i64,
+    message: String,
+}
+
+pub async fn update_comment(comment: EditComment, db: State<'_, Db>) -> Result<(), String> {
+    let maybe_comment = Comment::find_by_id(comment.id)
+        .one(&db.connection)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    match maybe_comment {
+        Some(model) => {
+            let mut existing = model.into_active_model();
+            existing.message = Set(comment.message);
+            existing.modified = Set(Some(Utc::now()));
+            existing
+                .save(&db.connection)
+                .await
+                .map(|_| ())
+                .map_err(|err| err.to_string())
+        }
+        None => Err(format!("Comment with id {} not found.", comment.id)),
+    }
+}
+
+pub async fn delete_comment(id: i64, db: State<'_, Db>) -> Result<(), String> {
+    Comment::delete_by_id(id)
+        .exec(&db.connection)
+        .await
+        .map(|_| ())
+        .map_err(|err| err.to_string())
 }

@@ -18,8 +18,18 @@ export type Task = {
     estimatedDuration: number | null;
     /** The amount of time in seconds that has been logged against this task. */
     elapsedDuration: number;
+    /** Any comments related to the task. */
+    comments: Comment[]
 
     // TODO: add comments array to this model
+}
+
+export type Comment = {
+    id: number;
+    taskId: number;
+    message: string;
+    created: Date;
+    modified: Date | null;
 }
 
 export type NewTask = {
