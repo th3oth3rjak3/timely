@@ -1,6 +1,9 @@
+use chrono::{DateTime, Utc};
 use entity::comment;
 use sea_orm::prelude::DateTimeUtc;
 use serde::{Deserialize, Serialize};
+
+use crate::SortDirection;
 
 /// The status of a task.
 #[derive(Serialize, Deserialize, Default, Debug, PartialEq, Eq, Clone)]
@@ -60,4 +63,53 @@ pub struct TaskRead {
     pub estimated_duration: Option<i64>,
     pub elapsed_duration: i64,
     pub comments: Vec<comment::Model>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditComment {
+    pub id: i64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewComment {
+    pub task_id: i64,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditTask {
+    pub id: i32,
+    pub description: String,
+    pub status: Status,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub actual_start_date: Option<DateTime<Utc>>,
+    pub actual_complete_date: Option<DateTime<Utc>>,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: Option<i64>,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewTask {
+    pub description: String,
+    pub status: Status,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub estimated_duration: Option<i64>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskSearchParams {
+    pub page: u64,
+    pub page_size: u64,
+    pub query_string: Option<String>,
+    pub statuses: Vec<String>,
+    pub sort_field: Option<String>,
+    pub sort_direction: Option<SortDirection>,
 }

@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -18,4 +19,12 @@ impl<T> PagedData<T> {
             data,
         }
     }
+}
+
+#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
+#[repr(u8)]
+pub enum SortDirection {
+    #[default]
+    Ascending,
+    Descending,
 }

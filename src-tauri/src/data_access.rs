@@ -1,6 +1,5 @@
 use migration::{Migrator, MigratorTrait};
 use sea_orm::*;
-use serde_repr::{Deserialize_repr, Serialize_repr};
 /// A wrapper around a sqlite connection pool.
 pub struct Db {
     /// The connection pool used to execute SQL queries.
@@ -24,12 +23,4 @@ pub async fn establish_connection() -> Result<DatabaseConnection, DbErr> {
     Migrator::up(&db, None).await?;
 
     Ok(db)
-}
-
-#[derive(Debug, Clone, Default, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
-#[repr(u8)]
-pub enum SortDirection {
-    #[default]
-    Ascending,
-    Descending,
 }

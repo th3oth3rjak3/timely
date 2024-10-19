@@ -3,6 +3,7 @@ import { modals } from "@mantine/modals";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrashFilled } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { ReactNode } from "react";
+import MyTooltip from "../../components/MyTooltip";
 import { TimeSpan } from "../../models/TimeSpan";
 import CommentDetails from "./CommentDetails";
 import { Task } from "./Task";
@@ -56,15 +57,64 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
 
         const status = statusDescription.toLowerCase();
 
-        const startButton = <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>;
-        const pauseButton = <Button size="compact-xs" variant="light" leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>;
-        const resumeButton = <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>;
-        const cancelButton = <Button size="compact-xs" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => openCancelModal()}>Cancel</Button>;
-        const finishButton = <Button size="compact-xs" variant="light" color="teal" leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>;
-        const restoreButton = <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>;
-        const reopenButton = <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>;
-        const deleteButton = <Button size="compact-xs" variant="light" color="red" leftSection={<IconTrashFilled size={14} />} onClick={() => openDeleteModal()}>Delete</Button>;
-        const editButton = <Button size="compact-xs" variant="light" color="cyan" leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>;
+        const startButton = (
+            <MyTooltip label="Start Task">
+                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
+            </MyTooltip>
+        );
+
+
+        const pauseButton = (
+            <MyTooltip label="Pause Task">
+                <Button size="compact-xs" variant="light" leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
+            </MyTooltip>
+        );
+
+
+        const resumeButton = (
+            <MyTooltip label="Resume Task">
+                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
+            </MyTooltip>
+        );
+
+
+        const cancelButton = (
+            <MyTooltip label="Cancel Task">
+                <Button size="compact-xs" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => openCancelModal()}>Cancel</Button>
+            </MyTooltip>
+        );
+
+
+        const finishButton = (
+            <MyTooltip label="Finish Task">
+                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
+            </MyTooltip>
+        );
+
+
+        const restoreButton = (
+            <MyTooltip label="Restore Cancelled Task">
+                <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
+            </MyTooltip>
+        );
+
+        const reopenButton = (
+            <MyTooltip label="Reopen Finished Task">
+                <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
+            </MyTooltip>
+        );
+
+        const deleteButton = (
+            <MyTooltip label="Delete Task">
+                <Button size="compact-xs" variant="light" color="red" leftSection={<IconTrashFilled size={14} />} onClick={() => openDeleteModal()}>Delete</Button>
+            </MyTooltip>
+        );
+
+        const editButton = (
+            <MyTooltip label="Edit Task">
+                <Button size="compact-xs" variant="light" color="cyan" leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
+            </MyTooltip>
+        );
 
         if (status === "todo") {
             return (

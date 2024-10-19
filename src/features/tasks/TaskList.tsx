@@ -1,9 +1,10 @@
 import { ActionIcon, Group, MultiSelect, Stack, Text, TextInput } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
-import { IconSearch, IconX } from "@tabler/icons-react";
+import { IconRefresh, IconSearch, IconX } from "@tabler/icons-react";
 import { invoke } from "@tauri-apps/api/core";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
+import MyTooltip from "../../components/MyTooltip.tsx";
 import { PagedData } from "../../models/PagedData.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
 import { setPageSize } from "../../redux/reducers/settingsSlice.ts";
@@ -231,7 +232,7 @@ function TaskList() {
     }
 
     function commentChanged() {
-        let params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
+        const params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
         getTasks(params);
     }
 
@@ -239,6 +240,11 @@ function TaskList() {
     function updatePageSize(size: number) {
         setPage(1);
         dispatch(setPageSize(size));
+    }
+
+    function refreshTasks() {
+        const params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
+        getTasks(params);
     }
 
     //#endregion
@@ -320,10 +326,17 @@ function TaskList() {
     //#region Component
     return (
         <Stack m={10}>
+            {taskToEdit === null ? null : <EditTaskDialog task={taskToEdit} onValidSubmit={editTask} isOpen={editDialogOpen} onClosed={() => setTaskToEdit(null)} />}
             <Group justify="space-between">
                 <Text size="lg">Tasks</Text>
-                <NewTaskDialog onValidSubmit={createTask} />
-                {taskToEdit === null ? null : <EditTaskDialog task={taskToEdit} onValidSubmit={editTask} isOpen={editDialogOpen} onClosed={() => setTaskToEdit(null)} />}
+                <Group>
+                    <NewTaskDialog onValidSubmit={createTask} />
+                    <MyTooltip label="Refresh Tasks" position="left">
+                        <ActionIcon variant="light" color="cyan" onClick={() => refreshTasks()}>
+                            <IconRefresh />
+                        </ActionIcon>
+                    </MyTooltip>
+                </Group>
             </Group>
             <DataTable
                 withTableBorder
