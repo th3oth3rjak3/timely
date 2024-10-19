@@ -3,5 +3,7 @@
 pub mod prelude;
 
 pub mod comment;
+pub mod tags;
 pub mod task;
+pub mod task_tags;
 pub mod user_settings;
