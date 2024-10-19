@@ -1,3 +1,4 @@
+use migration::{Migrator, MigratorTrait};
 use sea_orm::*;
 use serde_repr::{Deserialize_repr, Serialize_repr};
 /// A wrapper around a sqlite connection pool.
@@ -18,7 +19,11 @@ pub async fn establish_connection() -> Result<DatabaseConnection, DbErr> {
     let db_url =
         std::env::var("DATABASE_URL").expect("Unable to read DATABASE_URL from environment.");
 
-    Database::connect(ConnectOptions::new(db_url)).await
+    let db = Database::connect(ConnectOptions::new(db_url)).await?;
+
+    Migrator::up(&db, None).await?;
+
+    Ok(db)
 }
 
 #[derive(Debug, Clone, Default, Eq, PartialEq, Serialize_repr, Deserialize_repr)]
