@@ -122,12 +122,12 @@ function CommentDetails(props: Props) {
                 <Group>
                     <Text size="xs" style={{ fontStyle: "italic" }}>{"Created: " + dayjs(comment.created).format("MM/DD/YYYY hh:mm:ss A")}</Text>
                     {comment.modified !== null ? <Text size="xs" style={{ fontStyle: "italic" }}>{"Modified: " + dayjs(comment.modified).format("MM/DD/YYYY hh:mm:ss A")}</Text> : null}
-                    <MyTooltip label="Edit Comment" position="top">
+                    <MyTooltip label="Edit Comment" position="right">
                         <ActionIcon size="xs" variant="light" color="cyan" onClick={() => openEditCommentModal(comment)}>
                             <IconEdit />
                         </ActionIcon>
                     </MyTooltip>
-                    <MyTooltip label="Delete Comment" position="top">
+                    <MyTooltip label="Delete Comment" position="right">
                         <ActionIcon size="xs" variant="light" color="red" onClick={() => openDeleteModal(comment)}>
                             <IconTrash />
                         </ActionIcon>

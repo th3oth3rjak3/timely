@@ -1,15 +1,16 @@
-import { Button, Group, Stack, Text } from "@mantine/core";
+import { Button, Grid, Group, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
-import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrashFilled } from "@tabler/icons-react";
+import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import { ReactNode } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import { TimeSpan } from "../../models/TimeSpan";
 import CommentDetails from "./CommentDetails";
-import { Task } from "./Task";
+import TagDetails from "./TagDetails";
+import { Tag, Task } from "./Task";
 
 export type TaskDetailParams = {
     task: Task;
+    tagOptions: Tag[],
     onStarted: (task: Task) => void;
     onPaused: (task: Task) => void;
     onResumed: (task: Task) => void;
@@ -20,6 +21,7 @@ export type TaskDetailParams = {
     onEdited: (task: Task) => void;
     onDeleted: (task: Task) => void;
     onCommentChanged: () => void;
+    onTagsChanged: () => void;
 }
 
 /**
@@ -59,60 +61,60 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
 
         const startButton = (
             <MyTooltip label="Start Task">
-                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
+                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
             </MyTooltip>
         );
 
 
         const pauseButton = (
             <MyTooltip label="Pause Task">
-                <Button size="compact-xs" variant="light" leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
+                <Button size="compact-sm" variant="light" leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
             </MyTooltip>
         );
 
 
         const resumeButton = (
             <MyTooltip label="Resume Task">
-                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
+                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
             </MyTooltip>
         );
 
 
         const cancelButton = (
             <MyTooltip label="Cancel Task">
-                <Button size="compact-xs" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => openCancelModal()}>Cancel</Button>
+                <Button size="compact-sm" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => openCancelModal()}>Cancel</Button>
             </MyTooltip>
         );
 
 
         const finishButton = (
             <MyTooltip label="Finish Task">
-                <Button size="compact-xs" variant="light" color="teal" leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
+                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
             </MyTooltip>
         );
 
 
         const restoreButton = (
             <MyTooltip label="Restore Cancelled Task">
-                <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
+                <Button size="compact-sm" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
             </MyTooltip>
         );
 
         const reopenButton = (
             <MyTooltip label="Reopen Finished Task">
-                <Button size="compact-xs" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
+                <Button size="compact-sm" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
             </MyTooltip>
         );
 
         const deleteButton = (
             <MyTooltip label="Delete Task">
-                <Button size="compact-xs" variant="light" color="red" leftSection={<IconTrashFilled size={14} />} onClick={() => openDeleteModal()}>Delete</Button>
+                <Button size="compact-sm" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => openDeleteModal()}>Delete</Button>
             </MyTooltip>
         );
 
         const editButton = (
             <MyTooltip label="Edit Task">
-                <Button size="compact-xs" variant="light" color="cyan" leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
+                <Button size="compact-sm" variant="light" color="cyan" leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
             </MyTooltip>
         );
 
@@ -172,53 +174,35 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         return <></>;
     }
 
-    const row = (label: string, content: ReactNode): JSX.Element =>
-    (
-        <Group gap={6} ml={10} key={label}>
-            <Text size="xs" w={130}>{label + ":"}</Text>
-            <Text size="xs">{content}</Text>
-        </Group>
-    );
-
-    const rowData = [
-        {
-            label: "Description",
-            content: <span style={{ whiteSpace: "pre-wrap" }}>{props.task.description}</span>,
-        },
-        {
-            label: "Status",
-            content: props.task.status
-        },
-        {
-            label: "Scheduled Start",
-            content: props.task.scheduledStartDate !== null ? dayjs(props.task.scheduledStartDate).format("MM/DD/YYYY") : "Not Scheduled"
-        },
-        {
-            label: "Scheduled Complete",
-            content: props.task.scheduledCompleteDate !== null ? dayjs(props.task.scheduledCompleteDate).format("MM/DD/YYYY") : "Not Scheduled",
-        },
-        {
-            label: "Actual Start",
-            content: props.task.actualStartDate !== null ? dayjs(props.task.actualStartDate).format("MM/DD/YYYY") : "Not Started"
-        },
-        {
-            label: "Actual Complete",
-            content: props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed",
-        },
-        {
-            label: "Estimated",
-            content: props.task.estimatedDuration !== null ? TimeSpan.fromSeconds(props.task.estimatedDuration).toString() : "Not Estimated",
-        },
-        {
-            label: "Elapsed",
-            content: TimeSpan.fromSeconds(props.task.elapsedDuration).toString()
-        }
-
-    ];
-
     return (
-        <Stack gap={4} my={10}>
-            {rowData.map(({ label, content }) => row(label, content))}
+        <Stack gap={4} m={10}>
+            <Grid m="sm">
+                <Grid.Col span={12}>
+                    <Textarea label="Description" value={props.task.description} autosize readOnly />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <TextInput value={props.task.status} label="Status" readOnly />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <TextInput value={props.task.estimatedDuration !== null ? TimeSpan.fromSeconds(props.task.estimatedDuration).toString() : "Not Estimated"} label="Estimated Duration" readOnly />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                    <TextInput value={TimeSpan.fromSeconds(props.task.elapsedDuration).toString()} label="Elapsed Duration" readOnly />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                    <TextInput label="Scheduled Start Date" value={props.task.scheduledStartDate !== null ? dayjs(props.task.scheduledStartDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                    <TextInput label="Scheduled Complete Date" value={props.task.scheduledCompleteDate !== null ? dayjs(props.task.scheduledCompleteDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                    <TextInput label="Actual Start Date" value={props.task.actualStartDate !== null ? dayjs(props.task.actualStartDate).format("MM/DD/YYYY") : "Not Started"} readOnly />
+                </Grid.Col>
+                <Grid.Col span={6}>
+                    <TextInput label="Actual Complete Date" value={props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed"} readOnly />
+                </Grid.Col>
+                <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} />}</Grid.Col>
+            </Grid>
             <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
             <Group gap={6} ml={10} mt={10}>
                 {buttons(props.task.status)}

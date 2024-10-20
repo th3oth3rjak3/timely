@@ -13,7 +13,7 @@ import { maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities.ts";
 import EditTaskDialog from "./EditTaskDialog.tsx";
 import NewTaskDialog from "./NewTaskDialog.tsx";
-import { EditTask, NewTask, Task } from "./Task.ts";
+import { EditTask, NewTask, Tag, Task } from "./Task.ts";
 import TaskDetail from "./TaskDetail.tsx";
 import { taskSearchParams, TaskSearchParams } from "./TaskSearchParams.ts";
 
@@ -36,6 +36,8 @@ function TaskList() {
 
     // The current page the user is viewing (1 based).
     const [page, setPage] = useState(1);
+
+    const [tagOptions, setTagOptions] = useState<Tag[]>([]);
 
     // The number of total task records.
     const [recordCount, setRecordCount] = useState(0);
@@ -69,7 +71,13 @@ function TaskList() {
 
     //#region Functions
 
-
+    function getTagOptions() {
+        invoke<Tag[]>("get_all_tags")
+            .then((tags) => {
+                setTagOptions(tags);
+            })
+            .catch(err => showErrorNotification("getting tag options", err));
+    }
 
     /** Get tasks from the server to display to the user. */
     function getTasks(params: TaskSearchParams) {
@@ -231,11 +239,6 @@ function TaskList() {
         setTaskToEdit(null);
     }
 
-    function commentChanged() {
-        const params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
-        getTasks(params);
-    }
-
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
         setPage(1);
@@ -245,6 +248,7 @@ function TaskList() {
     function refreshTasks() {
         const params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
         getTasks(params);
+        getTagOptions();
     }
 
     //#endregion
@@ -255,7 +259,9 @@ function TaskList() {
     useEffect(() => {
         let params = taskSearchParams(page, pageSize, selectedStatuses, debouncedDescriptionQuery, sortStatus.columnAccessor, sortStatus.direction);
         getTasks(params);
+        getTagOptions();
     }, [debouncedDescriptionQuery, queryStatuses, sortStatus, page, pageSize]);
+
 
     //#endregion
 
@@ -266,7 +272,6 @@ function TaskList() {
         {
             accessor: "description",
             sortable: true,
-            width: "50vw",
             filter: (
                 <TextInput
                     label="Description"
@@ -283,7 +288,7 @@ function TaskList() {
                 />
             ),
             filtering: descriptionQuery !== "",
-            ellipsis: true,
+            ellipsis: false,
         },
         {
             accessor: "status",
@@ -303,7 +308,7 @@ function TaskList() {
                     nothingFoundMessage="Such empty..."
                 />
             ),
-            filtering: !!selectedStatuses && selectedStatuses.length !== statuses.length
+            filtering: !!selectedStatuses && selectedStatuses.length !== statuses.length,
         },
         {
             accessor: "scheduledStartDate",
@@ -340,7 +345,7 @@ function TaskList() {
             </Group>
             <DataTable
                 withTableBorder
-                fz="xs"
+                fz="sm"
                 columns={columns}
                 records={tasks}
                 page={page}
@@ -357,6 +362,7 @@ function TaskList() {
                         return (
                             <TaskDetail
                                 task={record}
+                                tagOptions={tagOptions}
                                 onStarted={startTask}
                                 onPaused={pauseTask}
                                 onFinished={finishTask}
@@ -366,7 +372,8 @@ function TaskList() {
                                 onReopened={reopenTask}
                                 onEdited={openEditDialog}
                                 onDeleted={deleteTask}
-                                onCommentChanged={commentChanged} />
+                                onCommentChanged={refreshTasks}
+                                onTagsChanged={refreshTasks} />
                         );
                     }
                 }}

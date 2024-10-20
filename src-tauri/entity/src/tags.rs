@@ -3,6 +3,8 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use crate::task_tags;
+
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(table_name = "tags")]
 #[serde(rename_all = "camelCase")]
@@ -18,9 +20,13 @@ pub enum Relation {
     TaskTags,
 }
 
-impl Related<super::task_tags::Entity> for Entity {
+impl Related<super::task::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::TaskTags.def()
+        task_tags::Relation::Task.def()
+    }
+
+    fn via() -> Option<RelationDef> {
+        Some(task_tags::Relation::Tags.def().rev())
     }
 }
 

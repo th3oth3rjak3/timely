@@ -20,6 +20,8 @@ export type Task = {
     elapsedDuration: number;
     /** Any comments related to the task. */
     comments: Comment[]
+    /** Tags associated with this task. */
+    tags: Tag[]
 
     // TODO: add comments array to this model
 }
@@ -30,6 +32,11 @@ export type Comment = {
     message: string;
     created: Date;
     modified: Date | null;
+}
+
+export type Tag = {
+    id: number,
+    value: string,
 }
 
 export type NewTask = {

@@ -20,6 +20,8 @@ import MainLayout from './layout/MainLayout';
 import { useAppDispatch } from './redux/hooks';
 import { setHomePage, setPageSize } from './redux/reducers/settingsSlice';
 
+import './App.css';
+
 function App() {
 
   const dispatch = useAppDispatch();

@@ -1,18 +1,20 @@
 import { ActionIcon, AppShell, Burger, Group, ScrollArea, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
 import { IconMaximize, IconMinimize, IconMinus, IconX } from "@tabler/icons-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import MyTooltip from "../components/MyTooltip";
+import { useAppDispatch, useAppSelector } from "../redux/hooks";
+import { closeNavbar, toggleNavbar } from "../redux/reducers/globalSlice";
 import { BG_COLOR, FG_COLOR } from "../utilities/colorUtilities";
 import Navbar from "./Navbar";
 
 
-
 function MainLayout() {
     /** An app store dispatch function to update store values. */
-    const [navOpened, navHandler] = useDisclosure();
+    const navOpened = useAppSelector(state => state.global.navbarOpen);
+    const dispatch = useAppDispatch();
+
     const [maximized, setMaximized] = useState(false);
 
     /** Update the currently maximized state. */
@@ -47,14 +49,14 @@ function MainLayout() {
         <AppShell
             header={{ height: 48 }}
             navbar={{ width: 200, breakpoint: "sm", collapsed: { desktop: !navOpened, mobile: !navOpened } }}
-            padding="md"
+            padding={0}
         >
             <AppShell.Header data-tauri-drag-region>
                 <Group h="100%" px="md" align="center" data-tauri-drag-region>
                     <MyTooltip label={navOpened ? "Close Menu" : "Open Menu"} position="right">
                         <Burger
                             opened={navOpened}
-                            onClick={navHandler.toggle}
+                            onClick={() => dispatch(toggleNavbar())}
                             size={18}
                             color={FG_COLOR}
                             bg={BG_COLOR}
@@ -87,12 +89,14 @@ function MainLayout() {
             </AppShell.Header>
             <AppShell.Navbar p="md" maw="200px">
                 <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6}>
-                    <Navbar closeNavMenu={navHandler.close} />
+                    <Navbar closeNavMenu={() => dispatch(closeNavbar())} />
                 </ScrollArea>
             </AppShell.Navbar>
             <AppShell.Main>
-                <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6} h="calc(100vh - var(--app-shell-header-height, 0px) - 32px)">
-                    <Outlet />
+                <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6} h="calc(100vh - var(--app-shell-header-height, 0px))">
+                    <div className="px-3">
+                        <Outlet />
+                    </div>
                 </ScrollArea>
             </AppShell.Main>
         </AppShell >

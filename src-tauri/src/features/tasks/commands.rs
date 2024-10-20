@@ -1,4 +1,4 @@
-use ::entity::{comment, prelude::*, task};
+use ::entity::{comment, prelude::*, tags, task, task_tags};
 use chrono::Utc;
 use migration::Expr;
 use sea_orm::{prelude::*, *};
@@ -87,10 +87,18 @@ pub async fn get_tasks(
         .await
         .map_err(|err| err.to_string())?;
 
-    let tasks_with_comments: Vec<TaskRead> = tasks
+    let tags = tasks
+        .load_many_to_many(tags::Entity, task_tags::Entity, &db.connection)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    let tasks_with_tags: Vec<(task::Model, Vec<tags::Model>)> =
+        tasks.into_iter().zip(tags.into_iter()).collect();
+
+    let tasks_with_comments: Vec<TaskRead> = tasks_with_tags
         .into_iter()
         .zip(comments.into_iter())
-        .map(|(task, mut comments)| {
+        .map(|((task, tags), mut comments)| {
             comments.sort_by(|a, b| a.created.cmp(&b.created));
             TaskRead {
                 id: task.id,
@@ -104,6 +112,7 @@ pub async fn get_tasks(
                 estimated_duration: task.estimated_duration,
                 elapsed_duration: task.elapsed_duration,
                 comments,
+                tags,
             }
         })
         .collect();
@@ -384,4 +393,75 @@ fn set_task_model_inactive(model: task::Model, status: Status) -> task::ActiveMo
     }
 
     task
+}
+
+#[tauri::command]
+pub async fn remove_tag_from_task(
+    task_id: i64,
+    tag_id: i64,
+    db: State<'_, Db>,
+) -> Result<(), String> {
+    TaskTags::delete_many()
+        .filter(
+            task_tags::Column::TagId
+                .eq(tag_id)
+                .and(task_tags::Column::TaskId.eq(task_id)),
+        )
+        .exec(&db.connection)
+        .await
+        .map(|_| ())
+        .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub async fn get_all_tags(db: State<'_, Db>) -> Result<Vec<tags::Model>, String> {
+    Tags::find()
+        .order_by_asc(tags::Column::Value)
+        .all(&db.connection)
+        .await
+        .map_err(|err| err.to_string())
+}
+
+#[tauri::command]
+pub async fn add_tag_to_task(tag_id: i64, task_id: i64, db: State<'_, Db>) -> Result<(), String> {
+    let existing_join = TaskTags::find()
+        .filter(
+            task_tags::Column::TagId
+                .eq(tag_id)
+                .and(task_tags::Column::TaskId.eq(task_id)),
+        )
+        .one(&db.connection)
+        .await
+        .map_err(|err| err.to_string())?;
+
+    match existing_join {
+        Some(_) => Ok(()),
+        None => {
+            let new_join = task_tags::ActiveModel {
+                id: ActiveValue::NotSet,
+                task_id: ActiveValue::Set(task_id),
+                tag_id: ActiveValue::Set(tag_id),
+            };
+
+            new_join
+                .save(&db.connection)
+                .await
+                .map(|_| ())
+                .map_err(|err| err.to_string())
+        }
+    }
+}
+
+#[tauri::command]
+pub async fn add_new_tag(new_tag: String, db: State<'_, Db>) -> Result<tags::Model, String> {
+    let model = tags::ActiveModel {
+        id: ActiveValue::NotSet,
+        value: ActiveValue::Set(new_tag),
+    };
+
+    model
+        .save(&db.connection)
+        .await
+        .map(|tag| tag.try_into_model().unwrap())
+        .map_err(|err| err.to_string())
 }

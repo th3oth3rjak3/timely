@@ -13,7 +13,7 @@
     "windows": [
       {
         "title": "timely",
-        "minWidth": 300,
+        "minWidth": 500,
         "width": 1100,
         "height": 600,
         "decorations": false

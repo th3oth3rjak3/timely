@@ -32,6 +32,10 @@ pub fn run() {
             features::tasks::add_comment,
             features::tasks::update_comment,
             features::tasks::delete_comment,
+            features::tasks::remove_tag_from_task,
+            features::tasks::get_all_tags,
+            features::tasks::add_tag_to_task,
+            features::tasks::add_new_tag,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
         ])

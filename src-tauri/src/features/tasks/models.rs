@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use entity::comment;
+use entity::{comment, tags};
 use sea_orm::prelude::DateTimeUtc;
 use serde::{Deserialize, Serialize};
 
@@ -63,6 +63,7 @@ pub struct TaskRead {
     pub estimated_duration: Option<i64>,
     pub elapsed_duration: i64,
     pub comments: Vec<comment::Model>,
+    pub tags: Vec<tags::Model>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
