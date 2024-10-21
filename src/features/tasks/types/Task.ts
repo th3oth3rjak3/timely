@@ -2,6 +2,8 @@
 export type Task = {
     /** The unique id of the task. */
     id: number;
+    /** The short title of the task. */
+    title: string;
     /** The descriptive text explaining the work to be done. */
     description: string;
     /** The current working status of the task. */
@@ -40,6 +42,7 @@ export type Tag = {
 }
 
 export type NewTask = {
+    title: string;
     description: string;
     status: string;
     scheduledStartDate: Date | null;
@@ -50,6 +53,7 @@ export type NewTask = {
 export type EditTask = {
     /** The unique id of the task. */
     id: number;
+    title: string;
     /** The descriptive text explaining the work to be done. */
     description: string;
     /** The current working status of the task. */

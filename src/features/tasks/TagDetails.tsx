@@ -1,7 +1,6 @@
 import { TagsInput } from "@mantine/core";
-import { invoke } from "@tauri-apps/api/core";
-import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities";
-import { Tag, Task } from "./Task";
+import useTagService from "./hooks/useTagService";
+import { Tag, Task } from "./types/Task";
 
 type Props = {
     task: Task;
@@ -11,41 +10,34 @@ type Props = {
 
 function TagDetails(props: Props) {
 
+    const {
+        tryFindTagByName,
+        removeTagFromTask,
+        createNewTag,
+        addTagToTask,
+    } = useTagService();
+
+    /** All tag options mapped to their display value to choose from. */
     const tagOptions = props.tagOptions.map(opt => opt.value);
 
-    function removeTagByName(tagName: string) {
-        const tagIds = props.tagOptions.filter(tag => tag.value === tagName).map(tag => tag.id);
-        if (tagIds.length < 1) return;
+    /** The tags that have been selected by the user. */
+    const selectedTags = props.task.tags.map(tag => tag.value);
 
-        invoke<void>("remove_tag_from_task", { taskId: props.task.id, tagId: tagIds[0] })
-            .then(() => {
-                showSuccessNotification("Successfully removed tag.");
-                props.onTagsChanged();
-            })
-            .catch((err: string) => showErrorNotification("removing tag from task", err));
+    async function removeTagByName(tagName: string) {
+        const maybeTag = tryFindTagByName(tagName, props.tagOptions);
+        if (!maybeTag) return;
+        await removeTagFromTask(props.task.id, maybeTag)
+        props.onTagsChanged();
     }
 
-    function addTagToTask(tagId: number) {
-        invoke<void>("add_tag_to_task", { taskId: props.task.id, tagId })
-            .then(() => {
-                showSuccessNotification("Successfully added tag.");
-            })
-            .catch(err => showErrorNotification("adding tag to task", err));
-    }
-
-    function addTagByName(tagName: string) {
-        const tagIds = props.tagOptions.filter(tag => tag.value === tagName).map(tag => tag.id);
-        if (tagIds.length < 1) {
-            invoke<Tag>("add_new_tag", { newTag: tagName })
-                .then((tag) => {
-                    addTagToTask(tag.id);
-                    props.onTagsChanged();
-                })
-                .catch(err => showErrorNotification("creating new task", err));
-        } else {
-            addTagToTask(tagIds[0]);
+    async function addTagByName(tagName: string) {
+        let tag = tryFindTagByName(tagName, props.tagOptions);
+        if (!tag) {
+            tag = await createNewTag(tagName);
+            if (!tag) return;
         }
 
+        await addTagToTask(props.task.id, tag);
         props.onTagsChanged();
     }
 
@@ -53,7 +45,7 @@ function TagDetails(props: Props) {
         <TagsInput
             label="Tags"
             data={tagOptions}
-            value={props.task.tags.map(t => t.value)}
+            value={selectedTags}
             onRemove={(tagName) => removeTagByName(tagName)}
             onOptionSubmit={(tagName) => addTagByName(tagName)}
             acceptValueOnBlur={false}

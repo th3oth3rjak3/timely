@@ -9,7 +9,7 @@ type MyTooltipProps = {
 
 function MyTooltip(props: MyTooltipProps) {
 
-    const position: FloatingPosition = !!props.position ? props.position : "top";
+    const position: FloatingPosition = props.position ?? "top";
 
     const transition = (position: FloatingPosition): MantineTransition => {
         if (position === "left") {
@@ -34,7 +34,7 @@ function MyTooltip(props: MyTooltipProps) {
     return (
         <Tooltip
             label={props.label}
-            openDelay={1000}
+            openDelay={500}
             transitionProps={{ transition: transition(position), duration: 300 }}
             color="cyan"
             position={position}

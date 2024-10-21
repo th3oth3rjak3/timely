@@ -94,9 +94,7 @@ function MainLayout() {
             </AppShell.Navbar>
             <AppShell.Main>
                 <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6} h="calc(100vh - var(--app-shell-header-height, 0px))">
-                    <div className="px-3">
-                        <Outlet />
-                    </div>
+                    <Outlet />
                 </ScrollArea>
             </AppShell.Main>
         </AppShell >

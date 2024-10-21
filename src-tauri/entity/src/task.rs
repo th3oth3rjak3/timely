@@ -21,6 +21,7 @@ pub struct Model {
     pub last_resumed_date: Option<DateTimeUtc>,
     pub estimated_duration: Option<i64>,
     pub elapsed_duration: i64,
+    pub title: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

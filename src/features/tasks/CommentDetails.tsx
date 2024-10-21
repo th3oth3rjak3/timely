@@ -2,11 +2,10 @@ import { ActionIcon, Button, Group, Stack, Text, TextInput } from "@mantine/core
 import { useForm } from "@mantine/form";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
-import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
 import MyTooltip from "../../components/MyTooltip";
-import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities";
-import { Comment, Task } from "./Task";
+import useCommentService from "./hooks/useCommentService";
+import { Comment, Task } from "./types/Task";
 
 type Props = {
     task: Task
@@ -14,6 +13,12 @@ type Props = {
 }
 
 function CommentDetails(props: Props) {
+
+    const {
+        addComment,
+        editComment,
+        deleteComment
+    } = useCommentService();
 
     const newCommentForm = useForm({
         mode: "uncontrolled",
@@ -59,7 +64,7 @@ function CommentDetails(props: Props) {
             closeOnClickOutside: false,
             closeOnEscape: false,
             children: (
-                <form onSubmit={editCommentForm.onSubmit(editComment)}>
+                <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
                     <Stack>
                         <TextInput label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} />
                         <Group>
@@ -80,38 +85,35 @@ function CommentDetails(props: Props) {
         cancelProps: { variant: "light", color: "indigo" },
         labels: { confirm: "Confirm", cancel: "Deny" },
         onCancel: () => { },
-        onConfirm: () => deleteComment(comment)
+        onConfirm: () => deleteExistingComment(comment)
     });
 
-    function addNewComment(values: typeof newCommentForm.values) {
-        invoke<void>("add_comment", { comment: { taskId: props.task.id, message: values.comment } })
-            .then(() => {
-                showSuccessNotification("Added comment successfully.");
+    async function addNewComment(values: typeof newCommentForm.values) {
+        await addComment(
+            props.task.id,
+            values.comment,
+            () => {
                 props.onCommentChanged();
                 newCommentForm.reset();
                 modals.closeAll();
-            })
-            .catch((err: string) => showErrorNotification("adding new comment", err));
+            }
+        );
     }
 
-    function editComment(comment: typeof editCommentForm.values) {
-        invoke<void>("update_comment", { comment: { id: comment.id, message: comment.comment } })
-            .then(() => {
-                showSuccessNotification("Updated comment successfully.");
+    async function editExistingComment(comment: typeof editCommentForm.values) {
+        await editComment(
+            comment.id,
+            comment.comment,
+            () => {
                 props.onCommentChanged();
                 editCommentForm.reset();
                 modals.closeAll();
-            })
-            .catch((err: string) => showErrorNotification("updating comment", err));
+            }
+        );
     }
 
-    function deleteComment(comment: Comment) {
-        invoke<void>("delete_comment", { id: comment.id })
-            .then(() => {
-                showSuccessNotification("Deleted comment successfully.");
-                props.onCommentChanged();
-            })
-            .catch(err => showErrorNotification("deleting comment", err));
+    async function deleteExistingComment(comment: Comment) {
+        await deleteComment(comment.id, () => props.onCommentChanged());
     }
 
 
@@ -138,7 +140,7 @@ function CommentDetails(props: Props) {
     }
 
     return (
-        <Stack m="sm" gap={10}>
+        <Stack gap={10}>
             <Group>
                 <Text size="sm">Comments</Text>
                 <MyTooltip label="Add Comment" position="right">

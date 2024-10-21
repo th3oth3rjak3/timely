@@ -4,7 +4,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { TimeSpan } from "../../models/TimeSpan";
 import { maybeDate } from "../../utilities/dateUtilities";
-import { Task } from "./Task";
+import { Task } from "./types/Task";
 
 type Props = {
     task: Task,
@@ -20,6 +20,7 @@ function EditTaskDialog(props: Props) {
         mode: 'controlled',
         initialValues: {
             id: props.task.id,
+            title: props.task.title,
             description: props.task.description,
             status: props.task.status,
             scheduledStartDate: maybeDate(props.task.scheduledStartDate),
@@ -28,9 +29,12 @@ function EditTaskDialog(props: Props) {
             actualCompleteDate: maybeDate(props.task.actualCompleteDate),
             estimatedDuration: TimeSpan.tryFromSeconds(props.task.estimatedDuration)?.totalHours ?? null,
             elapsedDuration: TimeSpan.fromSeconds(props.task.elapsedDuration).totalHours,
+            comments: props.task.comments,
+            tags: props.task.tags
         },
         validate: {
-            description: (value) => value.length > 0 && value.length < 2000 ? null : "Description must be between 1 and 2000 characters"
+            description: (value) => value.length > 0 && value.length < 2000 ? null : "Description must be between 1 and 2000 characters",
+            title: (value) => value.length > 0 && value.length < 100 ? null : "Title must be between 1 and 100 characters"
         }
     });
 
@@ -54,6 +58,7 @@ function EditTaskDialog(props: Props) {
             <Modal opened={modalOpened} onClose={closeModal} title="Edit Task" closeOnClickOutside={false} closeOnEscape={false}>
                 <form onSubmit={form.onSubmit(submitForm)}>
                     <Stack gap="sm">
+                        <TextInput withAsterisk label="Title" key={form.key("title")} {...form.getInputProps("title")} />
                         <Textarea withAsterisk label="Description" key={form.key("description")} {...form.getInputProps("description")} autosize />
                         <TextInput label="Status" key={form.key("status")} {...form.getInputProps("status")} readOnly />
                         <DateInput

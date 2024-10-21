@@ -1,4 +1,4 @@
-import { Button, Grid, Group, Stack, Text, Textarea, TextInput } from "@mantine/core";
+import { Button, Grid, Group, Text, Textarea, TextInput } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -6,7 +6,7 @@ import MyTooltip from "../../components/MyTooltip";
 import { TimeSpan } from "../../models/TimeSpan";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
-import { Tag, Task } from "./Task";
+import { Tag, Task } from "./types/Task";
 
 export type TaskDetailParams = {
     task: Task;
@@ -175,39 +175,41 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
     }
 
     return (
-        <Stack gap={4} m={10}>
-            <Grid m="sm">
-                <Grid.Col span={12}>
-                    <Textarea label="Description" value={props.task.description} autosize readOnly />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                    <TextInput value={props.task.status} label="Status" readOnly />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                    <TextInput value={props.task.estimatedDuration !== null ? TimeSpan.fromSeconds(props.task.estimatedDuration).toString() : "Not Estimated"} label="Estimated Duration" readOnly />
-                </Grid.Col>
-                <Grid.Col span={4}>
-                    <TextInput value={TimeSpan.fromSeconds(props.task.elapsedDuration).toString()} label="Elapsed Duration" readOnly />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                    <TextInput label="Scheduled Start Date" value={props.task.scheduledStartDate !== null ? dayjs(props.task.scheduledStartDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                    <TextInput label="Scheduled Complete Date" value={props.task.scheduledCompleteDate !== null ? dayjs(props.task.scheduledCompleteDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                    <TextInput label="Actual Start Date" value={props.task.actualStartDate !== null ? dayjs(props.task.actualStartDate).format("MM/DD/YYYY") : "Not Started"} readOnly />
-                </Grid.Col>
-                <Grid.Col span={6}>
-                    <TextInput label="Actual Complete Date" value={props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed"} readOnly />
-                </Grid.Col>
-                <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} />}</Grid.Col>
-            </Grid>
-            <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
-            <Group gap={6} ml={10} mt={10}>
-                {buttons(props.task.status)}
-            </Group>
-        </Stack>
+        <Grid p="sm">
+            <Grid.Col span={12}>
+                <Textarea label="Description" value={props.task.description} autosize readOnly />
+            </Grid.Col>
+            <Grid.Col span={4}>
+                <TextInput value={props.task.status} label="Status" readOnly />
+            </Grid.Col>
+            <Grid.Col span={4}>
+                <TextInput value={props.task.estimatedDuration !== null ? TimeSpan.fromSeconds(props.task.estimatedDuration).toString() : "Not Estimated"} label="Estimated Duration" readOnly />
+            </Grid.Col>
+            <Grid.Col span={4}>
+                <TextInput value={TimeSpan.fromSeconds(props.task.elapsedDuration).toString()} label="Elapsed Duration" readOnly />
+            </Grid.Col>
+            <Grid.Col span={6}>
+                <TextInput label="Scheduled Start Date" value={props.task.scheduledStartDate !== null ? dayjs(props.task.scheduledStartDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
+            </Grid.Col>
+            <Grid.Col span={6}>
+                <TextInput label="Scheduled Complete Date" value={props.task.scheduledCompleteDate !== null ? dayjs(props.task.scheduledCompleteDate).format("MM/DD/YYYY") : "Not Scheduled"} readOnly />
+            </Grid.Col>
+            <Grid.Col span={6}>
+                <TextInput label="Actual Start Date" value={props.task.actualStartDate !== null ? dayjs(props.task.actualStartDate).format("MM/DD/YYYY") : "Not Started"} readOnly />
+            </Grid.Col>
+            <Grid.Col span={6}>
+                <TextInput label="Actual Complete Date" value={props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed"} readOnly />
+            </Grid.Col>
+            <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} />}</Grid.Col>
+            <Grid.Col span={12}>
+                <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
+            </Grid.Col>
+            <Grid.Col span={12}>
+                <Group gap={6}>
+                    {buttons(props.task.status)}
+                </Group>
+            </Grid.Col>
+        </Grid>
     );
 }
 

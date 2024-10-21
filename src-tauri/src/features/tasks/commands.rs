@@ -13,6 +13,7 @@ pub async fn create_task(new_task: NewTask, db: State<'_, Db>) -> Result<(), Str
     let new_task = task::ActiveModel {
         id: ActiveValue::NotSet,
         description: ActiveValue::Set(new_task.description),
+        title: ActiveValue::Set(new_task.title),
         status: ActiveValue::Set(new_task.status.into()),
         scheduled_start_date: ActiveValue::Set(new_task.scheduled_start_date),
         scheduled_complete_date: ActiveValue::Set(new_task.scheduled_complete_date),
@@ -43,7 +44,11 @@ pub async fn get_tasks(
     let mut search_expr = Expr::col(task::Column::Status).is_in(params.statuses);
 
     if let Some(query) = &params.query_string {
-        search_expr = search_expr.and(task::Column::Description.contains(query))
+        search_expr = search_expr.and(
+            task::Column::Description
+                .contains(query)
+                .or(task::Column::Title.contains(query)),
+        )
     }
 
     let mut task_query = Task::find().filter(search_expr);
@@ -51,6 +56,7 @@ pub async fn get_tasks(
     if let (Some(field), Some(dir)) = (params.sort_field, params.sort_direction) {
         let col = match field.to_lowercase().as_str() {
             "status" => task::Column::Status,
+            "title" => task::Column::Title,
             "description" => task::Column::Description,
             _ => task::Column::ScheduledCompleteDate,
         };
@@ -102,6 +108,7 @@ pub async fn get_tasks(
             comments.sort_by(|a, b| a.created.cmp(&b.created));
             TaskRead {
                 id: task.id,
+                title: task.title,
                 description: task.description,
                 status: task.status.into(),
                 scheduled_start_date: task.scheduled_start_date,
@@ -232,6 +239,7 @@ pub async fn edit_task(task: EditTask, db: State<'_, Db>) -> Result<(), String> 
         Some(model) => {
             let mut existing_task = model.clone().into_active_model();
 
+            existing_task.title = Set(task.title);
             existing_task.description = Set(task.description);
             existing_task.scheduled_start_date = Set(task.scheduled_start_date);
             existing_task.scheduled_complete_date = Set(task.scheduled_complete_date);

@@ -53,6 +53,7 @@ impl From<Status> for String {
 #[serde(rename_all = "camelCase")]
 pub struct TaskRead {
     pub id: i64,
+    pub title: String,
     pub description: String,
     pub status: Status,
     pub scheduled_start_date: Option<DateTimeUtc>,
@@ -84,6 +85,7 @@ pub struct NewComment {
 #[serde(rename_all = "camelCase")]
 pub struct EditTask {
     pub id: i32,
+    pub title: String,
     pub description: String,
     pub status: Status,
     pub scheduled_start_date: Option<DateTime<Utc>>,
@@ -98,6 +100,7 @@ pub struct EditTask {
 #[serde(rename_all = "camelCase")]
 pub struct NewTask {
     pub description: String,
+    pub title: String,
     pub status: Status,
     pub scheduled_start_date: Option<DateTime<Utc>>,
     pub scheduled_complete_date: Option<DateTime<Utc>>,
