@@ -1,3 +1,4 @@
+@layer mantine, mantine-contextmenu;
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

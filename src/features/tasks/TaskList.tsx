@@ -1,6 +1,7 @@
 import { ActionIcon, Group, MultiSelect, Stack, Text, TextInput } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
-import { IconRefresh, IconSearch, IconX } from "@tabler/icons-react";
+import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
+import { IconArrowBackUp, IconCancel, IconCheck, IconPlayerPause, IconPlayerPlay, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
 import MyTooltip from "../../components/MyTooltip.tsx";
@@ -18,10 +19,11 @@ import NewTaskDialog from "./NewTaskDialog.tsx";
 import TaskDetail from "./TaskDetail.tsx";
 import { Task } from "./types/Task.ts";
 
-
 function TaskList() {
 
     //#region State
+
+    const { showContextMenu, hideContextMenu } = useContextMenu();
 
     /** The globally set number of items per page in the application. */
     const pageSize = useAppSelector(state => state.settings.pageSize);
@@ -78,6 +80,8 @@ function TaskList() {
         reopenTask
     } = useTaskService(fetchAllData);
 
+    const isTouch = useMediaQuery('(pointer: coarse)');
+
     //#endregion
 
     //#region Functions
@@ -91,6 +95,110 @@ function TaskList() {
     function updatePageSize(size: number) {
         setPage(1);
         dispatch(setPageSize(size));
+    }
+
+    function getContextMenuItems(task: Task): ContextMenuContent {
+
+        const startTaskItem = {
+            key: 'start-task',
+            title: 'Start Task',
+            icon: <IconPlayerPlay size={16} />,
+            onClick: () => startTask(task)
+        };
+
+        const pauseTaskItem = {
+            key: 'pause-task',
+            title: 'Pause Task',
+            icon: <IconPlayerPause size={16} />,
+            onClick: () => pauseTask(task),
+        };
+
+        const resumeTaskItem = {
+            key: 'resume-task',
+            title: 'Resume Task',
+            icon: <IconPlayerPlay size={16} />,
+            onClick: () => resumeTask(task),
+        };
+
+        const finishTaskItem = {
+            key: 'finish-task',
+            title: 'Finish Task',
+            icon: <IconCheck size={16} />,
+            onClick: () => finishTask(task),
+        };
+
+        const reopenTaskItem = {
+            key: 'reopen-task',
+            title: 'Reopen Task',
+            icon: <IconArrowBackUp size={16} />,
+            onClick: () => reopenTask(task),
+        };
+
+        const cancelTaskItem = {
+            key: 'cancel-task',
+            title: 'Cancel Task',
+            icon: <IconCancel size={16} />,
+            onClick: () => cancelTask(task),
+        };
+
+        const restoreTaskItem = {
+            key: 'restore-task',
+            title: 'Restore Task',
+            icon: <IconArrowBackUp size={16} />,
+            onClick: () => restoreTask(task),
+        };
+
+        const deleteTaskItem = {
+            key: 'delete-task',
+            title: 'Delete Task',
+            icon: <IconTrash size={16} />,
+            onClick: () => deleteTask(task),
+        };
+
+        let status = task.status.toLowerCase();
+
+        if (status === "todo") {
+            return [
+                startTaskItem,
+                cancelTaskItem,
+                deleteTaskItem,
+            ];
+        }
+
+        if (status === "doing") {
+            return [
+                pauseTaskItem,
+                finishTaskItem,
+                cancelTaskItem,
+                deleteTaskItem,
+            ];
+        }
+
+        if (status === "done") {
+            return [
+                reopenTaskItem,
+                deleteTaskItem,
+            ];
+        }
+
+        if (status === "paused") {
+            return [
+                resumeTaskItem,
+                finishTaskItem,
+                cancelTaskItem,
+                deleteTaskItem,
+            ];
+        }
+
+        if (status === "cancelled") {
+            return [
+                restoreTaskItem,
+                deleteTaskItem,
+            ];
+        }
+
+
+        return [];
     }
 
     //#endregion
@@ -192,7 +300,11 @@ function TaskList() {
             {loading
                 ? <></>
                 : <DataTable
+                    textSelectionDisabled={isTouch}
+                    onRowContextMenu={({ record, event }) => showContextMenu(getContextMenuItems(record))(event)}
+                    onScroll={hideContextMenu}
                     withTableBorder
+                    withColumnBorders
                     fz="sm"
                     columns={columns}
                     records={tasks}

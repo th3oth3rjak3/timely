@@ -30,7 +30,6 @@ export type TaskDetailParams = {
  * @returns A JSX element.
  */
 function TaskDetail(props: TaskDetailParams): JSX.Element {
-
     const buttons = (statusDescription: string): JSX.Element => {
 
         const openCancelModal = () => modals.openConfirmModal({

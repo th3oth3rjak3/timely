@@ -25,6 +25,7 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
+    "mantine-contextmenu": "^7.12.2",
     "mantine-datatable": "^7.12.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

@@ -1,14 +1,16 @@
 import '@mantine/charts/styles.css';
 import { MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
+import '@mantine/core/styles.layer.css';
 import '@mantine/dates/styles.css';
 import '@mantine/dropzone/styles.css';
 import { ModalsProvider } from '@mantine/modals';
 import { Notifications } from '@mantine/notifications';
 import '@mantine/notifications/styles.css';
-
 import { Router } from "@remix-run/router";
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core'; // TODO: remove this and generate a service
+import 'mantine-contextmenu/styles.css';
+import 'mantine-contextmenu/styles.layer.css';
 import 'mantine-datatable/styles.css';
 import { useEffect, useState } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
@@ -20,6 +22,7 @@ import MainLayout from './layout/MainLayout';
 import { useAppDispatch } from './redux/hooks';
 import { setHomePage, setPageSize } from './redux/reducers/settingsSlice';
 
+import { ContextMenuProvider } from 'mantine-contextmenu';
 import './App.css';
 
 function App() {
@@ -69,19 +72,23 @@ function App() {
   if (!!router) {
     return (
       <MantineProvider defaultColorScheme="dark" >
-        <ModalsProvider>
-          <Notifications />
-          <RouterProvider router={router} />
-        </ModalsProvider>
+        <ContextMenuProvider>
+          <ModalsProvider>
+            <Notifications />
+            <RouterProvider router={router} />
+          </ModalsProvider>
+        </ContextMenuProvider>
       </MantineProvider>
     );
   }
 
   return (
     <MantineProvider defaultColorScheme="dark" >
-      <ModalsProvider>
-        <Notifications />
-      </ModalsProvider>
+      <ContextMenuProvider>
+        <ModalsProvider>
+          <Notifications />
+        </ModalsProvider>
+      </ContextMenuProvider>
     </MantineProvider>
   );
 
