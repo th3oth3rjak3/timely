@@ -7,48 +7,35 @@
 
 import { Button, Grid, Group, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { invoke } from "@tauri-apps/api/core";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import { setHomePage, setPageSize } from "../../redux/reducers/settingsSlice";
+import { useAppSelector } from "../../redux/hooks";
 import { toSelectOptions } from "../../utilities/formUtilities";
-import { showErrorNotification, showSuccessNotification } from "../../utilities/notificationUtilities";
-import { UserSettings } from "./UserSettings";
+import useSettingsService from "./hooks/useSettingsService";
 
 
 /**
  * Settings page.
  */
 function Settings() {
+    const { updateUserSettings } = useSettingsService();
 
     type Settings = {
         pageSize: string;
         homePage: string;
     }
 
-    const pageSize = useAppSelector(state => state.settings.pageSize);
+    const userSettings = useAppSelector(state => state.settings.userSettings);
     const pageSizeOptions = useAppSelector(state => state.settings.pageSizeOptions);
-    const homePage = useAppSelector(state => state.settings.homePage);
     const homePageOptions = useAppSelector(state => state.settings.homePageOptions);
 
-    const dispatch = useAppDispatch();
-
-    const form = useForm({
+    const form = useForm<Settings>({
         mode: 'controlled',
-        initialValues: { pageSize: pageSize.toString(), homePage: homePage } as Settings,
+        initialValues: { pageSize: userSettings.pageSize.toString(), homePage: userSettings.homePage },
         initialDirty: { pageSize: false, homePage: false },
         initialTouched: { pageSize: false, homePage: false }
     });
 
-    function setSettingsValues(settings: Settings) {
-
-        invoke<UserSettings>("update_user_settings", { settings: { homePage: settings.homePage, pageSize: Number(settings.pageSize) } })
-            .then((updated) => {
-                dispatch(setPageSize(updated.pageSize));
-                dispatch(setHomePage(updated.homePage));
-                showSuccessNotification("Successfully updated settings.")
-                form.resetDirty();
-            })
-            .catch((err: string) => showErrorNotification("updating user settings", err));
+    async function setSettingsValues(settings: Settings) {
+        await updateUserSettings(settings, () => form.resetDirty());
     }
 
     function resetForm() {

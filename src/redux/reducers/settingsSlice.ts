@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { UserSettings } from "../../features/settings/UserSettings";
 import { SelectOption } from "../../utilities/formUtilities";
 
 /** Settings that are applied to the application. */
@@ -11,7 +12,10 @@ export type SettingsState = {
      * This will allow the user to specify their preferred start page. 
      * */
     homePage: string;
+    /** The list of pages available to select as the homepage. */
     homePageOptions: SelectOption[];
+    /** The user settings from the database. */
+    userSettings: UserSettings;
 }
 
 const initialState: SettingsState = {
@@ -21,7 +25,11 @@ const initialState: SettingsState = {
     homePageOptions: [
         { label: "Settings", value: "/settings" },
         { label: "Tasks List", value: "/tasks" },
-        { label: "Timer", value: "/timer" }]
+        { label: "Timer", value: "/timer" }],
+    userSettings: {
+        homePage: "",
+        pageSize: 5,
+    }
 };
 
 export const settingsSlice = createSlice({
@@ -29,16 +37,17 @@ export const settingsSlice = createSlice({
     initialState,
     reducers: {
         /** Set the number of list items to be shown per page. */
-        setPageSize: (settings, action: PayloadAction<number>) => {
-            settings.pageSize = action.payload;
+        setPageSize: (state, action: PayloadAction<number>) => {
+            state.pageSize = action.payload;
         },
-        /** Set the user's preferred root route to be shown on application load. */
-        setHomePage: (settings, action: PayloadAction<string>) => {
-            settings.homePage = action.payload;
+        setUserSettings: (state, action: PayloadAction<UserSettings>) => {
+            state.userSettings = action.payload;
+            state.homePage = action.payload.homePage;
+            state.pageSize = action.payload.pageSize;
         }
     }
 });
 
-export const { setPageSize, setHomePage } = settingsSlice.actions;
+export const { setPageSize, setUserSettings } = settingsSlice.actions;
 
 export default settingsSlice.reducer;
