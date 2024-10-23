@@ -5,14 +5,14 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import MyTooltip from "../components/MyTooltip";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { closeNavbar, toggleNavbar } from "../redux/reducers/globalSlice";
+import { closeNavbar, toggleNavbar } from "../redux/reducers/settingsSlice";
 import { BG_COLOR, FG_COLOR } from "../utilities/colorUtilities";
 import Navbar from "./Navbar";
 
 
 function MainLayout() {
     /** An app store dispatch function to update store values. */
-    const navOpened = useAppSelector(state => state.global.navbarOpen);
+    const navOpened = useAppSelector(state => state.settings.navbarOpen);
     const dispatch = useAppDispatch();
 
     const [maximized, setMaximized] = useState(false);

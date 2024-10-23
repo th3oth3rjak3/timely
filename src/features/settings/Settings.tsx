@@ -1,10 +1,3 @@
-/**
- * TODO: 
- *  - Get user settings from database - belongs in the application component.
- *  - Store user settings in database whenever they're changed here.
- *  - Update the redux store when values change.
- */
-
 import { Button, Grid, Group, Select, Stack, Text } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useAppSelector } from "../../redux/hooks";
@@ -24,7 +17,7 @@ function Settings() {
     }
 
     const userSettings = useAppSelector(state => state.settings.userSettings);
-    const pageSizeOptions = useAppSelector(state => state.settings.pageSizeOptions);
+    const pageSizeOptions = useAppSelector(state => state.settings.taskListSettings.pageSizeOptions);
     const homePageOptions = useAppSelector(state => state.settings.homePageOptions);
 
     const form = useForm<Settings>({

@@ -5,13 +5,13 @@ import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPause, IconPlayerPlay, IconPlus, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
-import { DataTable, DataTableSortStatus } from "mantine-datatable";
+import { DataTable } from "mantine-datatable";
 import { useEffect, useState } from "react";
 import MyTooltip from "../../components/MyTooltip.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
-import { setPageSize } from "../../redux/reducers/settingsSlice.ts";
+import { setCurrentPage, setPageSize, setSortStatus } from "../../redux/reducers/settingsSlice.ts";
 import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
@@ -28,16 +28,17 @@ function TaskList() {
     const { showContextMenu, hideContextMenu } = useContextMenu();
 
     /** The globally set number of items per page in the application. */
-    const pageSize = useAppSelector(state => state.settings.pageSize);
+    const pageSize = useAppSelector(state => state.settings.taskListSettings.pageSize);
 
     /** The globally set choices for how many items per page can be chosen. */
-    const pageSizeOptions = useAppSelector(state => state.settings.pageSizeOptions);
+    const pageSizeOptions = useAppSelector(state => state.settings.taskListSettings.pageSizeOptions);
+
+    const currentPage = useAppSelector(state => state.settings.taskListSettings.currentPage);
+    const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
+
 
     /** An app store dispatch function to update store values. */
     const dispatch = useAppDispatch();
-
-    // The current page the user is viewing (1 based).
-    const [page, setPage] = useState(1); // TODO: appselector
 
     // The query input for the description filter.
     const [descriptionQuery, setDescriptionQuery] = useState<string>(""); // TODO: appselector
@@ -49,16 +50,10 @@ function TaskList() {
     // The list of currently selected statuses by the user.
     const [selectedStatuses, setSelectedStatuses] = useState<string[]>(["Todo", "Doing", "Paused"]); // TODO: appselector
 
-    // The current sort status.
-    const [sortStatus, setSortStatus] = useState<DataTableSortStatus<Task>>({
-        columnAccessor: 'scheduledCompleteDate',
-        direction: 'asc',
-    }) // TODO: appselector
-
     const [loading, setLoading] = useState(true);
 
     const searchParams = useTaskSearchParams(
-        page,
+        currentPage,
         pageSize,
         selectedStatuses,
         debouncedDescriptionQuery,
@@ -104,7 +99,7 @@ function TaskList() {
 
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
-        setPage(1);
+        dispatch(setCurrentPage(1));
         dispatch(setPageSize(size));
     }
 
@@ -470,15 +465,15 @@ function TaskList() {
                     fz="sm"
                     columns={columns}
                     records={tasks}
-                    page={page}
+                    page={currentPage}
                     totalRecords={recordCount}
                     recordsPerPage={pageSize}
-                    onPageChange={setPage}
+                    onPageChange={(page) => dispatch(setCurrentPage(page))}
                     recordsPerPageOptions={pageSizeOptions}
                     onRecordsPerPageChange={(size) => updatePageSize(size)}
                     key={"id"}
                     sortStatus={sortStatus}
-                    onSortStatusChange={setSortStatus}
+                    onSortStatusChange={status => dispatch(setSortStatus(status))}
                     rowExpansion={{
                         content: ({ record }) => {
                             return (
