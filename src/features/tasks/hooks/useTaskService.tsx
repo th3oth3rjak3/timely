@@ -1,3 +1,5 @@
+import { Text } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
 import { EditTask, NewTask, Task } from "../types/Task";
@@ -81,11 +83,21 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
      * @param task - The task to cancel.
     */
     const cancelTask = async (task: Task) => {
-        await invoke<void>({
-            command: "cancel_task",
-            params: { taskId: task.id },
-            successMessage: "Task cancelled successfully.",
-            callback: fetchAllData
+        modals.openConfirmModal({
+            title: 'Cancel Task',
+            children: (
+                <Text>Are you sure you want to cancel this task?</Text>
+            ),
+            labels: { confirm: "Confirm", cancel: "Deny" },
+            confirmProps: { variant: "light", color: "cyan" },
+            cancelProps: { variant: "light", color: "indigo" },
+            onCancel: () => { },
+            onConfirm: async () => await invoke<void>({
+                command: "cancel_task",
+                params: { taskId: task.id },
+                successMessage: "Task cancelled successfully.",
+                callback: fetchAllData
+            })
         });
     }
 
@@ -117,11 +129,21 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
      * @param task - The task to be deleted.
      */
     const deleteTask = async (task: Task) => {
-        await invoke<void>({
-            command: "delete_task",
-            params: { taskId: task.id },
-            successMessage: "Task deleted successfully.",
-            callback: fetchAllData
+        modals.openConfirmModal({
+            title: "Delete Task",
+            children: (
+                <Text>Are you sure you want to delete this task?</Text>
+            ),
+            confirmProps: { variant: "light", color: "cyan" },
+            cancelProps: { variant: "light", color: "indigo" },
+            labels: { confirm: "Confirm", cancel: "Deny" },
+            onCancel: () => { },
+            onConfirm: async () => await invoke<void>({
+                command: "delete_task",
+                params: { taskId: task.id },
+                successMessage: "Task deleted successfully.",
+                callback: fetchAllData
+            })
         });
     }
 
@@ -130,7 +152,7 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
      * @param task - The updated task to save.
      * @param callback - A void function to update any external state after the fact.
      */
-    const editTask = async (previousTask: Task | null, task: EditTask, callback: () => void) => {
+    const editTask = async (previousTask: Task | null, task: EditTask, callback?: () => void) => {
         if (!!previousTask && previousTask !== null && previousTask.elapsedDuration === task.elapsedDuration) {
             task.elapsedDuration = null;
         }
@@ -141,8 +163,10 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
             successMessage: "Task updated successfully.",
             callback: fetchAllData
         });
-        callback();
+        callback?.();
     }
+
+
 
     return {
         searchForTasks,
@@ -155,7 +179,7 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
         cancelTask,
         restoreTask,
         reopenTask,
-        deleteTask
+        deleteTask,
     };
 }
 

@@ -1,5 +1,4 @@
-import { Button, Grid, Group, Text, Textarea, TextInput } from "@mantine/core";
-import { modals } from "@mantine/modals";
+import { Button, Grid, Group, Textarea, TextInput } from "@mantine/core";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import MyTooltip from "../../components/MyTooltip";
@@ -32,30 +31,6 @@ export type TaskDetailParams = {
 function TaskDetail(props: TaskDetailParams): JSX.Element {
     const buttons = (statusDescription: string): JSX.Element => {
 
-        const openCancelModal = () => modals.openConfirmModal({
-            title: 'Cancel Task',
-            children: (
-                <Text>Are you sure you want to cancel this task?</Text>
-            ),
-            labels: { confirm: "Confirm", cancel: "Deny" },
-            confirmProps: { variant: "light", color: "cyan" },
-            cancelProps: { variant: "light", color: "indigo" },
-            onCancel: () => { },
-            onConfirm: () => props.onCancelled(props.task)
-        });
-
-        const openDeleteModal = () => modals.openConfirmModal({
-            title: "Delete Task",
-            children: (
-                <Text>Are you sure you want to delete this task?</Text>
-            ),
-            confirmProps: { variant: "light", color: "cyan" },
-            cancelProps: { variant: "light", color: "indigo" },
-            labels: { confirm: "Confirm", cancel: "Deny" },
-            onCancel: () => { },
-            onConfirm: () => props.onDeleted(props.task)
-        });
-
         const status = statusDescription.toLowerCase();
 
         const startButton = (
@@ -81,7 +56,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
 
         const cancelButton = (
             <MyTooltip label="Cancel Task">
-                <Button size="compact-sm" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => openCancelModal()}>Cancel</Button>
+                <Button size="compact-sm" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => props.onCancelled(props.task)}>Cancel</Button>
             </MyTooltip>
         );
 
@@ -107,7 +82,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
 
         const deleteButton = (
             <MyTooltip label="Delete Task">
-                <Button size="compact-sm" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => openDeleteModal()}>Delete</Button>
+                <Button size="compact-sm" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => props.onDeleted(props.task)}>Delete</Button>
             </MyTooltip>
         );
 

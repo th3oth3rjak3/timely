@@ -1,23 +1,25 @@
-import { ActionIcon, Group, MultiSelect, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Group, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput } from "@mantine/core";
+import { DateInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
 import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
-import { IconArrowBackUp, IconCancel, IconCheck, IconPlayerPause, IconPlayerPlay, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import { modals } from "@mantine/modals";
+import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPause, IconPlayerPlay, IconPlus, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
 import { useEffect, useState } from "react";
 import MyTooltip from "../../components/MyTooltip.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
+import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
 import { setPageSize } from "../../redux/reducers/settingsSlice.ts";
 import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
-import { maybeFormattedDate } from "../../utilities/dateUtilities.ts";
+import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
-import EditTaskDialog from "./EditTaskDialog.tsx";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskSearchParams from "./hooks/useTaskSearchParams.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
-import NewTaskDialog from "./NewTaskDialog.tsx";
 import TaskDetail from "./TaskDetail.tsx";
-import { Task } from "./types/Task.ts";
+import { NewTask, Task } from "./types/Task.ts";
 
 function TaskList() {
 
@@ -53,8 +55,6 @@ function TaskList() {
         direction: 'asc',
     }) // TODO: appselector
 
-    const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
-    const [editDialogOpen, setEditDialogOpen] = useState<boolean>(false);
     const [loading, setLoading] = useState(true);
 
     const searchParams = useTaskSearchParams(
@@ -77,19 +77,30 @@ function TaskList() {
         restoreTask,
         deleteTask,
         finishTask,
-        reopenTask
+        reopenTask,
     } = useTaskService(fetchAllData);
 
     const isTouch = useMediaQuery('(pointer: coarse)');
 
+    const editForm = useForm<Task>({
+        mode: 'uncontrolled',
+        validate: {
+            description: (value) => value.length > 0 && value.length < 2000 ? null : "Description must be between 1 and 2000 characters",
+            title: (value) => value.length > 0 && value.length < 100 ? null : "Title must be between 1 and 100 characters"
+        }
+    });
+
+    const newForm = useForm<NewTask>({
+        mode: 'uncontrolled',
+        validate: {
+            description: (value) => value.length > 0 && value.length < 2000 ? null : "Description must be between 1 and 2000 characters",
+            title: (value) => value.length > 0 && value.length < 100 ? null : "Title must be between 1 and 100 characters"
+        }
+    });
+
     //#endregion
 
     //#region Functions
-
-    function openEditDialog(task: Task) {
-        setTaskToEdit(task);
-        setEditDialogOpen(true);
-    }
 
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
@@ -155,11 +166,19 @@ function TaskList() {
             onClick: () => deleteTask(task),
         };
 
+        const editTaskItem = {
+            key: 'edit-task',
+            title: 'Edit Task',
+            icon: <IconEdit size={16} />,
+            onClick: () => beginEditingTask(task)
+        }
+
         let status = task.status.toLowerCase();
 
         if (status === "todo") {
             return [
                 startTaskItem,
+                editTaskItem,
                 cancelTaskItem,
                 deleteTaskItem,
             ];
@@ -169,6 +188,7 @@ function TaskList() {
             return [
                 pauseTaskItem,
                 finishTaskItem,
+                editTaskItem,
                 cancelTaskItem,
                 deleteTaskItem,
             ];
@@ -185,6 +205,7 @@ function TaskList() {
             return [
                 resumeTaskItem,
                 finishTaskItem,
+                editTaskItem,
                 cancelTaskItem,
                 deleteTaskItem,
             ];
@@ -197,10 +218,157 @@ function TaskList() {
             ];
         }
 
-
         return [];
     }
 
+    const createNewTask = () => {
+        const onValidSubmit = async (newTask: NewTask) => {
+            const newItem = { ...newTask };
+            modals.closeAll();
+            if (!!newTask.estimatedDuration && newTask.estimatedDuration !== null) {
+                newItem.estimatedDuration = TimeSpan.fromHours(newTask.estimatedDuration).totalSeconds;
+            }
+            await createTask(newItem);
+            newForm.reset();
+        }
+
+        openNewModal(onValidSubmit);
+    }
+
+    const openNewModal = (callback: (newTask: NewTask) => void) => {
+        newForm.setValues({
+            title: "",
+            description: "",
+            status: "Todo",
+            scheduledStartDate: null,
+            scheduledCompleteDate: null,
+            estimatedDuration: null,
+        });
+
+        modals.open({
+            title: "New Task",
+            children: (
+                <>
+                    <form onSubmit={newForm.onSubmit(callback)}>
+                        <Stack gap="sm">
+                            <TextInput withAsterisk label="Title" key={newForm.key("title")} {...newForm.getInputProps("title")} />
+                            <Textarea withAsterisk label="Description" key={newForm.key("description")} {...newForm.getInputProps("description")} autosize />
+                            <TextInput label="Status" key={newForm.key("status")} {...newForm.getInputProps("status")} readOnly />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={new Date()}
+                                label="Start By"
+                                key={newForm.key("scheduledStartDate")}
+                                {...newForm.getInputProps("scheduledStartDate")} />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={new Date()}
+                                label="Due By"
+                                key={newForm.key("scheduledCompleteDate")}
+                                {...newForm.getInputProps("scheduledCompleteDate")} />
+                            <NumberInput label="Estimated Duration (Hours)" key={newForm.key("estimatedDuration")} {...newForm.getInputProps("estimatedDuration")} suffix=" hour(s)" decimalScale={1} />
+                        </Stack>
+                        <Group justify="flex-end" mt="md">
+                            <Button type="submit" variant="light" color="cyan">Submit</Button>
+                        </Group>
+                    </form>
+                </>
+            )
+        });
+    }
+
+    const beginEditingTask = (task: Task) => {
+
+        const onValidSubmit = async (editedTask: Task) => {
+            const updatedItem = { ...editedTask };
+            modals.closeAll();
+            if (!!editedTask.estimatedDuration && editedTask.estimatedDuration !== null) {
+                updatedItem.estimatedDuration = TimeSpan.fromHours(editedTask.estimatedDuration).totalSeconds;
+            }
+
+            updatedItem.elapsedDuration = TimeSpan.fromHours(editedTask.elapsedDuration).totalSeconds;
+
+            await editTask(task, updatedItem);
+        }
+
+        openEditModal(task, onValidSubmit);
+    }
+
+
+    const openEditModal = (task: Task, callback: (task: Task) => void) => {
+        const formInput = {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            scheduledStartDate: maybeDate(task.scheduledStartDate),
+            scheduledCompleteDate: maybeDate(task.scheduledCompleteDate),
+            actualStartDate: maybeDate(task.actualStartDate),
+            actualCompleteDate: maybeDate(task.actualCompleteDate),
+            estimatedDuration: TimeSpan.tryFromSeconds(task.estimatedDuration)?.totalHours ?? null,
+            elapsedDuration: TimeSpan.fromSeconds(task.elapsedDuration).totalHours,
+            comments: task.comments,
+            tags: task.tags
+        };
+
+        editForm.setValues(formInput);
+
+        modals.open({
+            title: "Edit Task",
+            children: (
+                <>
+                    <form onSubmit={editForm.onSubmit(callback)}>
+                        <Stack gap="sm">
+                            <TextInput withAsterisk label="Title" key={editForm.key("title")} {...editForm.getInputProps("title")} />
+                            <Textarea withAsterisk label="Description" key={editForm.key("description")} {...editForm.getInputProps("description")} autosize />
+                            <TextInput label="Status" key={editForm.key("status")} {...editForm.getInputProps("status")} readOnly />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={editForm.getValues().scheduledStartDate}
+                                label="Start By"
+                                key={editForm.key("scheduledStartDate")}
+                                {...editForm.getInputProps("scheduledStartDate")} />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={editForm.getValues().scheduledCompleteDate}
+                                label="Due By"
+                                key={editForm.key("scheduledCompleteDate")}
+                                {...editForm.getInputProps("scheduledCompleteDate")} />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={editForm.getValues().actualStartDate}
+                                label="Started On"
+                                key={editForm.key("actualStartDate")}
+                                {...editForm.getInputProps("actualStartDate")} />
+                            <DateInput
+                                valueFormat="MM/DD/YYYY"
+                                highlightToday={true}
+                                clearable
+                                defaultValue={editForm.getValues().actualCompleteDate}
+                                label="Finished On"
+                                key={editForm.key("actualCompleteDate")}
+                                {...editForm.getInputProps("actualCompleteDate")} />
+                            <NumberInput label="Estimated Duration" key={editForm.key("estimatedDuration")} {...editForm.getInputProps("estimatedDuration")} suffix=" hour(s)" decimalScale={1} />
+                            <NumberInput label="Elapsed Duration" key={editForm.key("elapsedDuration")} {...editForm.getInputProps("elapsedDuration")} suffix=" hour(s)" decimalScale={1} />
+                        </Stack>
+                        <Group justify="flex-end" mt="md">
+                            <Button type="submit" variant="light" color="cyan">Submit</Button>
+                        </Group>
+                    </form>
+                </>
+            )
+        });
+    }
     //#endregion
 
     //#region Configuration
@@ -278,18 +446,12 @@ function TaskList() {
     //#region Component
     return (
         <Stack m={10}>
-            {taskToEdit === null
-                ? null
-                : <EditTaskDialog
-                    task={taskToEdit}
-                    onValidSubmit={(task) => editTask(taskToEdit, task, () => setTaskToEdit(null))}
-                    isOpen={editDialogOpen}
-                    onClosed={() => setTaskToEdit(null)} />
-            }
             <Group justify="space-between">
                 <Text size="xl">Tasks</Text>
                 <Group>
-                    <NewTaskDialog onValidSubmit={createTask} />
+                    <ActionIcon variant="light" color="cyan" onClick={() => createNewTask()}>
+                        <IconPlus />
+                    </ActionIcon>
                     <MyTooltip label="Refresh Tasks" position="left">
                         <ActionIcon variant="light" color="cyan" onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
                             <IconRefresh />
@@ -330,7 +492,7 @@ function TaskList() {
                                     onRestored={restoreTask}
                                     onCancelled={cancelTask}
                                     onReopened={reopenTask}
-                                    onEdited={openEditDialog}
+                                    onEdited={beginEditingTask}
                                     onDeleted={deleteTask}
                                     onCommentChanged={fetchAllData}
                                     onTagsChanged={fetchAllData} />
@@ -343,8 +505,8 @@ function TaskList() {
                 />}
         </Stack>
     );
-
-    //#endregion
 }
+//#endregion
+
 
 export default TaskList;
