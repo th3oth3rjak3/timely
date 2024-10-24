@@ -3,9 +3,29 @@ pub mod features;
 pub mod models;
 pub mod sql_utilties;
 
+use ::entity::prelude::*;
+use ::entity::task;
 use data_access::*;
+use models::Queryable;
 use models::*;
+use sea_orm::prelude::*;
+use sea_orm::query::*;
 use std::env;
+
+#[tauri::command]
+fn test_query_feature(query: Query) {
+    let query_result = Query::to_sea_orm_query(query, task::Entity {});
+
+    match query_result {
+        Ok(query) => {
+            let sql_query = Task::find()
+                .filter(query)
+                .build(sea_orm::DatabaseBackend::Sqlite);
+            println!("{}", sql_query);
+        }
+        Err(er) => println!("ERROR: {}", er),
+    };
+}
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -38,6 +58,7 @@ pub fn run() {
             features::tasks::add_new_tag,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
+            test_query_feature,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

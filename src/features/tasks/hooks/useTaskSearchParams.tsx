@@ -1,3 +1,4 @@
+import { useDebouncedValue } from "@mantine/hooks";
 import { useMemo } from "react";
 import { taskSearchParams } from "../types/TaskSearchParams";
 
@@ -8,9 +9,10 @@ const useTaskSearchParams = (
     searchQuery: string,
     sortStatus: { columnAccessor: string; direction: 'asc' | 'desc' }
 ) => {
+    const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 200);
     return useMemo(() => {
-        return taskSearchParams(page, pageSize, selectedStatuses, searchQuery, sortStatus.columnAccessor, sortStatus.direction);
-    }, [page, pageSize, selectedStatuses, searchQuery, sortStatus]);
+        return taskSearchParams(page, pageSize, selectedStatuses, debouncedSearchQuery, sortStatus.columnAccessor, sortStatus.direction);
+    }, [page, pageSize, selectedStatuses, debouncedSearchQuery, sortStatus]);
 };
 
 export default useTaskSearchParams;

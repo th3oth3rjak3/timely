@@ -2,6 +2,7 @@ import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { Query, QueryCondition, QueryExpression } from "../../../models/Query";
 import { EditTask, NewTask, Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
 
@@ -9,10 +10,37 @@ import { TaskSearchParams } from "../types/TaskSearchParams";
 const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
     const { invoke } = useTauri();
 
+    const generateSearchQuery = (params: TaskSearchParams): Query => {
+
+
+        const statusExpression = QueryExpression.and(
+            new QueryCondition("status", "In", params.statuses)
+        );
+
+        let queryExpressions = [statusExpression];
+
+        if (params.queryString !== null) {
+            const containsExpression = QueryExpression.or(
+                new QueryCondition("description", "Contains", params.queryString),
+                new QueryCondition("title", "Contains", params.queryString),
+            );
+            queryExpressions.push(containsExpression);
+        }
+        const query = Query.and(...queryExpressions);
+        console.log(`Query: ${JSON.stringify(query.serialize(), null, 2)}`)
+        return Query.and(...queryExpressions);
+
+    }
+
     /** Search for tasks that meet the search parameters.
      * @param params - The search parameters to use to find tasks.
      */
     const searchForTasks = async (params: TaskSearchParams) => {
+        const query = generateSearchQuery(params);
+        await invoke<void>({
+            command: "test_query_feature",
+            params: { query: query.serialize() }
+        });
         return await invoke<PagedData<Task>>({
             command: "get_tasks",
             params: { params },

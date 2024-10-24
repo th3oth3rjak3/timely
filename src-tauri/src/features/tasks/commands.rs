@@ -1,6 +1,5 @@
 use ::entity::{comment, prelude::*, tags, task, task_tags};
 use chrono::Utc;
-use migration::Expr;
 use sea_orm::{prelude::*, *};
 use tauri::State;
 
@@ -41,7 +40,7 @@ pub async fn get_tasks(
     params: TaskSearchParams,
     db: State<'_, Db>,
 ) -> Result<PagedData<TaskRead>, String> {
-    let mut search_expr = Expr::col(task::Column::Status).is_in(params.statuses);
+    let mut search_expr = task::Column::Status.is_in(params.statuses);
 
     if let Some(query) = &params.query_string {
         search_expr = search_expr.and(
