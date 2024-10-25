@@ -65,6 +65,9 @@ pub struct QueryExpression {
 pub struct Query {
     pub operation_type: String,
     pub expressions: Vec<QueryExpression>,
+    pub page: u64,
+    pub page_size: u64,
+    pub ordering: Ordering,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -79,16 +82,20 @@ pub enum Operator {
     NotEquals,
     In,
     NotIn,
+    GreaterThan,
+    GreaterThanOrEqual,
+    LessThan,
+    LessThanOrEqual,
 }
 
-pub trait Queryable<T> {
+pub trait Queryable<T: EntityTrait> {
     fn evaluate_condition(condition: &QueryCondition, configured: &T)
         -> Result<SimpleExpr, String>;
     fn to_sea_orm_expression(
         expression: &QueryExpression,
         configured: &T,
     ) -> Result<Condition, String>;
-    fn to_sea_orm_query(query: Query, configured: T) -> Result<Condition, String>;
+    fn to_sea_orm_query(&self, configured: T) -> Result<Select<T>, String>;
 }
 
 pub trait QueryConfiguration {
@@ -101,6 +108,21 @@ impl QueryConfiguration for task::Entity {
         columns.insert("title".into(), task::Column::Title);
         columns.insert("description".into(), task::Column::Description);
         columns.insert("status".into(), task::Column::Status);
+        columns.insert(
+            "scheduled_start_date".into(),
+            task::Column::ScheduledStartDate,
+        );
+        columns.insert(
+            "scheduled_complete_date".into(),
+            task::Column::ScheduledCompleteDate,
+        );
+        columns.insert("actual_start_date".into(), task::Column::ActualStartDate);
+        columns.insert(
+            "actual_complete_date".into(),
+            task::Column::ActualCompleteDate,
+        );
+        columns.insert("estimated_duration".into(), task::Column::EstimatedDuration);
+        columns.insert("elapsed_duration".into(), task::Column::ElapsedDuration);
         columns
     }
 }
@@ -123,6 +145,10 @@ pub fn parse_condition(
                 Operator::NotLike => column.not_like(single),
                 Operator::In => column.is_in(vec![single]),
                 Operator::NotIn => column.is_not_in(vec![single]),
+                Operator::GreaterThan => column.gt(single),
+                Operator::GreaterThanOrEqual => column.gte(single),
+                Operator::LessThan => column.lt(single),
+                Operator::LessThanOrEqual => column.lte(single),
             };
 
             Ok(expr)
@@ -142,7 +168,7 @@ pub fn parse_condition(
     }
 }
 
-impl<T: QueryConfiguration> Queryable<T> for Query {
+impl<T: QueryConfiguration + EntityTrait + EntityName> Queryable<T> for Query {
     fn evaluate_condition(
         condition: &QueryCondition,
         configured: &T,
@@ -171,7 +197,7 @@ impl<T: QueryConfiguration> Queryable<T> for Query {
         for op in expression.operations.iter() {
             match op {
                 QueryOperation::Condition(cond) => {
-                    let c = Query::evaluate_condition(cond, configured)?;
+                    let c = Query::evaluate_condition(&cond, configured)?;
                     condition = condition.add(c);
                 }
                 QueryOperation::Expression(expr) => {
@@ -184,15 +210,15 @@ impl<T: QueryConfiguration> Queryable<T> for Query {
         Ok(condition)
     }
 
-    fn to_sea_orm_query(query: Query, configured: T) -> Result<Condition, String> {
-        let mut condition = match query.operation_type.as_str() {
+    fn to_sea_orm_query(&self, configured: T) -> Result<Select<T>, String> {
+        let mut condition = match self.operation_type.as_str() {
             "and" => Condition::all(),
             _ => Condition::any(),
         };
 
         let mut expressions = Vec::new();
 
-        for expr in query.expressions.iter() {
+        for expr in self.expressions.iter() {
             let result = Query::to_sea_orm_expression(expr, &configured)?;
             expressions.push(result);
         }
@@ -201,6 +227,26 @@ impl<T: QueryConfiguration> Queryable<T> for Query {
             condition = condition.add(cond);
         }
 
-        Ok(condition)
+        let mut query: Select<T> = T::find().filter(condition);
+
+        let columns = configured.clone().columns();
+        let col = match columns.get(&self.ordering.order_by) {
+            Some(value) => Ok(value),
+            None => Err(format!("Column {} not found.", &self.ordering.order_by)),
+        }?;
+
+        match self.ordering.sort_direction {
+            SortDirection::Ascending => query = query.order_by_asc(*col),
+            SortDirection::Descending => query = query.order_by_desc(*col),
+        };
+
+        Ok(query)
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Ordering {
+    pub order_by: String,
+    pub sort_direction: SortDirection,
 }

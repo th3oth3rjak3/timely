@@ -3,7 +3,7 @@ use chrono::Utc;
 use sea_orm::{prelude::*, *};
 use tauri::State;
 
-use crate::{Db, PagedData, SortDirection};
+use crate::{models::Queryable, Db, PagedData, Query, SortDirection};
 
 use super::*;
 
@@ -36,42 +36,15 @@ pub async fn create_task(new_task: NewTask, db: State<'_, Db>) -> Result<(), Str
 /// * state - The database state used to query a connection.
 /// * params - The search parameters used to filter/sort the results.
 #[tauri::command]
-pub async fn get_tasks(
-    params: TaskSearchParams,
-    db: State<'_, Db>,
-) -> Result<PagedData<TaskRead>, String> {
-    let mut search_expr = task::Column::Status.is_in(params.statuses);
+pub async fn get_tasks(query: Query, db: State<'_, Db>) -> Result<PagedData<TaskRead>, String> {
+    let task_query = query.to_sea_orm_query(task::Entity)?;
 
-    if let Some(query) = &params.query_string {
-        search_expr = search_expr.and(
-            task::Column::Description
-                .contains(query)
-                .or(task::Column::Title.contains(query)),
-        )
-    }
-
-    let mut task_query = Task::find().filter(search_expr);
-
-    if let (Some(field), Some(dir)) = (params.sort_field, params.sort_direction) {
-        let col = match field.to_lowercase().as_str() {
-            "status" => task::Column::Status,
-            "title" => task::Column::Title,
-            "description" => task::Column::Description,
-            _ => task::Column::ScheduledCompleteDate,
-        };
-
-        match dir {
-            SortDirection::Ascending => task_query = task_query.order_by_asc(col),
-            SortDirection::Descending => task_query = task_query.order_by_desc(col),
-        };
-    }
-
-    let paginator = task_query.paginate(&db.connection, params.page_size);
+    let paginator = task_query.paginate(&db.connection, query.page_size);
 
     let count = paginator.num_items().await.map_err(|err| err.to_string())?;
 
     let tasks: Vec<task::Model> = paginator
-        .fetch_page(params.page - 1)
+        .fetch_page(query.page - 1)
         .await
         .map(|tasks| {
             tasks
@@ -125,8 +98,8 @@ pub async fn get_tasks(
 
     Ok(PagedData::<TaskRead> {
         data: tasks_with_comments,
-        page: params.page,
-        page_size: params.page_size,
+        page: query.page,
+        page_size: query.page_size,
         total_item_count: count,
     })
 }

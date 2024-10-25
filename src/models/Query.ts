@@ -1,11 +1,13 @@
 import { getSqlColumnFromPropertyName } from "../utilities/dataTableUtilities";
+import { Operator } from "./Operator";
+import { SortDirection } from "./SortDirection";
 
 export class QueryCondition {
     field: string;
     operator: string;
     condition: string | string[];
 
-    constructor(field: string, operator: string, condition: string | string[]) {
+    constructor(field: string, operator: Operator, condition: string | string[]) {
         this.field = getSqlColumnFromPropertyName(field);
         this.operator = operator;
         this.condition = condition;
@@ -52,27 +54,53 @@ export class QueryExpression {
     }
 }
 
+export class Ordering {
+    orderBy: string;
+    sortDirection: SortDirection;
+
+    constructor(orderBy: string, sortDirection: SortDirection) {
+        this.orderBy = orderBy;
+        this.sortDirection = sortDirection;
+    }
+
+    serialize() {
+        return {
+            orderBy: this.orderBy,
+            sortDirection: this.sortDirection,
+        }
+    }
+}
+
 export class Query {
     operationType: string;
     expressions: QueryExpression[];
+    page: number;
+    pageSize: number;
+    ordering?: Ordering;
 
-    constructor(operationType: string, expressions: QueryExpression[]) {
+    constructor(operationType: string, expressions: QueryExpression[], page: number, pageSize: number, ordering?: Ordering) {
         this.expressions = expressions;
         this.operationType = operationType;
+        this.page = page;
+        this.pageSize = pageSize;
+        this.ordering = ordering;
     }
 
-    static or(...args: QueryExpression[]): Query {
-        return new Query("or", [...args]);
+    static or(page: number, pageSize: number, ordering?: Ordering, ...args: QueryExpression[]): Query {
+        return new Query("or", [...args], page, pageSize, ordering);
     }
 
-    static and(...args: QueryExpression[]): Query {
-        return new Query("and", [...args]);
+    static and(page: number, pageSize: number, ordering?: Ordering, ...args: QueryExpression[]): Query {
+        return new Query("and", [...args], page, pageSize, ordering);
     }
 
     serialize(): any {
         return {
             operationType: this.operationType,
-            expressions: this.expressions.map(expr => expr.serialize())
+            expressions: this.expressions.map(expr => expr.serialize()),
+            page: this.page,
+            pageSize: this.pageSize,
+            ordering: this.ordering?.serialize() ?? null
         }
     }
 }
