@@ -3,7 +3,7 @@ use chrono::Utc;
 use sea_orm::{prelude::*, *};
 use tauri::State;
 
-use crate::{models::Queryable, Db, PagedData, Query, SortDirection};
+use crate::{models::Queryable, Db, PagedData, Query};
 
 use super::*;
 

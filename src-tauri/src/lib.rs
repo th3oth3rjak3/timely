@@ -1,7 +1,6 @@
 pub mod data_access;
 pub mod features;
 pub mod models;
-pub mod sql_utilties;
 
 use data_access::*;
 use models::*;
