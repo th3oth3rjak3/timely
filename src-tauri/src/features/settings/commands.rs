@@ -1,46 +1,39 @@
-use ::entity::user_settings::{self, Entity as UserSettings};
-use sea_orm::{prelude::*, *};
+//use ::entity::user_settings::{self, Entity as UserSettings};
+use diesel::prelude::*;
 use tauri::State;
 
-use crate::Db;
+use crate::{schema::user_settings, Diesel};
 
-use super::models::UpdateUserSettings;
+use super::{models::UpdateUserSettings, UserSettings};
 
 #[tauri::command]
-pub async fn get_user_settings(db: State<'_, Db>) -> Result<user_settings::Model, String> {
-    UserSettings::find()
-        .one(&db.connection)
-        .await
+pub fn get_user_settings(db: State<'_, Diesel>) -> Result<UserSettings, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+    user_settings::table
+        .select(UserSettings::as_select())
+        .first(&mut connection)
         .map_err(|err| err.to_string())
-        .and_then(|maybe_model| match maybe_model {
-            Some(model) => Ok(model),
-            None => Err("User Settings not found".into()),
-        })
 }
 
 #[tauri::command]
-pub async fn update_user_settings(
+pub fn update_user_settings(
     settings: UpdateUserSettings,
-    db: State<'_, Db>,
-) -> Result<user_settings::Model, String> {
-    let model = UserSettings::find()
-        .one(&db.connection)
-        .await
-        .map_err(|err| err.to_string())
-        .and_then(|maybe_model| match maybe_model {
-            Some(model) => Ok(model),
-            None => Err("User Settings not found".into()),
-        })?;
+    db: State<'_, Diesel>,
+) -> Result<UserSettings, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    let mut existing = model.into_active_model();
-    existing.home_page = Set(settings.home_page);
-    existing.page_size = Set(settings.page_size);
-    existing
-        .save(&db.connection)
-        .await
-        .map_err(|err| err.to_string())
-        .and_then(|active_model| match active_model.try_into_model() {
-            Ok(model) => Ok(model),
-            Err(err) => Err(err.to_string()),
-        })
+    let mut found = user_settings::table
+        .select(UserSettings::as_select())
+        .first(&mut connection)
+        .map_err(|err| err.to_string())?;
+
+    found.home_page = settings.home_page;
+    found.page_size = settings.page_size;
+
+    diesel::update(user_settings::table)
+        .set(&found)
+        .execute(&mut connection)
+        .map_err(|err| err.to_string())?;
+
+    Ok(found)
 }

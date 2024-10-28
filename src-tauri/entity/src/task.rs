@@ -10,17 +10,17 @@ use crate::task_tags;
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key)]
-    pub id: i64,
+    pub id: i32,
     pub description: String,
     #[sea_orm(column_type = "custom(\"enum_text\")")]
     pub status: String,
-    pub scheduled_start_date: Option<DateTimeUtc>,
-    pub scheduled_complete_date: Option<DateTimeUtc>,
-    pub actual_start_date: Option<DateTimeUtc>,
-    pub actual_complete_date: Option<DateTimeUtc>,
-    pub last_resumed_date: Option<DateTimeUtc>,
-    pub estimated_duration: Option<i64>,
-    pub elapsed_duration: i64,
+    pub scheduled_start_date: Option<DateTime>,
+    pub scheduled_complete_date: Option<DateTime>,
+    pub actual_start_date: Option<DateTime>,
+    pub actual_complete_date: Option<DateTime>,
+    pub last_resumed_date: Option<DateTime>,
+    pub estimated_duration: Option<i32>,
+    pub elapsed_duration: i32,
     pub title: String,
 }
 

@@ -41,9 +41,10 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
      * @param params - The search parameters to use to find tasks.
      */
     const searchForTasks = async (params: TaskSearchParams) => {
+        console.log(JSON.stringify(params, null, 2))
         return await invoke<PagedData<Task>>({
             command: "get_tasks",
-            params: { query: generateSearchQuery(params).serialize() },
+            params: { params },
         });
     }
 

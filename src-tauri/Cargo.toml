@@ -37,3 +37,12 @@ sea-orm = { version = "1.0.0", features = [
     "with-chrono",
     "with-json",
 ] }
+diesel = { version = "2.2.4", features = [
+    "sqlite",
+    "returning_clauses_for_sqlite_3_35",
+    "chrono",
+    "serde_json",
+    "r2d2",
+] }
+#libsqlite3-sys = { version = "0.29", features = ["bundled"] }
+r2d2 = "0.8.10"

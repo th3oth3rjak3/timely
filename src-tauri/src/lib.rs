@@ -1,21 +1,25 @@
 pub mod data_access;
 pub mod features;
 pub mod models;
+pub mod schema;
 
 use data_access::*;
 use models::*;
-use std::env;
+use std::{env, sync::Arc};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let connection = tauri::async_runtime::block_on(establish_connection())
         .expect("Could not connect to the database.");
 
-    // TODO: add migrations.
+    let pool = establish_connection_pool();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .manage(Db { connection })
+        .manage(Diesel {
+            pool: Arc::new(pool),
+        })
         .invoke_handler(tauri::generate_handler![
             features::tasks::get_tasks,
             features::tasks::create_task,

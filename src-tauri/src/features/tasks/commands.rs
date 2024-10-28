@@ -1,33 +1,48 @@
-use ::entity::{comment, prelude::*, tags, task, task_tags};
+use super::models::Task;
 use chrono::Utc;
-use sea_orm::{prelude::*, *};
+use diesel::{dsl::count, prelude::*, sqlite::Sqlite};
 use tauri::State;
 
-use crate::{models::Queryable, Db, PagedData, Query};
+use crate::{
+    schema::{comments, tags, task_tags, tasks},
+    Diesel, PagedData,
+};
 
 use super::*;
 
 #[tauri::command]
-pub async fn create_task(new_task: NewTask, db: State<'_, Db>) -> Result<(), String> {
-    let new_task = task::ActiveModel {
-        id: ActiveValue::NotSet,
-        description: ActiveValue::Set(new_task.description),
-        title: ActiveValue::Set(new_task.title),
-        status: ActiveValue::Set(new_task.status.into()),
-        scheduled_start_date: ActiveValue::Set(new_task.scheduled_start_date),
-        scheduled_complete_date: ActiveValue::Set(new_task.scheduled_complete_date),
-        actual_start_date: ActiveValue::Set(None),
-        actual_complete_date: ActiveValue::Set(None),
-        last_resumed_date: ActiveValue::Set(None),
-        estimated_duration: ActiveValue::Set(new_task.estimated_duration),
-        elapsed_duration: ActiveValue::Set(0),
-    };
+pub async fn create_task(new_task: NewTask, db: State<'_, Diesel>) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    new_task
-        .insert(&db.connection)
-        .await
+    diesel::insert_into(tasks::table)
+        .values(&new_task)
+        .execute(&mut connection)
         .map(|_| ())
-        .map_err(|err| err.to_string())
+        .map_err(|err| format!("Error creating new task: {}", err.to_string()))
+}
+
+#[diesel::dsl::auto_type(no_type_alias)]
+fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
+    let mut task_query = tasks::table
+        .inner_join(task_tags::table.on(task_tags::task_id.eq(tasks::id)))
+        .inner_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
+        .into_boxed::<Sqlite>();
+
+    task_query = task_query.filter(tasks::status.eq_any(&params.statuses));
+
+    if let Some(tags) = &params.tags {
+        task_query = task_query.filter(tags::value.eq_any(tags));
+    }
+
+    if let Some(query) = &params.query_string {
+        task_query = task_query.filter(
+            tasks::title
+                .like(format!("%{}%", &query))
+                .or(tasks::description.like(format!("%{}%", &query))),
+        );
+    }
+
+    task_query
 }
 
 /// Search for all tasks which match the search parameters.
@@ -36,168 +51,180 @@ pub async fn create_task(new_task: NewTask, db: State<'_, Db>) -> Result<(), Str
 /// * state - The database state used to query a connection.
 /// * params - The search parameters used to filter/sort the results.
 #[tauri::command]
-pub async fn get_tasks(query: Query, db: State<'_, Db>) -> Result<PagedData<TaskRead>, String> {
-    let task_query = query.to_sea_orm_query(task::Entity)?;
+pub async fn get_tasks(
+    params: TaskSearchParams,
+    db: State<'_, Diesel>,
+) -> Result<PagedData<TaskRead>, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    let paginator = task_query.paginate(&db.connection, query.page_size);
+    let count_query = generate_search_query(&params);
+    let task_query = generate_search_query(&params);
 
-    let count = paginator.num_items().await.map_err(|err| err.to_string())?;
-
-    let tasks: Vec<task::Model> = paginator
-        .fetch_page(query.page - 1)
-        .await
-        .map(|tasks| {
-            tasks
-                .into_iter()
-                .map(|mut task| {
-                    if let Some(last_resumed) = task.last_resumed_date {
-                        let diff = Utc::now() - last_resumed;
-                        task.elapsed_duration += diff.num_seconds();
-                    };
-                    task
-                })
-                .collect()
-        })
+    let count: i64 = count_query
+        .select(count(tasks::id))
+        .first(&mut connection)
         .map_err(|err| err.to_string())?;
 
-    let comments = tasks
-        .load_many(Comment, &db.connection)
-        .await
+    let all_tasks: Vec<Task> = task_query
+        .order_by(tasks::title.desc())
+        .limit(params.page_size)
+        .offset((params.page - 1) * params.page_size)
+        .select(Task::as_select())
+        .load(&mut connection)
         .map_err(|err| err.to_string())?;
 
-    let tags = tasks
-        .load_many_to_many(tags::Entity, task_tags::Entity, &db.connection)
-        .await
+    let all_comments: Vec<Comment> = Comment::belonging_to(&all_tasks)
+        .select(Comment::as_select())
+        .load(&mut connection)
         .map_err(|err| err.to_string())?;
 
-    let tasks_with_tags: Vec<(task::Model, Vec<tags::Model>)> =
-        tasks.into_iter().zip(tags.into_iter()).collect();
+    let loaded_tags: Vec<(TaskTag, Tag)> = TaskTag::belonging_to(&all_tasks)
+        .inner_join(tags::table)
+        .select((TaskTag::as_select(), Tag::as_select()))
+        .load(&mut connection)
+        .map_err(|err| err.to_string())?;
 
-    let tasks_with_comments: Vec<TaskRead> = tasks_with_tags
+    let tasks_with_tags: Vec<(Task, Vec<Tag>)> = loaded_tags
+        .grouped_by(&all_tasks)
         .into_iter()
-        .zip(comments.into_iter())
-        .map(|((task, tags), mut comments)| {
-            comments.sort_by(|a, b| a.created.cmp(&b.created));
-            TaskRead {
-                id: task.id,
-                title: task.title,
-                description: task.description,
-                status: task.status.into(),
-                scheduled_start_date: task.scheduled_start_date,
-                scheduled_complete_date: task.scheduled_complete_date,
-                actual_start_date: task.actual_start_date,
-                actual_complete_date: task.actual_complete_date,
-                last_resumed_date: task.last_resumed_date,
-                estimated_duration: task.estimated_duration,
-                elapsed_duration: task.elapsed_duration,
-                comments,
-                tags,
-            }
+        .zip(all_tasks)
+        .map(|(t, task)| (task.clone(), t.into_iter().map(|(_, tag)| tag).collect()))
+        .collect();
+
+    let tasks_with_tags_and_comments: Vec<(Task, Vec<Tag>, Vec<Comment>)> = all_comments
+        .grouped_by(
+            &tasks_with_tags
+                .iter()
+                .map(|a| a.0.clone())
+                .collect::<Vec<Task>>(),
+        )
+        .into_iter()
+        .zip(tasks_with_tags)
+        .map(|(t, a)| ((a.0, a.1, t)))
+        .collect();
+
+    let task_read: Vec<TaskRead> = tasks_with_tags_and_comments
+        .into_iter()
+        .map(|(task, tags, comments)| TaskRead {
+            id: task.id,
+            title: task.title,
+            description: task.description,
+            status: task.status,
+            scheduled_start_date: task.scheduled_start_date,
+            scheduled_complete_date: task.scheduled_complete_date,
+            actual_start_date: task.actual_start_date,
+            actual_complete_date: task.actual_complete_date,
+            last_resumed_date: task.last_resumed_date,
+            estimated_duration: task.estimated_duration,
+            elapsed_duration: task.elapsed_duration,
+            comments,
+            tags,
         })
         .collect();
 
-    Ok(PagedData::<TaskRead> {
-        data: tasks_with_comments,
-        page: query.page,
-        page_size: query.page_size,
-        total_item_count: count,
-    })
+    Ok(PagedData::<TaskRead>::new(
+        params.page,
+        params.page_size,
+        count.clone(),
+        task_read,
+    ))
 }
 
 #[tauri::command]
-pub async fn start_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn start_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
-            task.actual_start_date = Set(Some(Utc::now()));
-            save_task(task, &db).await
+            task.actual_start_date = Some(Utc::now().naive_utc());
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn pause_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn pause_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Paused);
-            save_task(task, &db).await
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn resume_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn resume_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let task = set_task_model_active(model, Status::Doing);
-            save_task(task, &db).await
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn finish_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn finish_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let mut task = set_task_model_inactive(model, Status::Done);
-            task.actual_complete_date = Set(Some(Utc::now()));
-            save_task(task, &db).await
+            task.actual_complete_date = Some(Utc::now().naive_utc());
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn cancel_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn cancel_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Cancelled);
-            save_task(task, &db).await
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn reopen_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn reopen_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
-            task.actual_complete_date = Set(None);
-            save_task(task, &db).await
+            task.actual_complete_date = None;
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn restore_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn restore_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
-            let mut task: task::ActiveModel;
+            let mut task: Task;
             if model.elapsed_duration > 0 && model.actual_start_date.is_some() {
                 task = set_task_model_inactive(model, Status::Paused);
             } else {
                 task = set_task_model_inactive(model, Status::Todo);
-                task.actual_start_date = Set(None);
-                task.elapsed_duration = Set(0);
+                task.actual_start_date = None;
+                task.elapsed_duration = 0;
             }
-            save_task(task, &db).await
+            save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn delete_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task_id, &db).await? {
+pub fn delete_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task_id, &db)? {
         Some(model) => {
-            let task = model.into_active_model();
-            task.delete(&db.connection)
-                .await
+            let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+            diesel::delete(tasks::table)
+                .filter(tasks::id.eq(model.id))
+                .execute(&mut connection)
                 .map(|_| ())
                 .map_err(|err| err.to_string())
         }
@@ -206,55 +233,57 @@ pub async fn delete_task(task_id: i32, db: State<'_, Db>) -> Result<(), String> 
 }
 
 #[tauri::command]
-pub async fn edit_task(task: EditTask, db: State<'_, Db>) -> Result<(), String> {
-    match find_task(task.id, &db).await? {
+pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
+    match find_task(task.id, &db)? {
         Some(model) => {
-            let mut existing_task = model.clone().into_active_model();
+            let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-            existing_task.title = Set(task.title);
-            existing_task.description = Set(task.description);
-            existing_task.scheduled_start_date = Set(task.scheduled_start_date);
-            existing_task.scheduled_complete_date = Set(task.scheduled_complete_date);
-            existing_task.estimated_duration = Set(task.estimated_duration);
-            existing_task.actual_start_date = Set(task.actual_start_date);
-            existing_task.actual_complete_date = Set(task.actual_complete_date);
+            let mut existing_task = model.clone();
 
-            match model.status.into() {
+            existing_task.title = task.title;
+            existing_task.description = task.description;
+            existing_task.scheduled_start_date = task.scheduled_start_date;
+            existing_task.scheduled_complete_date = task.scheduled_complete_date;
+            existing_task.estimated_duration = task.estimated_duration;
+            existing_task.actual_start_date = task.actual_start_date;
+            existing_task.actual_complete_date = task.actual_complete_date;
+
+            match model.status {
                 Status::Cancelled => {
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Doing => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Set(Some(Utc::now()));
+                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
                     }
-                    existing_task.actual_complete_date = Set(None);
+                    existing_task.actual_complete_date = None;
                     existing_task = update_active_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Done => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Set(Some(Utc::now()));
+                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
                     }
-                    existing_task.actual_complete_date = Set(Some(Utc::now()));
+                    existing_task.actual_complete_date = Some(Utc::now().naive_utc());
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Paused => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Set(Some(Utc::now()));
+                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
                     }
-                    existing_task.actual_complete_date = Set(None);
+                    existing_task.actual_complete_date = None;
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Todo => {
-                    existing_task.actual_start_date = Set(None);
-                    existing_task.actual_complete_date = Set(None);
+                    existing_task.actual_start_date = None;
+                    existing_task.actual_complete_date = None;
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Unknown => unimplemented!(),
             }
 
-            existing_task
-                .save(&db.connection)
-                .await
+            diesel::update(tasks::table)
+                .set(&existing_task)
+                .execute(&mut connection)
                 .map(|_| ())
                 .map_err(|err| err.to_string())
         }
@@ -263,72 +292,70 @@ pub async fn edit_task(task: EditTask, db: State<'_, Db>) -> Result<(), String> 
 }
 
 #[tauri::command]
-pub async fn add_comment(comment: NewComment, db: State<'_, Db>) -> Result<(), String> {
-    let model = comment::ActiveModel {
-        id: ActiveValue::NotSet,
-        task_id: ActiveValue::Set(comment.task_id),
-        message: ActiveValue::Set(comment.message),
-        created: ActiveValue::Set(Utc::now()),
-        modified: ActiveValue::Set(None),
+pub fn add_comment(comment: NewComment, db: State<'_, Diesel>) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    let model = Comment {
+        id: 0,
+        task_id: comment.task_id,
+        message: comment.message,
+        created: Utc::now().naive_utc(),
+        modified: None,
     };
 
-    model
-        .save(&db.connection)
-        .await
+    // TODO: verify that diesel doesn't just accept 0 as the id.
+
+    diesel::insert_into(comments::table)
+        .values(&model)
+        .execute(&mut connection)
         .map(|_| ())
         .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
-pub async fn update_comment(comment: EditComment, db: State<'_, Db>) -> Result<(), String> {
-    let maybe_comment = Comment::find_by_id(comment.id)
-        .one(&db.connection)
-        .await
+pub async fn update_comment(comment: EditComment, db: State<'_, Diesel>) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    let mut found: Comment = comments::table
+        .filter(comments::id.eq(comment.id))
+        .select(Comment::as_select())
+        .first(&mut connection)
         .map_err(|err| err.to_string())?;
 
-    match maybe_comment {
-        Some(model) => {
-            let mut existing = model.into_active_model();
-            existing.message = Set(comment.message);
-            existing.modified = Set(Some(Utc::now()));
-            existing
-                .save(&db.connection)
-                .await
-                .map(|_| ())
-                .map_err(|err| err.to_string())
-        }
-        None => Err(format!("Comment with id {} not found.", comment.id)),
-    }
-}
+    found.message = comment.message;
+    found.modified = Some(Utc::now().naive_utc());
 
-#[tauri::command]
-pub async fn delete_comment(id: i64, db: State<'_, Db>) -> Result<(), String> {
-    Comment::delete_by_id(id)
-        .exec(&db.connection)
-        .await
+    diesel::update(comments::table)
+        .set(&found)
+        .execute(&mut connection)
         .map(|_| ())
         .map_err(|err| err.to_string())
 }
 
-fn update_inactive_elapsed(
-    mut task: task::ActiveModel,
-    maybe_elapsed: Option<i64>,
-) -> task::ActiveModel {
+#[tauri::command]
+pub fn delete_comment(id: i32, db: State<'_, Diesel>) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    diesel::delete(comments::table)
+        .filter(comments::id.eq(id))
+        .execute(&mut connection)
+        .map(|_| ())
+        .map_err(|err| err.to_string())
+}
+
+fn update_inactive_elapsed(mut task: Task, maybe_elapsed: Option<i32>) -> Task {
     if let Some(elapsed) = maybe_elapsed {
-        task.elapsed_duration = Set(elapsed);
-        task.last_resumed_date = Set(None);
+        task.elapsed_duration = elapsed;
+        task.last_resumed_date = None;
     }
 
     task
 }
 
-fn update_active_elapsed(
-    mut task: task::ActiveModel,
-    maybe_elapsed: Option<i64>,
-) -> task::ActiveModel {
+fn update_active_elapsed(mut task: Task, maybe_elapsed: Option<i32>) -> Task {
     if let Some(elapsed) = maybe_elapsed {
-        task.elapsed_duration = Set(elapsed);
-        task.last_resumed_date = Set(Some(Utc::now()));
+        task.elapsed_duration = elapsed;
+        task.last_resumed_date = Some(Utc::now().naive_utc());
     }
 
     task
@@ -338,38 +365,43 @@ fn not_found_message(task_id: i32) -> String {
     format!("Task with id '{}' not found.", task_id)
 }
 
-async fn save_task(task: task::ActiveModel, state: &State<'_, Db>) -> Result<(), String> {
-    task.save(&state.connection)
-        .await
+fn save_task(task: Task, db: &State<'_, Diesel>) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    task.save_changes::<Task>(&mut connection)
         .map(|_| ())
         .map_err(|err| err.to_string())
 }
 
 /// Find a task by its id.
-async fn find_task(task_id: i32, state: &State<'_, Db>) -> Result<Option<task::Model>, String> {
-    Task::find_by_id(task_id)
-        .one(&state.connection)
-        .await
+fn find_task(task_id: i32, db: &State<'_, Diesel>) -> Result<Option<Task>, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    tasks::table
+        .filter(tasks::id.eq(task_id))
+        .select(Task::as_select())
+        .first(&mut connection)
+        .optional()
         .map_err(|err| err.to_string())
 }
 
 /// Update the status when transitioning to an active state.
-fn set_task_model_active(model: task::Model, status: Status) -> task::ActiveModel {
-    let mut task = model.into_active_model();
-    task.status = Set(status.into());
-    task.last_resumed_date = Set(Some(Utc::now()));
+fn set_task_model_active(model: Task, status: Status) -> Task {
+    let mut task = model.clone();
+    task.status = status;
+    task.last_resumed_date = Some(Utc::now().naive_utc());
     task
 }
 
 /// Update the status when transition to a paused or finished state.
-fn set_task_model_inactive(model: task::Model, status: Status) -> task::ActiveModel {
-    let mut task = model.clone().into_active_model();
-    task.status = Set(status.into());
+fn set_task_model_inactive(model: Task, status: Status) -> Task {
+    let mut task = model.clone();
+    task.status = status;
 
     if let Some(last_resumed) = model.last_resumed_date {
-        let diff = Utc::now() - last_resumed;
-        task.elapsed_duration = Set(model.elapsed_duration + diff.num_seconds());
-        task.last_resumed_date = Set(None);
+        let diff = Utc::now().naive_utc() - last_resumed;
+        task.elapsed_duration = model.elapsed_duration + diff.num_seconds() as i32;
+        task.last_resumed_date = None;
     }
 
     task
@@ -377,71 +409,85 @@ fn set_task_model_inactive(model: task::Model, status: Status) -> task::ActiveMo
 
 #[tauri::command]
 pub async fn remove_tag_from_task(
-    task_id: i64,
-    tag_id: i64,
-    db: State<'_, Db>,
+    task_id: i32,
+    tag_id: i32,
+    db: State<'_, Diesel>,
 ) -> Result<(), String> {
-    TaskTags::delete_many()
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    diesel::delete(task_tags::table)
         .filter(
-            task_tags::Column::TagId
-                .eq(tag_id)
-                .and(task_tags::Column::TaskId.eq(task_id)),
+            task_tags::task_id
+                .eq(task_id)
+                .and(task_tags::tag_id.eq(tag_id)),
         )
-        .exec(&db.connection)
-        .await
+        .execute(&mut connection)
         .map(|_| ())
         .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
-pub async fn get_all_tags(db: State<'_, Db>) -> Result<Vec<tags::Model>, String> {
-    Tags::find()
-        .order_by_asc(tags::Column::Value)
-        .all(&db.connection)
-        .await
+pub async fn get_all_tags(db: State<'_, Diesel>) -> Result<Vec<Tag>, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    tags::table
+        .order_by(tags::value.asc())
+        .select(Tag::as_select())
+        .load(&mut connection)
         .map_err(|err| err.to_string())
 }
 
 #[tauri::command]
-pub async fn add_tag_to_task(tag_id: i64, task_id: i64, db: State<'_, Db>) -> Result<(), String> {
-    let existing_join = TaskTags::find()
+pub async fn add_tag_to_task(
+    tag_id: i32,
+    task_id: i32,
+    db: State<'_, Diesel>,
+) -> Result<(), String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+
+    let existing_record: Option<TaskTag> = task_tags::table
         .filter(
-            task_tags::Column::TagId
+            task_tags::tag_id
                 .eq(tag_id)
-                .and(task_tags::Column::TaskId.eq(task_id)),
+                .and(task_tags::task_id.eq(task_id)),
         )
-        .one(&db.connection)
-        .await
+        .select(TaskTag::as_select())
+        .first(&mut connection)
+        .optional()
         .map_err(|err| err.to_string())?;
 
-    match existing_join {
+    match existing_record {
         Some(_) => Ok(()),
-        None => {
-            let new_join = task_tags::ActiveModel {
-                id: ActiveValue::NotSet,
-                task_id: ActiveValue::Set(task_id),
-                tag_id: ActiveValue::Set(tag_id),
-            };
-
-            new_join
-                .save(&db.connection)
-                .await
-                .map(|_| ())
-                .map_err(|err| err.to_string())
-        }
+        None => diesel::insert_into(task_tags::table)
+            .values((task_tags::tag_id.eq(tag_id), task_tags::task_id.eq(task_id)))
+            .execute(&mut connection)
+            .map(|_| ())
+            .map_err(|err| err.to_string()),
     }
 }
 
 #[tauri::command]
-pub async fn add_new_tag(new_tag: String, db: State<'_, Db>) -> Result<tags::Model, String> {
-    let model = tags::ActiveModel {
-        id: ActiveValue::NotSet,
-        value: ActiveValue::Set(new_tag),
-    };
+pub fn add_new_tag(new_tag: String, db: State<'_, Diesel>) -> Result<Tag, String> {
+    let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    model
-        .save(&db.connection)
-        .await
-        .map(|tag| tag.try_into_model().unwrap())
-        .map_err(|err| err.to_string())
+    // If a tag already exists, no need to add it again.
+    let maybe_tag = tags::table
+        .filter(tags::value.eq(&new_tag))
+        .select(Tag::as_select())
+        .first(&mut connection)
+        .optional()
+        .map_err(|err| err.to_string())?;
+
+    match maybe_tag {
+        Some(existing) => Ok(existing),
+        None => {
+            let tag: Tag = diesel::insert_into(tags::table)
+                .values(tags::value.eq(&new_tag))
+                .returning(Tag::as_returning())
+                .get_result(&mut connection)
+                .map_err(|err| err.to_string())?;
+
+            Ok(tag)
+        }
+    }
 }

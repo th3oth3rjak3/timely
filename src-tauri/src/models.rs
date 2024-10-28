@@ -8,14 +8,14 @@ use serde_repr::{Deserialize_repr, Serialize_repr};
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct PagedData<T> {
-    pub page: u64,
-    pub page_size: u64,
-    pub total_item_count: u64,
+    pub page: i64,
+    pub page_size: i64,
+    pub total_item_count: i64,
     pub data: Vec<T>,
 }
 
 impl<T> PagedData<T> {
-    pub fn new(page: u64, page_size: u64, total_item_count: u64, data: Vec<T>) -> Self {
+    pub fn new(page: i64, page_size: i64, total_item_count: i64, data: Vec<T>) -> Self {
         Self {
             page,
             page_size,
