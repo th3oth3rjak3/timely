@@ -1,6 +1,9 @@
 use std::{env, sync::Arc};
 
 use diesel::{prelude::*, r2d2::ConnectionManager};
+use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
+
+pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!();
 
 pub type Pool = r2d2::Pool<ConnectionManager<SqliteConnection>>;
 pub type PooledConn = r2d2::PooledConnection<ConnectionManager<SqliteConnection>>;
@@ -43,7 +46,8 @@ pub fn establish_connection_pool() -> Pool {
     enable_write_ahead_log(&mut conn);
     enable_query_lock_timeout(&mut conn);
 
-    // TODO: run diesel migrations here.
+    conn.run_pending_migrations(MIGRATIONS)
+        .expect("Could not run migrations.");
 
     pool
 }

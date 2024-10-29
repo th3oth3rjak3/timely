@@ -240,6 +240,8 @@ function TaskList() {
 
         modals.open({
             title: "New Task",
+            closeOnClickOutside: false,
+            closeOnEscape: false,
             children: (
                 <>
                     <form onSubmit={newForm.onSubmit(callback)}>
@@ -312,6 +314,8 @@ function TaskList() {
 
         modals.open({
             title: "Edit Task",
+            closeOnEscape: false,
+            closeOnClickOutside: false,
             children: (
                 <>
                     <form onSubmit={editForm.onSubmit(callback)}>
