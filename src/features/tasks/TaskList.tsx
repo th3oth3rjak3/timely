@@ -32,21 +32,12 @@ function TaskList() {
     /** The globally set choices for how many items per page can be chosen. */
     const pageSizeOptions = useAppSelector(state => state.settings.taskListSettings.pageSizeOptions);
 
-    // const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
-
+    const statusOptions = useAppSelector(state => state.settings.taskListSettings.statusOptions);
     const taskSearchParams = useAppSelector(state => state.settings.taskListSettings.params);
 
     /** An app store dispatch function to update store values. */
     const dispatch = useAppDispatch();
 
-    const descriptionQuery = useAppSelector(state => state.settings.taskListSettings.params.queryString);
-
-    /** The list of all statuses available to choose from. */
-    const statuses = useAppSelector(state => state.settings.taskListSettings.statusOptions);
-
-    // The list of currently selected statuses by the user.
-    const selectedStatuses = useAppSelector(state => state.settings.taskListSettings.params.statuses);
-    const currentPage = useAppSelector(state => state.settings.taskListSettings.params.page);
     const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
 
     const [loading, setLoading] = useState(true);
@@ -92,7 +83,7 @@ function TaskList() {
         dispatch(setTaskSearchParams({
             ...taskSearchParams,
             page: 1,
-            queryString: value,
+            queryString: value ?? null,
         }))
     }
 
@@ -387,15 +378,15 @@ function TaskList() {
                     placeholder="Search..."
                     leftSection={<IconSearch size={16} />}
                     rightSection={
-                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => updateDescriptionQuery(null)}>
+                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => updateDescriptionQuery("")}>
                             <IconX size={14} />
                         </ActionIcon>
                     }
-                    value={descriptionQuery !== null ? descriptionQuery : undefined}
+                    value={taskSearchParams.queryString || ""}
                     onChange={(e) => updateDescriptionQuery(e.currentTarget.value)}
                 />
             ),
-            filtering: descriptionQuery !== "",
+            filtering: taskSearchParams.queryString !== null && taskSearchParams.queryString !== "",
             ellipsis: false,
         },
         {
@@ -406,8 +397,8 @@ function TaskList() {
                 <MultiSelect
                     label="Status"
                     description="Show all tasks with any of the selected statuses"
-                    data={statuses}
-                    value={selectedStatuses}
+                    data={statusOptions}
+                    value={taskSearchParams.statuses}
                     placeholder="Search statuses..."
                     onChange={(statuses) => updateSelectedStatuses(statuses)}
                     leftSection={<IconSearch size={16} />}
@@ -417,7 +408,7 @@ function TaskList() {
                     nothingFoundMessage="Such empty..."
                 />
             ),
-            filtering: !!selectedStatuses && selectedStatuses.length !== statuses.length,
+            filtering: !!taskSearchParams.statuses && taskSearchParams.statuses.length !== statusOptions.length,
         },
         {
             accessor: "scheduledStartDate",
@@ -472,7 +463,7 @@ function TaskList() {
                     fz="sm"
                     columns={columns}
                     records={tasks}
-                    page={currentPage}
+                    page={taskSearchParams.page}
                     totalRecords={recordCount}
                     recordsPerPage={pageSize}
                     onPageChange={(page) => dispatch(setCurrentPage(page))}
