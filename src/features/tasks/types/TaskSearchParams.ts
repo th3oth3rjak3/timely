@@ -1,3 +1,4 @@
+import { Ordering } from "../../../models/Ordering";
 import { SortDirection } from "../../../models/SortDirection";
 import { getSqlColumnFromPropertyName } from "../../../utilities/dataTableUtilities";
 
@@ -5,8 +6,7 @@ export type TaskSearchParams = {
     page: number;
     pageSize: number;
     queryString: string | null;
-    sortField: string | null;
-    sortDirection: SortDirection | null;
+    ordering: Ordering | null;
     statuses: string[];
     tags: string[] | null;
 }
@@ -24,9 +24,11 @@ export function taskSearchParams(
         page,
         pageSize,
         statuses,
+        ordering: {
+            orderBy: getSqlColumnFromPropertyName(sortField ?? "scheduledCompleteDate"),
+            sortDirection: !!sortDirection && sortDirection === "desc" ? SortDirection.Descending : SortDirection.Ascending
+        },
         tags: tags ?? null,
         queryString: !!queryString && queryString.length > 0 ? queryString : null,
-        sortField: getSqlColumnFromPropertyName(sortField ?? "scheduled_complete_date"),
-        sortDirection: !!sortDirection && sortDirection === "desc" ? SortDirection.Descending : SortDirection.Ascending
     };
 }

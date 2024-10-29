@@ -9,14 +9,10 @@ use std::{env, sync::Arc};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let connection = tauri::async_runtime::block_on(establish_connection())
-        .expect("Could not connect to the database.");
-
     let pool = establish_connection_pool();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(Db { connection })
         .manage(Diesel {
             pool: Arc::new(pool),
         })

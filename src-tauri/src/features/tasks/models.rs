@@ -10,7 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::SortDirection;
+use crate::Ordering;
 
 /// The status of a task.
 #[derive(
@@ -194,7 +194,7 @@ pub struct NewTask {
     pub estimated_duration: Option<i32>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskSearchParams {
     pub page: i64,
@@ -202,8 +202,7 @@ pub struct TaskSearchParams {
     pub query_string: Option<String>,
     pub statuses: Vec<String>,
     pub tags: Option<Vec<String>>,
-    pub sort_field: Option<String>,
-    pub sort_direction: Option<SortDirection>,
+    pub ordering: Ordering,
 }
 
 #[derive(

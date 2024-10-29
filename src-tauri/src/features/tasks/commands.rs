@@ -5,7 +5,7 @@ use tauri::State;
 
 use crate::{
     schema::{comments, tags, task_tags, tasks},
-    Diesel, PagedData,
+    Diesel, PagedData, SortDirection,
 };
 
 use super::*;
@@ -24,8 +24,8 @@ pub async fn create_task(new_task: NewTask, db: State<'_, Diesel>) -> Result<(),
 #[diesel::dsl::auto_type(no_type_alias)]
 fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
     let mut task_query = tasks::table
-        .inner_join(task_tags::table.on(task_tags::task_id.eq(tasks::id)))
-        .inner_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
+        .left_join(task_tags::table.on(task_tags::task_id.eq(tasks::id)))
+        .left_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
         .into_boxed::<Sqlite>();
 
     task_query = task_query.filter(tasks::status.eq_any(&params.statuses));
@@ -40,6 +40,31 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
                 .like(format!("%{}%", &query))
                 .or(tasks::description.like(format!("%{}%", &query))),
         );
+    }
+
+    match params.ordering.sort_direction {
+        SortDirection::Ascending => match params.ordering.order_by.as_str() {
+            "title" => task_query = task_query.order_by(tasks::title.asc()),
+            "description" => task_query = task_query.order_by(tasks::description.asc()),
+            "scheduled_start_date" => {
+                task_query = task_query.order_by(tasks::scheduled_start_date.asc())
+            }
+            "scheduled_complete_date" => {
+                task_query = task_query.order_by(tasks::scheduled_complete_date.asc())
+            }
+            _ => {}
+        },
+        SortDirection::Descending => match params.ordering.order_by.as_str() {
+            "title" => task_query = task_query.order_by(tasks::title.desc()),
+            "description" => task_query = task_query.order_by(tasks::description.desc()),
+            "scheduled_start_date" => {
+                task_query = task_query.order_by(tasks::scheduled_start_date.desc())
+            }
+            "scheduled_complete_date" => {
+                task_query = task_query.order_by(tasks::scheduled_complete_date.desc())
+            }
+            _ => {}
+        },
     }
 
     task_query
@@ -66,7 +91,6 @@ pub async fn get_tasks(
         .map_err(|err| err.to_string())?;
 
     let all_tasks: Vec<Task> = task_query
-        .order_by(tasks::title.desc())
         .limit(params.page_size)
         .offset((params.page - 1) * params.page_size)
         .select(Task::as_select())

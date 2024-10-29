@@ -1,41 +1,13 @@
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import useTauri from "../../../hooks/useTauri";
-import { Operator } from "../../../models/Operator";
 import { PagedData } from "../../../models/PagedData";
-import { Ordering, Query, QueryCondition, QueryExpression } from "../../../models/Query";
 import { EditTask, NewTask, Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
 
 /** Create a task service to interact with tauri data. */
 const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
     const { invoke } = useTauri();
-
-    /** Generate the search query for tasks. */
-    const generateSearchQuery = (params: TaskSearchParams): Query => {
-        const statusExpression = QueryExpression.and(
-            new QueryCondition("status", Operator.In, params.statuses)
-        );
-
-        let queryExpressions = [statusExpression];
-
-        if (params.queryString !== null) {
-            const containsExpression = QueryExpression.or(
-                new QueryCondition("description", Operator.Contains, params.queryString),
-                new QueryCondition("title", Operator.Contains, params.queryString),
-            );
-            queryExpressions.push(containsExpression);
-        }
-
-        const ordering = params.sortField !== null && params.sortDirection !== null
-            ? new Ordering(params.sortField, params.sortDirection)
-            : undefined;
-
-        const query = Query.and(params.page, params.pageSize, ordering, ...queryExpressions);
-        console.log(`${JSON.stringify(query.serialize(), null, 2)}`)
-        return query;
-
-    }
 
     /** Search for tasks that meet the search parameters.
      * @param params - The search parameters to use to find tasks.

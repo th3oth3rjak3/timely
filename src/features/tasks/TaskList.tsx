@@ -1,7 +1,7 @@
 import { ActionIcon, Button, Group, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { useDebouncedValue, useMediaQuery } from "@mantine/hooks";
+import { useMediaQuery } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPause, IconPlayerPlay, IconPlus, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
@@ -11,12 +11,11 @@ import MyTooltip from "../../components/MyTooltip.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
-import { setCurrentPage, setPageSize, setSortStatus } from "../../redux/reducers/settingsSlice.ts";
+import { setCurrentPage, setPageSize, setSortStatus, setTaskSearchParams } from "../../redux/reducers/settingsSlice.ts";
 import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
-import useTaskSearchParams from "./hooks/useTaskSearchParams.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
 import TaskDetail from "./TaskDetail.tsx";
 import { NewTask, Task } from "./types/Task.ts";
@@ -28,39 +27,31 @@ function TaskList() {
     const { showContextMenu, hideContextMenu } = useContextMenu();
 
     /** The globally set number of items per page in the application. */
-    const pageSize = useAppSelector(state => state.settings.taskListSettings.pageSize);
+    const pageSize = useAppSelector(state => state.settings.taskListSettings.params.pageSize);
 
     /** The globally set choices for how many items per page can be chosen. */
     const pageSizeOptions = useAppSelector(state => state.settings.taskListSettings.pageSizeOptions);
 
-    const currentPage = useAppSelector(state => state.settings.taskListSettings.currentPage);
-    const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
+    // const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
 
+    const taskSearchParams = useAppSelector(state => state.settings.taskListSettings.params);
 
     /** An app store dispatch function to update store values. */
     const dispatch = useAppDispatch();
 
-    // The query input for the description filter.
-    const [descriptionQuery, setDescriptionQuery] = useState<string>(""); // TODO: appselector
-    const [debouncedDescriptionQuery] = useDebouncedValue(descriptionQuery, 200); // TODO: appselector
+    const descriptionQuery = useAppSelector(state => state.settings.taskListSettings.params.queryString);
 
     /** The list of all statuses available to choose from. */
-    const statuses = ["Todo", "Doing", "Done", "Paused", "Cancelled"]; //  TODO: appselector
+    const statuses = useAppSelector(state => state.settings.taskListSettings.statusOptions);
 
     // The list of currently selected statuses by the user.
-    const [selectedStatuses, setSelectedStatuses] = useState<string[]>(["Todo", "Doing", "Paused"]); // TODO: appselector
+    const selectedStatuses = useAppSelector(state => state.settings.taskListSettings.params.statuses);
+    const currentPage = useAppSelector(state => state.settings.taskListSettings.params.page);
+    const sortStatus = useAppSelector(state => state.settings.taskListSettings.sortStatus);
 
     const [loading, setLoading] = useState(true);
 
-    const searchParams = useTaskSearchParams(
-        currentPage,
-        pageSize,
-        selectedStatuses,
-        debouncedDescriptionQuery,
-        sortStatus
-    );
-
-    const { tasks, recordCount, tagOptions, fetchAllData } = useFetchTasks(searchParams);
+    const { tasks, recordCount, tagOptions, fetchAllData } = useFetchTasks(taskSearchParams);
     const { windowWidth } = useWindowSize();
     const {
         createTask,
@@ -96,6 +87,22 @@ function TaskList() {
     //#endregion
 
     //#region Functions
+
+    function updateDescriptionQuery(value: string | null) {
+        dispatch(setTaskSearchParams({
+            ...taskSearchParams,
+            page: 1,
+            queryString: value,
+        }))
+    }
+
+    function updateSelectedStatuses(statuses: string[]) {
+        dispatch(setTaskSearchParams({
+            ...taskSearchParams,
+            page: 1,
+            statuses: statuses
+        }));
+    }
 
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
@@ -380,12 +387,12 @@ function TaskList() {
                     placeholder="Search..."
                     leftSection={<IconSearch size={16} />}
                     rightSection={
-                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => setDescriptionQuery("")}>
+                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => updateDescriptionQuery(null)}>
                             <IconX size={14} />
                         </ActionIcon>
                     }
-                    value={descriptionQuery}
-                    onChange={(e) => setDescriptionQuery(e.currentTarget.value)}
+                    value={descriptionQuery !== null ? descriptionQuery : undefined}
+                    onChange={(e) => updateDescriptionQuery(e.currentTarget.value)}
                 />
             ),
             filtering: descriptionQuery !== "",
@@ -402,7 +409,7 @@ function TaskList() {
                     data={statuses}
                     value={selectedStatuses}
                     placeholder="Search statuses..."
-                    onChange={setSelectedStatuses}
+                    onChange={(statuses) => updateSelectedStatuses(statuses)}
                     leftSection={<IconSearch size={16} />}
                     searchable
                     maw={300}
@@ -435,7 +442,7 @@ function TaskList() {
     //#region Effects
     useEffect(() => {
         fetchAllData().then(() => setLoading(false));
-    }, [searchParams]);
+    }, [taskSearchParams]);
     //#endregion
 
     //#region Component
