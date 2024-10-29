@@ -1,6 +1,6 @@
 use super::models::Task;
 use chrono::Utc;
-use diesel::{dsl::count, prelude::*, sqlite::Sqlite};
+use diesel::{dsl::*, prelude::*, sqlite::Sqlite};
 use tauri::State;
 
 use crate::{
@@ -11,9 +11,9 @@ use crate::{
 use super::*;
 
 #[tauri::command]
-pub async fn create_task(new_task: NewTask, db: State<'_, Diesel>) -> Result<(), String> {
+pub async fn create_task(new_task: CreateTask, db: State<'_, Diesel>) -> Result<(), String> {
     let mut connection = db.pool.get().map_err(|err| err.to_string())?;
-
+    let new_task = NewTask::from(new_task);
     diesel::insert_into(tasks::table)
         .values(&new_task)
         .execute(&mut connection)
@@ -47,10 +47,16 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
             "title" => task_query = task_query.order_by(tasks::title.asc()),
             "description" => task_query = task_query.order_by(tasks::description.asc()),
             "scheduled_start_date" => {
-                task_query = task_query.order_by(tasks::scheduled_start_date.asc())
+                task_query = task_query.order_by((
+                    tasks::scheduled_start_date.is_null(),
+                    tasks::scheduled_start_date.asc(),
+                ))
             }
             "scheduled_complete_date" => {
-                task_query = task_query.order_by(tasks::scheduled_complete_date.asc())
+                task_query = task_query.order_by((
+                    tasks::scheduled_complete_date.is_null(),
+                    tasks::scheduled_complete_date.asc(),
+                ))
             }
             _ => {}
         },
@@ -58,10 +64,16 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
             "title" => task_query = task_query.order_by(tasks::title.desc()),
             "description" => task_query = task_query.order_by(tasks::description.desc()),
             "scheduled_start_date" => {
-                task_query = task_query.order_by(tasks::scheduled_start_date.desc())
+                task_query = task_query.order_by((
+                    tasks::scheduled_start_date.is_null(),
+                    tasks::scheduled_start_date.desc(),
+                ))
             }
             "scheduled_complete_date" => {
-                task_query = task_query.order_by(tasks::scheduled_complete_date.desc())
+                task_query = task_query.order_by((
+                    tasks::scheduled_complete_date.is_null(),
+                    tasks::scheduled_complete_date.desc(),
+                ))
             }
             _ => {}
         },
@@ -86,11 +98,12 @@ pub async fn get_tasks(
     let task_query = generate_search_query(&params);
 
     let count: i64 = count_query
-        .select(count(tasks::id))
+        .select(count_distinct(tasks::id))
         .first(&mut connection)
         .map_err(|err| err.to_string())?;
 
     let all_tasks: Vec<Task> = task_query
+        .distinct()
         .limit(params.page_size)
         .offset((params.page - 1) * params.page_size)
         .select(Task::as_select())
@@ -129,20 +142,29 @@ pub async fn get_tasks(
 
     let task_read: Vec<TaskRead> = tasks_with_tags_and_comments
         .into_iter()
-        .map(|(task, tags, comments)| TaskRead {
-            id: task.id,
-            title: task.title,
-            description: task.description,
-            status: task.status,
-            scheduled_start_date: task.scheduled_start_date,
-            scheduled_complete_date: task.scheduled_complete_date,
-            actual_start_date: task.actual_start_date,
-            actual_complete_date: task.actual_complete_date,
-            last_resumed_date: task.last_resumed_date,
-            estimated_duration: task.estimated_duration,
-            elapsed_duration: task.elapsed_duration,
-            comments,
-            tags,
+        .map(|(task, tags, comments)| {
+            let mut elapsed_duration = task.elapsed_duration;
+
+            if let Some(last_resumed) = task.last_resumed_date {
+                let diff = Utc::now() - last_resumed.and_utc();
+                elapsed_duration += diff.num_seconds() as i32;
+            }
+
+            TaskRead {
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                scheduled_start_date: task.scheduled_start_date,
+                scheduled_complete_date: task.scheduled_complete_date,
+                actual_start_date: task.actual_start_date,
+                actual_complete_date: task.actual_complete_date,
+                last_resumed_date: task.last_resumed_date,
+                estimated_duration: task.estimated_duration,
+                elapsed_duration,
+                comments,
+                tags,
+            }
         })
         .collect();
 
@@ -266,11 +288,12 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
 
             existing_task.title = task.title;
             existing_task.description = task.description;
-            existing_task.scheduled_start_date = task.scheduled_start_date;
-            existing_task.scheduled_complete_date = task.scheduled_complete_date;
+            existing_task.scheduled_start_date = task.scheduled_start_date.map(|dt| dt.naive_utc());
+            existing_task.scheduled_complete_date =
+                task.scheduled_complete_date.map(|dt| dt.naive_utc());
             existing_task.estimated_duration = task.estimated_duration;
-            existing_task.actual_start_date = task.actual_start_date;
-            existing_task.actual_complete_date = task.actual_complete_date;
+            existing_task.actual_start_date = task.actual_start_date.map(|dt| dt.naive_utc());
+            existing_task.actual_complete_date = task.actual_complete_date.map(|dt| dt.naive_utc());
 
             match model.status {
                 Status::Cancelled => {
@@ -305,9 +328,8 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
                 Status::Unknown => unimplemented!(),
             }
 
-            diesel::update(tasks::table)
-                .set(&existing_task)
-                .execute(&mut connection)
+            existing_task
+                .save_changes::<Task>(&mut connection)
                 .map(|_| ())
                 .map_err(|err| err.to_string())
         }
@@ -316,18 +338,10 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
 }
 
 #[tauri::command]
-pub fn add_comment(comment: NewComment, db: State<'_, Diesel>) -> Result<(), String> {
+pub fn add_comment(comment: CreateComment, db: State<'_, Diesel>) -> Result<(), String> {
     let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    let model = Comment {
-        id: 0,
-        task_id: comment.task_id,
-        message: comment.message,
-        created: Utc::now().naive_utc(),
-        modified: None,
-    };
-
-    // TODO: verify that diesel doesn't just accept 0 as the id.
+    let model = NewComment::from(comment);
 
     diesel::insert_into(comments::table)
         .values(&model)
@@ -349,9 +363,8 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Diesel>) -> Resu
     found.message = comment.message;
     found.modified = Some(Utc::now().naive_utc());
 
-    diesel::update(comments::table)
-        .set(&found)
-        .execute(&mut connection)
+    found
+        .save_changes::<Comment>(&mut connection)
         .map(|_| ())
         .map_err(|err| err.to_string())
 }
@@ -482,11 +495,14 @@ pub async fn add_tag_to_task(
 
     match existing_record {
         Some(_) => Ok(()),
-        None => diesel::insert_into(task_tags::table)
-            .values((task_tags::tag_id.eq(tag_id), task_tags::task_id.eq(task_id)))
-            .execute(&mut connection)
-            .map(|_| ())
-            .map_err(|err| err.to_string()),
+        None => {
+            let new_record = TaskTag { task_id, tag_id };
+            diesel::insert_into(task_tags::table)
+                .values(&new_record)
+                .execute(&mut connection)
+                .map(|_| ())
+                .map_err(|err| err.to_string())
+        }
     }
 }
 

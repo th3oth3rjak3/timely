@@ -15,6 +15,18 @@ pub fn enable_foreign_keys(conn: &mut SqliteConnection) {
         .expect("Foreign Keys could not be enabled.");
 }
 
+pub fn enable_write_ahead_log(conn: &mut SqliteConnection) {
+    diesel::sql_query("PRAGMA journal_mode=WAL;")
+        .execute(conn)
+        .expect("Failed to set journal mode to WAL.");
+}
+
+pub fn enable_query_lock_timeout(conn: &mut SqliteConnection) {
+    diesel::sql_query("PRAGMA busy_timeout = 5000;")
+        .execute(conn)
+        .expect("Failed to set busy timeout.");
+}
+
 pub fn establish_connection_pool() -> Pool {
     let env: &str = include_str!("../.env");
 
@@ -28,6 +40,8 @@ pub fn establish_connection_pool() -> Pool {
 
     let mut conn = pool.get().expect("Connection to exist");
     enable_foreign_keys(&mut conn);
+    enable_write_ahead_log(&mut conn);
+    enable_query_lock_timeout(&mut conn);
 
     // TODO: run diesel migrations here.
 

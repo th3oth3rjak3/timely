@@ -1,4 +1,4 @@
-use chrono::NaiveDateTime;
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::{
     backend::Backend,
     deserialize::{FromSql, FromSqlRow},
@@ -137,6 +137,27 @@ pub struct EditComment {
 pub struct NewComment {
     pub task_id: i32,
     pub message: String,
+    pub created: NaiveDateTime,
+    pub modified: Option<NaiveDateTime>,
+}
+
+/// Required because I don't want the user passing date times.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateComment {
+    pub task_id: i32,
+    pub message: String,
+}
+
+impl From<CreateComment> for NewComment {
+    fn from(value: CreateComment) -> Self {
+        NewComment {
+            task_id: value.task_id,
+            message: value.message,
+            created: Utc::now().naive_utc(),
+            modified: None,
+        }
+    }
 }
 
 #[derive(
@@ -148,7 +169,6 @@ pub struct NewComment {
     AsChangeset,
     Serialize,
     Deserialize,
-    Insertable,
     Associations,
 )]
 #[diesel(table_name = crate::schema::comments)]
@@ -172,14 +192,15 @@ pub struct EditTask {
     pub title: String,
     pub description: String,
     pub status: Status,
-    pub scheduled_start_date: Option<NaiveDateTime>,
-    pub scheduled_complete_date: Option<NaiveDateTime>,
-    pub actual_start_date: Option<NaiveDateTime>,
-    pub actual_complete_date: Option<NaiveDateTime>,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub actual_start_date: Option<DateTime<Utc>>,
+    pub actual_complete_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
     pub elapsed_duration: Option<i32>,
 }
 
+/// Model for the database which requires NaiveDateTime
 #[derive(Debug, Clone, Default, Deserialize, Serialize, Insertable)]
 #[diesel(table_name = crate::schema::tasks)]
 #[diesel(check_for_backend(diesel::sqlite::Sqlite))]
@@ -192,6 +213,33 @@ pub struct NewTask {
     pub scheduled_start_date: Option<NaiveDateTime>,
     pub scheduled_complete_date: Option<NaiveDateTime>,
     pub estimated_duration: Option<i32>,
+    pub elapsed_duration: i32,
+}
+
+/// Required to serialize the datetime as UTC
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CreateTask {
+    pub title: String,
+    pub description: String,
+    pub status: Status,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub estimated_duration: Option<i32>,
+}
+
+impl From<CreateTask> for NewTask {
+    fn from(value: CreateTask) -> Self {
+        NewTask {
+            title: value.title,
+            description: value.description,
+            status: value.status,
+            scheduled_start_date: value.scheduled_start_date.map(|dt| dt.naive_utc()),
+            scheduled_complete_date: value.scheduled_complete_date.map(|dt| dt.naive_utc()),
+            estimated_duration: value.estimated_duration,
+            elapsed_duration: 0,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,7 +272,15 @@ pub struct Tag {
 }
 
 #[derive(
-    Associations, Identifiable, Selectable, Queryable, Debug, Clone, Serialize, Deserialize,
+    Associations,
+    Identifiable,
+    Insertable,
+    Selectable,
+    Queryable,
+    Debug,
+    Clone,
+    Serialize,
+    Deserialize,
 )]
 #[diesel(belongs_to(Task))]
 #[diesel(belongs_to(Tag))]

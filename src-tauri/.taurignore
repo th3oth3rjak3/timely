@@ -1,1 +1,3 @@
 **/timely.sqlite
+**/timely.sqlite-shm
+**/timely.sqlite-wal

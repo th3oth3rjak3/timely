@@ -45,7 +45,7 @@ function TagDetails(props: Props) {
         <TagsInput
             label="Tags"
             data={tagOptions}
-            value={selectedTags}
+            defaultValue={selectedTags}
             onRemove={(tagName) => removeTagByName(tagName)}
             onOptionSubmit={(tagName) => addTagByName(tagName)}
             acceptValueOnBlur={false}
