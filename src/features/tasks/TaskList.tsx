@@ -363,9 +363,11 @@ function TaskList() {
             <Group justify="space-between">
                 <Text size="xl">Tasks</Text>
                 <Group>
-                    <ActionIcon variant="light" color="cyan" onClick={() => newFormActions.open()}>
-                        <IconPlus />
-                    </ActionIcon>
+                    <MyTooltip label="Create New Task" position="left">
+                        <ActionIcon variant="light" color="cyan" onClick={() => newFormActions.open()}>
+                            <IconPlus />
+                        </ActionIcon>
+                    </MyTooltip>
                     <MyTooltip label="Refresh Tasks" position="left">
                         <ActionIcon variant="light" color="cyan" onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
                             <IconRefresh />
