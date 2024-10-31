@@ -23,6 +23,7 @@ import { setUserSettings } from './redux/reducers/settingsSlice';
 import { ContextMenuProvider } from 'mantine-contextmenu';
 import './App.css';
 import useSettingsService from './features/settings/hooks/useSettingsService';
+import TagsList from './features/tags/TagsList';
 
 function App() {
 
@@ -53,6 +54,10 @@ function App() {
                 {
                   path: "/tasks",
                   element: <TasksList />
+                },
+                {
+                  path: "/tags",
+                  element: <TagsList />
                 },
                 {
                   path: "/settings",

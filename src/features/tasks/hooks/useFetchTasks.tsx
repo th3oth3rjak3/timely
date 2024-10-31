@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Tag, Task } from "../types/Task";
+import useTagService from "../../tags/hooks/useTagService";
+import { Tag } from "../../tags/types/Tag";
+import { Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
-import useTagService from "./useTagService";
 import useTaskService from "./useTaskService";
 
 const useFetchTasks = (searchParams: TaskSearchParams) => {

@@ -35,6 +35,9 @@ pub fn run() {
             features::tasks::get_all_tags,
             features::tasks::add_tag_to_task,
             features::tasks::add_new_tag,
+            features::tags::get_tags,
+            features::tags::edit_tag,
+            features::tags::delete_tag,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
         ])

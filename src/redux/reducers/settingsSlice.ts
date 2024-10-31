@@ -1,6 +1,8 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DataTableSortStatus } from "mantine-datatable";
 import { UserSettings } from "../../features/settings/UserSettings";
+import { Tag } from "../../features/tags/types/Tag";
+import { tagSearchParams, TagSearchParams } from "../../features/tags/types/TagSearchParams";
 import { Task } from "../../features/tasks/types/Task";
 import { taskSearchParams, TaskSearchParams } from "../../features/tasks/types/TaskSearchParams";
 import { Ordering } from "../../models/Ordering";
@@ -20,9 +22,15 @@ export type SettingsState = {
     userSettings: UserSettings;
     /** Whether or not the navbar is open. */
     navbarOpen: boolean;
+    /** Settings for the tags listing. */
+    tagListSettings: TagsListSettings;
 }
 
-
+export type TagsListSettings = {
+    pageSizeOptions: number[];
+    params: TagSearchParams;
+    sortStatus: DataTableSortStatus<Tag>;
+}
 
 export type TaskListSettings = {
     /** The choices that should be shown in a list for number of items per page. */
@@ -32,10 +40,12 @@ export type TaskListSettings = {
     sortStatus: DataTableSortStatus<Task>;
 }
 
+const pageSizeOptions = [5, 10, 25, 50, 100];
+
 const initialState: SettingsState = {
     navbarOpen: false,
     taskListSettings: {
-        pageSizeOptions: [5, 10, 25, 50, 100],
+        pageSizeOptions: pageSizeOptions,
         statusOptions: ["Todo", "Doing", "Done", "Paused", "Cancelled"],
         params: taskSearchParams(1, 5, ["Todo", "Doing", "Paused"], undefined, undefined, "scheduledCompleteDate", "asc"),
         sortStatus: {
@@ -43,11 +53,21 @@ const initialState: SettingsState = {
             direction: 'asc',
         },
     },
+    tagListSettings: {
+        pageSizeOptions: pageSizeOptions,
+        params: tagSearchParams(1, 5, undefined, undefined, undefined),
+        sortStatus: {
+            columnAccessor: 'value',
+            direction: 'asc'
+        }
+    },
     homePage: "",
     homePageOptions: [
-        { label: "Settings", value: "/settings" },
+        { label: "Timer", value: "/timer" },
         { label: "Tasks List", value: "/tasks" },
-        { label: "Timer", value: "/timer" }],
+        { label: "Tags List", value: "/tags" },
+        { label: "Settings", value: "/settings" },
+    ],
     userSettings: {
         homePage: "",
         pageSize: 5,
@@ -59,14 +79,14 @@ export const settingsSlice = createSlice({
     initialState,
     reducers: {
         /** Set the current page that the user is looking at. */
-        setCurrentPage: (state, action: PayloadAction<number>) => {
+        setCurrentTaskPage: (state, action: PayloadAction<number>) => {
             state.taskListSettings.params.page = action.payload;
         },
         /** Set the number of list items to be shown per page. */
-        setPageSize: (state, action: PayloadAction<number>) => {
+        setTaskPageSize: (state, action: PayloadAction<number>) => {
             state.taskListSettings.params.pageSize = action.payload;
         },
-        setSortStatus: (state, action: PayloadAction<DataTableSortStatus<Task>>) => {
+        setTaskSortStatus: (state, action: PayloadAction<DataTableSortStatus<Task>>) => {
             state.taskListSettings.sortStatus = action.payload;
             state.taskListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction);
         },
@@ -86,19 +106,36 @@ export const settingsSlice = createSlice({
         },
         toggleNavbar: (state) => {
             state.navbarOpen = !state.navbarOpen;
+        },
+        setCurrentTagPage: (state, action: PayloadAction<number>) => {
+            state.tagListSettings.params.page = action.payload;
+        },
+        setTagPageSize: (state, action: PayloadAction<number>) => {
+            state.tagListSettings.params.pageSize = action.payload;
+        },
+        setTagSortStatus: (state, action: PayloadAction<DataTableSortStatus<Tag>>) => {
+            state.tagListSettings.sortStatus = action.payload;
+            state.tagListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction);
+        },
+        setTagSearchParams: (state, action: PayloadAction<TagSearchParams>) => {
+            state.tagListSettings.params = action.payload;
         }
     }
 });
 
 export const {
-    setPageSize,
-    setCurrentPage,
-    setSortStatus,
+    setTaskPageSize,
+    setCurrentTaskPage,
+    setTaskSortStatus,
     setUserSettings,
     openNavbar,
     closeNavbar,
     toggleNavbar,
     setTaskSearchParams,
+    setCurrentTagPage,
+    setTagPageSize,
+    setTagSortStatus,
+    setTagSearchParams,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

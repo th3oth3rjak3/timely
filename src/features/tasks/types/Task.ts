@@ -1,3 +1,5 @@
+import { Tag } from "../../tags/types/Tag";
+
 /** A task to be completed by the user. */
 export type Task = {
     /** The unique id of the task. */
@@ -24,21 +26,6 @@ export type Task = {
     comments: Comment[]
     /** Tags associated with this task. */
     tags: Tag[]
-
-    // TODO: add comments array to this model
-}
-
-export type Comment = {
-    id: number;
-    taskId: number;
-    message: string;
-    created: Date;
-    modified: Date | null;
-}
-
-export type Tag = {
-    id: number,
-    value: string,
 }
 
 export type NewTask = {

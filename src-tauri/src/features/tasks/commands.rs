@@ -1,9 +1,10 @@
 use super::models::Task;
-use chrono::Utc;
+use chrono::Local;
 use diesel::{dsl::*, prelude::*, sqlite::Sqlite};
 use tauri::State;
 
 use crate::{
+    features::tags::Tag,
     schema::{comments, tags, task_tags, tasks},
     Diesel, PagedData, SortDirection,
 };
@@ -146,7 +147,7 @@ pub async fn get_tasks(
             let mut elapsed_duration = task.elapsed_duration;
 
             if let Some(last_resumed) = task.last_resumed_date {
-                let diff = Utc::now() - last_resumed.and_utc();
+                let diff = Local::now().naive_local() - last_resumed;
                 elapsed_duration += diff.num_seconds() as i32;
             }
 
@@ -155,11 +156,21 @@ pub async fn get_tasks(
                 title: task.title,
                 description: task.description,
                 status: task.status,
-                scheduled_start_date: task.scheduled_start_date,
-                scheduled_complete_date: task.scheduled_complete_date,
-                actual_start_date: task.actual_start_date,
-                actual_complete_date: task.actual_complete_date,
-                last_resumed_date: task.last_resumed_date,
+                scheduled_start_date: task
+                    .scheduled_start_date
+                    .map(|dt| dt.and_utc().with_timezone(&Local)),
+                scheduled_complete_date: task
+                    .scheduled_complete_date
+                    .map(|dt| dt.and_utc().with_timezone(&Local)),
+                actual_start_date: task
+                    .actual_start_date
+                    .map(|dt| dt.and_utc().with_timezone(&Local)),
+                actual_complete_date: task
+                    .actual_complete_date
+                    .map(|dt| dt.and_utc().with_timezone(&Local)),
+                last_resumed_date: task
+                    .last_resumed_date
+                    .map(|dt| dt.and_utc().with_timezone(&Local)),
                 estimated_duration: task.estimated_duration,
                 elapsed_duration,
                 comments,
@@ -181,7 +192,7 @@ pub fn start_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
     match find_task(task_id, &db)? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
-            task.actual_start_date = Some(Utc::now().naive_utc());
+            task.actual_start_date = Some(Local::now().naive_local());
             save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
@@ -215,7 +226,7 @@ pub fn finish_task(task_id: i32, db: State<'_, Diesel>) -> Result<(), String> {
     match find_task(task_id, &db)? {
         Some(model) => {
             let mut task = set_task_model_inactive(model, Status::Done);
-            task.actual_complete_date = Some(Utc::now().naive_utc());
+            task.actual_complete_date = Some(Local::now().naive_local());
             save_task(task, &db)
         }
         None => Err(not_found_message(task_id)),
@@ -288,12 +299,14 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
 
             existing_task.title = task.title;
             existing_task.description = task.description;
-            existing_task.scheduled_start_date = task.scheduled_start_date.map(|dt| dt.naive_utc());
+            existing_task.scheduled_start_date =
+                task.scheduled_start_date.map(|dt| dt.naive_local());
             existing_task.scheduled_complete_date =
-                task.scheduled_complete_date.map(|dt| dt.naive_utc());
+                task.scheduled_complete_date.map(|dt| dt.naive_local());
             existing_task.estimated_duration = task.estimated_duration;
-            existing_task.actual_start_date = task.actual_start_date.map(|dt| dt.naive_utc());
-            existing_task.actual_complete_date = task.actual_complete_date.map(|dt| dt.naive_utc());
+            existing_task.actual_start_date = task.actual_start_date.map(|dt| dt.naive_local());
+            existing_task.actual_complete_date =
+                task.actual_complete_date.map(|dt| dt.naive_local());
 
             match model.status {
                 Status::Cancelled => {
@@ -301,21 +314,21 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
                 }
                 Status::Doing => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
+                        existing_task.actual_start_date = Some(Local::now().naive_local());
                     }
                     existing_task.actual_complete_date = None;
                     existing_task = update_active_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Done => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
+                        existing_task.actual_start_date = Some(Local::now().naive_local());
                     }
-                    existing_task.actual_complete_date = Some(Utc::now().naive_utc());
+                    existing_task.actual_complete_date = Some(Local::now().naive_local());
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
                 Status::Paused => {
                     if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
+                        existing_task.actual_start_date = Some(Local::now().naive_local());
                     }
                     existing_task.actual_complete_date = None;
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
@@ -361,7 +374,7 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Diesel>) -> Resu
         .map_err(|err| err.to_string())?;
 
     found.message = comment.message;
-    found.modified = Some(Utc::now().naive_utc());
+    found.modified = Some(Local::now().naive_local());
 
     found
         .save_changes::<Comment>(&mut connection)
@@ -392,7 +405,7 @@ fn update_inactive_elapsed(mut task: Task, maybe_elapsed: Option<i32>) -> Task {
 fn update_active_elapsed(mut task: Task, maybe_elapsed: Option<i32>) -> Task {
     if let Some(elapsed) = maybe_elapsed {
         task.elapsed_duration = elapsed;
-        task.last_resumed_date = Some(Utc::now().naive_utc());
+        task.last_resumed_date = Some(Local::now().naive_local());
     }
 
     task
@@ -426,7 +439,7 @@ fn find_task(task_id: i32, db: &State<'_, Diesel>) -> Result<Option<Task>, Strin
 fn set_task_model_active(model: Task, status: Status) -> Task {
     let mut task = model.clone();
     task.status = status;
-    task.last_resumed_date = Some(Utc::now().naive_utc());
+    task.last_resumed_date = Some(Local::now().naive_local());
     task
 }
 
@@ -436,7 +449,7 @@ fn set_task_model_inactive(model: Task, status: Status) -> Task {
     task.status = status;
 
     if let Some(last_resumed) = model.last_resumed_date {
-        let diff = Utc::now().naive_utc() - last_resumed;
+        let diff = Local::now().naive_local() - last_resumed;
         task.elapsed_duration = model.elapsed_duration + diff.num_seconds() as i32;
         task.last_resumed_date = None;
     }

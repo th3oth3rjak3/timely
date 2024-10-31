@@ -10,7 +10,7 @@ import MyTooltip from "../../components/MyTooltip.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
-import { setCurrentPage, setPageSize, setSortStatus, setTaskSearchParams } from "../../redux/reducers/settingsSlice.ts";
+import { setCurrentTaskPage, setTaskPageSize, setTaskSearchParams, setTaskSortStatus } from "../../redux/reducers/settingsSlice.ts";
 import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { validateLength } from "../../utilities/formUtilities.ts";
@@ -60,7 +60,7 @@ function TaskList() {
         reopenTask,
     } = useTaskService(fetchAllData);
 
-    const isTouch = useMediaQuery('(pointer: coarse)');
+    const isTouchScreen = useMediaQuery('(pointer: coarse)');
 
     const validators = {
         description: (value?: string | null) => validateLength({ fieldName: "Description", value, minValue: 1, maxValue: 2000 }),
@@ -122,8 +122,8 @@ function TaskList() {
 
     /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
     function updatePageSize(size: number) {
-        dispatch(setCurrentPage(1));
-        dispatch(setPageSize(size));
+        dispatch(setCurrentTaskPage(1));
+        dispatch(setTaskPageSize(size));
     }
 
     function getContextMenuItems(task: Task): ContextMenuContent {
@@ -378,7 +378,7 @@ function TaskList() {
             {loading
                 ? <></>
                 : <DataTable
-                    textSelectionDisabled={isTouch}
+                    textSelectionDisabled={isTouchScreen}
                     onRowContextMenu={({ record, event }) => showContextMenu(getContextMenuItems(record))(event)}
                     onScroll={hideContextMenu}
                     withTableBorder
@@ -389,12 +389,12 @@ function TaskList() {
                     page={taskSearchParams.page}
                     totalRecords={recordCount}
                     recordsPerPage={pageSize}
-                    onPageChange={(page) => dispatch(setCurrentPage(page))}
+                    onPageChange={(page) => dispatch(setCurrentTaskPage(page))}
                     recordsPerPageOptions={pageSizeOptions}
                     onRecordsPerPageChange={(size) => updatePageSize(size)}
                     key={"id"}
                     sortStatus={sortStatus}
-                    onSortStatusChange={status => dispatch(setSortStatus(status))}
+                    onSortStatusChange={status => dispatch(setTaskSortStatus(status))}
                     rowExpansion={{
                         content: ({ record }) => {
                             return (
@@ -490,7 +490,7 @@ function TaskList() {
                         <NumberInput label="Elapsed Duration" key={editForm.key("elapsedDuration")} {...editForm.getInputProps("elapsedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant="light" color="cyan">Submit</Button>
+                        <Button type="submit" variant="light" color="cyan" disabled={!editForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>

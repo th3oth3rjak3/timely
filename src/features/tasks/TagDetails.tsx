@@ -1,5 +1,5 @@
 import { TagsInput } from "@mantine/core";
-import useTagService from "./hooks/useTagService";
+import useTagService from "../tags/hooks/useTagService";
 import { Tag, Task } from "./types/Task";
 
 type Props = {
