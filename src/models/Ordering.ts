@@ -12,4 +12,11 @@ export class Ordering {
 
         this.orderBy = getSqlColumnFromPropertyName(orderBy);
     }
+
+    serialize() {
+        return {
+            orderBy: this.orderBy,
+            sortDirection: this.sortDirection
+        }
+    }
 }

@@ -1,12 +1,11 @@
 import { Ordering } from "../../../models/Ordering";
 import { SortDirection } from "../../../models/SortDirection";
-import { getSqlColumnFromPropertyName } from "../../../utilities/dataTableUtilities";
 
 export type TagSearchParams = {
     page: number;
     pageSize: number;
     queryString: string | null;
-    ordering: Ordering | null;
+    ordering: { orderBy: string, sortDirection: SortDirection } | null;
 }
 
 export function tagSearchParams(
@@ -19,10 +18,7 @@ export function tagSearchParams(
     return {
         page,
         pageSize,
-        ordering: {
-            orderBy: getSqlColumnFromPropertyName(sortField ?? "value"),
-            sortDirection: !!sortDirection && sortDirection === "desc" ? SortDirection.Descending : SortDirection.Ascending
-        },
+        ordering: new Ordering(sortField ?? "value", sortDirection ?? "asc").serialize(),
         queryString: !!queryString && queryString.length > 0 ? queryString : null,
     };
 }

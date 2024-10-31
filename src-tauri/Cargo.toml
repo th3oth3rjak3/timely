@@ -14,11 +14,14 @@ edition = "2021"
 name = "timely_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[workspace]
+members = ["./timely_macros"]
 
 [build-dependencies]
 tauri-build = { version = "2.0.0", features = [] }
 
 [dependencies]
+timely_macros = { path = "./timely_macros" }
 tauri = { version = "2.0.0", features = [] }
 tauri-plugin-shell = "2.0.0"
 serde = { version = "1", features = ["derive"] }
@@ -36,3 +39,4 @@ diesel = { version = "2.2.4", features = [
 libsqlite3-sys = { version = "0.29", features = ["bundled"] }
 r2d2 = "0.8.10"
 diesel_migrations = { version = "2.2.0", features = ["sqlite"] }
+strum = { version = "0.26", features = ["derive"] }

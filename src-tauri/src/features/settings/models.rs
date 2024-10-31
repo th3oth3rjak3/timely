@@ -19,3 +19,8 @@ pub struct UserSettings {
     pub page_size: i32,
     pub home_page: String,
 }
+
+#[derive(Debug, Clone)]
+pub enum ColorScheme {
+    Cyan,
+}

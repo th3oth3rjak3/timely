@@ -46,6 +46,7 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
     match params.ordering.sort_direction {
         SortDirection::Ascending => match params.ordering.order_by.as_str() {
             "title" => task_query = task_query.order_by(tasks::title.asc()),
+            "status" => task_query = task_query.order_by(tasks::status.asc()),
             "description" => task_query = task_query.order_by(tasks::description.asc()),
             "scheduled_start_date" => {
                 task_query = task_query.order_by((
@@ -63,6 +64,7 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
         },
         SortDirection::Descending => match params.ordering.order_by.as_str() {
             "title" => task_query = task_query.order_by(tasks::title.desc()),
+            "status" => task_query = task_query.order_by(tasks::status.desc()),
             "description" => task_query = task_query.order_by(tasks::description.desc()),
             "scheduled_start_date" => {
                 task_query = task_query.order_by((
@@ -338,7 +340,6 @@ pub fn edit_task(task: EditTask, db: State<'_, Diesel>) -> Result<(), String> {
                     existing_task.actual_complete_date = None;
                     existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
                 }
-                Status::Unknown => unimplemented!(),
             }
 
             existing_task

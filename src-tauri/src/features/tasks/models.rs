@@ -1,22 +1,29 @@
 use chrono::{DateTime, Local, NaiveDateTime};
 use diesel::{
-    backend::Backend,
-    deserialize::{FromSql, FromSqlRow},
+    deserialize::FromSqlRow,
     expression::AsExpression,
     prelude::*,
-    serialize::{self, ToSql},
-    sql_types::Text,
-    sqlite::Sqlite,
+    sql_types::{self},
 };
 use serde::{Deserialize, Serialize};
+use timely_macros::SqliteTextEnum;
 
 use crate::{features::tags::Tag, Ordering};
 
 /// The status of a task.
 #[derive(
-    Serialize, Deserialize, Default, Debug, PartialEq, Eq, Clone, AsExpression, FromSqlRow,
+    Serialize,
+    Deserialize,
+    Default,
+    Debug,
+    PartialEq,
+    Eq,
+    Clone,
+    AsExpression,
+    SqliteTextEnum,
+    FromSqlRow,
 )]
-#[diesel(sql_type = diesel::sql_types::Text)]
+#[diesel(sql_type = sql_types::Text)]
 pub enum Status {
     /// When a task has been cancelled and will not be worked.
     Cancelled,
@@ -29,52 +36,6 @@ pub enum Status {
     /// A task that has not yet been started.
     #[default]
     Todo,
-    /// Any other task status.
-    Unknown,
-}
-
-impl ToSql<Text, Sqlite> for Status {
-    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
-        let output: String = self.to_owned().into();
-        out.set_value(output);
-        Ok(serialize::IsNull::No)
-    }
-}
-
-impl FromSql<Text, Sqlite> for Status {
-    fn from_sql(bytes: <Sqlite as Backend>::RawValue<'_>) -> diesel::deserialize::Result<Self> {
-        let value: Result<Status, String> =
-            <String as FromSql<Text, Sqlite>>::from_sql(bytes).map(|value| value.try_into())?;
-        value.map_err(|err| err.into())
-    }
-}
-
-impl TryFrom<String> for Status {
-    type Error = String;
-
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str() {
-            "Todo" => Ok(Status::Todo),
-            "Doing" => Ok(Status::Doing),
-            "Done" => Ok(Status::Done),
-            "Paused" => Ok(Status::Paused),
-            "Cancelled" => Ok(Status::Cancelled),
-            unsupported => Err(format!("Unsupported Status: {unsupported}")),
-        }
-    }
-}
-
-impl From<Status> for String {
-    fn from(value: Status) -> Self {
-        match value {
-            Status::Cancelled => "Cancelled".to_string(),
-            Status::Doing => "Doing".to_string(),
-            Status::Done => "Done".to_string(),
-            Status::Paused => "Paused".to_string(),
-            Status::Todo => "Todo".to_string(),
-            Status::Unknown => "Unknown".to_string(),
-        }
-    }
 }
 
 #[derive(

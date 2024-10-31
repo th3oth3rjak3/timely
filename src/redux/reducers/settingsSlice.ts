@@ -49,14 +49,16 @@ const initialState: SettingsState = {
         statusOptions: ["Todo", "Doing", "Done", "Paused", "Cancelled"],
         params: taskSearchParams(1, 5, ["Todo", "Doing", "Paused"], undefined, undefined, "scheduledCompleteDate", "asc"),
         sortStatus: {
+            sortKey: 'tasks',
             columnAccessor: 'scheduledCompleteDate',
             direction: 'asc',
         },
     },
     tagListSettings: {
         pageSizeOptions: pageSizeOptions,
-        params: tagSearchParams(1, 5, undefined, undefined, undefined),
+        params: tagSearchParams(1, 5, undefined, 'value', 'asc'),
         sortStatus: {
+            sortKey: 'tags',
             columnAccessor: 'value',
             direction: 'asc'
         }
@@ -88,7 +90,7 @@ export const settingsSlice = createSlice({
         },
         setTaskSortStatus: (state, action: PayloadAction<DataTableSortStatus<Task>>) => {
             state.taskListSettings.sortStatus = action.payload;
-            state.taskListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction);
+            state.taskListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction).serialize();
         },
         setUserSettings: (state, action: PayloadAction<UserSettings>) => {
             state.userSettings = action.payload;
@@ -115,7 +117,7 @@ export const settingsSlice = createSlice({
         },
         setTagSortStatus: (state, action: PayloadAction<DataTableSortStatus<Tag>>) => {
             state.tagListSettings.sortStatus = action.payload;
-            state.tagListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction);
+            state.tagListSettings.params.ordering = new Ordering(action.payload.columnAccessor, action.payload.direction).serialize();
         },
         setTagSearchParams: (state, action: PayloadAction<TagSearchParams>) => {
             state.tagListSettings.params = action.payload;
