@@ -1,10 +1,12 @@
 import { FloatingPosition, MantineTransition, Tooltip } from "@mantine/core";
 import { ReactNode } from "react";
+import { ColorPalette } from "../features/settings/hooks/useColorService";
 
 type MyTooltipProps = {
     label: string;
-    children: ReactNode
-    position?: FloatingPosition
+    children: ReactNode;
+    colorPalette: ColorPalette;
+    position?: FloatingPosition;
 }
 
 function MyTooltip(props: MyTooltipProps) {
@@ -36,7 +38,8 @@ function MyTooltip(props: MyTooltipProps) {
             label={props.label}
             openDelay={500}
             transitionProps={{ transition: transition(position), duration: 300 }}
-            color="cyan"
+            color={props.colorPalette.colorName}
+            variant={props.colorPalette.variant}
             position={position}
             offset={10}
         >

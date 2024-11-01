@@ -1,12 +1,12 @@
-import { ActionIcon, AppShell, Burger, Group, ScrollArea, Text } from "@mantine/core";
+import { ActionIcon, AppShell, Burger, Group, ScrollArea, Text, useMantineTheme } from "@mantine/core";
 import { IconMaximize, IconMinimize, IconMinus, IconX } from "@tabler/icons-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import MyTooltip from "../components/MyTooltip";
+import useColorService from "../features/settings/hooks/useColorService";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { closeNavbar, toggleNavbar } from "../redux/reducers/settingsSlice";
-import { BG_COLOR, FG_COLOR } from "../utilities/colorUtilities";
 import Navbar from "./Navbar";
 
 
@@ -14,6 +14,9 @@ function MainLayout() {
     /** An app store dispatch function to update store values. */
     const navOpened = useAppSelector(state => state.settings.navbarOpen);
     const dispatch = useAppDispatch();
+    const theme = useMantineTheme();
+    const userSettings = useAppSelector(state => state.settings.userSettings);
+    const { colorPalette } = useColorService(theme, userSettings);
 
     const [maximized, setMaximized] = useState(false);
 
@@ -53,13 +56,13 @@ function MainLayout() {
         >
             <AppShell.Header data-tauri-drag-region>
                 <Group h="100%" px="md" align="center" data-tauri-drag-region>
-                    <MyTooltip label={navOpened ? "Close Menu" : "Open Menu"} position="right">
+                    <MyTooltip label={navOpened ? "Close Menu" : "Open Menu"} position="right" colorPalette={colorPalette}>
                         <Burger
                             opened={navOpened}
                             onClick={() => dispatch(toggleNavbar())}
                             size={18}
-                            color={FG_COLOR}
-                            bg={BG_COLOR}
+                            color={colorPalette.color}
+                            bg={colorPalette.background}
                             style={{ borderRadius: 4 }}
                             lineSize={2}
                         />
@@ -67,18 +70,18 @@ function MainLayout() {
                     <Group justify="space-between" align="center" style={{ flex: 1 }} data-tauri-drag-region>
                         <Text size="xl">Timely</Text>
                         <Group justify="flex-end" gap={10} data-tauri-drag-region>
-                            <MyTooltip label="Minimize" position="left">
-                                <ActionIcon onClick={hideWindow} variant="light" size={28} color="cyan">
+                            <MyTooltip label="Minimize" position="left" colorPalette={colorPalette}>
+                                <ActionIcon onClick={hideWindow} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
                                     <IconMinus />
                                 </ActionIcon>
                             </MyTooltip>
-                            <MyTooltip label={maximized ? "Restore" : "Maximize"} position="left">
-                                <ActionIcon onClick={toggleMaximize} variant="light" size={28} color="cyan">
+                            <MyTooltip label={maximized ? "Restore" : "Maximize"} position="left" colorPalette={colorPalette}>
+                                <ActionIcon onClick={toggleMaximize} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
                                     {maximized ? <IconMinimize /> : <IconMaximize />}
                                 </ActionIcon>
                             </MyTooltip>
-                            <MyTooltip label="Exit" position="left">
-                                <ActionIcon onClick={closeWindow} variant="light" size={28} color="cyan">
+                            <MyTooltip label="Exit" position="left" colorPalette={colorPalette}>
+                                <ActionIcon onClick={closeWindow} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
                                     <IconX />
                                 </ActionIcon>
                             </MyTooltip>

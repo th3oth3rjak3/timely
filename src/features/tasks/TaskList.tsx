@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Modal, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Group, Modal, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput, useMantineTheme } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
@@ -11,10 +11,10 @@ import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
 import { setCurrentTaskPage, setTaskPageSize, setTaskSearchParams, setTaskSortStatus } from "../../redux/reducers/settingsSlice.ts";
-import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { validateLength } from "../../utilities/formUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
+import useColorService from "../settings/hooks/useColorService.tsx";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
 import TaskDetail from "./TaskDetail.tsx";
@@ -25,6 +25,9 @@ function TaskList() {
     //#region State
 
     const { showContextMenu, hideContextMenu } = useContextMenu();
+    const theme = useMantineTheme();
+    const userSettings = useAppSelector(state => state.settings.userSettings);
+    const { colorPalette } = useColorService(theme, userSettings);
 
     /** The globally set number of items per page in the application. */
     const pageSize = useAppSelector(state => state.settings.taskListSettings.params.pageSize);
@@ -58,7 +61,7 @@ function TaskList() {
         deleteTask,
         finishTask,
         reopenTask,
-    } = useTaskService(fetchAllData);
+    } = useTaskService(colorPalette, fetchAllData);
 
     const isTouchScreen = useMediaQuery('(pointer: coarse)');
 
@@ -363,13 +366,13 @@ function TaskList() {
             <Group justify="space-between">
                 <Text size="xl">Tasks</Text>
                 <Group>
-                    <MyTooltip label="Create New Task" position="left">
-                        <ActionIcon variant="light" color="cyan" onClick={() => newFormActions.open()}>
+                    <MyTooltip label="Create New Task" position="left" colorPalette={colorPalette}>
+                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => newFormActions.open()}>
                             <IconPlus />
                         </ActionIcon>
                     </MyTooltip>
-                    <MyTooltip label="Refresh Tasks" position="left">
-                        <ActionIcon variant="light" color="cyan" onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
+                    <MyTooltip label="Refresh Tasks" position="left" colorPalette={colorPalette}>
+                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
                             <IconRefresh />
                         </ActionIcon>
                     </MyTooltip>
@@ -401,6 +404,7 @@ function TaskList() {
                                 <TaskDetail
                                     task={record}
                                     tagOptions={tagOptions}
+                                    colorPalette={colorPalette}
                                     onStarted={startTask}
                                     onPaused={pauseTask}
                                     onFinished={finishTask}
@@ -415,8 +419,8 @@ function TaskList() {
                             );
                         }
                     }}
-                    paginationActiveBackgroundColor={BG_COLOR}
-                    paginationActiveTextColor={FG_COLOR}
+                    paginationActiveBackgroundColor={colorPalette.background}
+                    paginationActiveTextColor={colorPalette.color}
                     paginationSize="xs"
                 />}
             <Modal opened={newFormOpened} onClose={closeNewForm} title="New Task" closeOnClickOutside={false} closeOnEscape={false}>
@@ -444,7 +448,7 @@ function TaskList() {
                         <NumberInput label="Estimated Duration (Hours)" key={newForm.key("estimatedDuration")} {...newForm.getInputProps("estimatedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant="light" color="cyan" disabled={!newForm.isValid()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!newForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>
@@ -490,7 +494,7 @@ function TaskList() {
                         <NumberInput label="Elapsed Duration" key={editForm.key("elapsedDuration")} {...editForm.getInputProps("elapsedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant="light" color="cyan" disabled={!editForm.isValid()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!editForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>

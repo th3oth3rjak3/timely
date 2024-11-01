@@ -6,6 +6,7 @@ import { UserSettings } from "../UserSettings";
 export type Settings = {
     pageSize: string;
     homePage: string;
+    colorScheme: string;
 }
 
 function useSettingsService() {
@@ -24,7 +25,7 @@ function useSettingsService() {
     const updateUserSettings = async (settings: Settings, callback: () => void | Promise<void>) => {
         const updated = await invoke<UserSettings>({
             command: "update_user_settings",
-            params: { settings: { homePage: settings.homePage, pageSize: Number(settings.pageSize) } },
+            params: { settings: { homePage: settings.homePage, pageSize: Number(settings.pageSize), colorScheme: settings.colorScheme } },
             successMessage: "Successfully updated settings.",
             callback
         });

@@ -3,13 +3,16 @@ import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled
 import dayjs from "dayjs";
 import MyTooltip from "../../components/MyTooltip";
 import { TimeSpan } from "../../models/TimeSpan";
+import { ColorPalette } from "../settings/hooks/useColorService";
+import { Tag } from "../tags/types/Tag";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
-import { Tag, Task } from "./types/Task";
+import { Task } from "./types/Task";
 
 export type TaskDetailParams = {
     task: Task;
     tagOptions: Tag[],
+    colorPalette: ColorPalette,
     onStarted: (task: Task) => void;
     onPaused: (task: Task) => void;
     onResumed: (task: Task) => void;
@@ -34,61 +37,61 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         const status = statusDescription.toLowerCase();
 
         const startButton = (
-            <MyTooltip label="Start Task">
-                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
+            <MyTooltip label="Start Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
             </MyTooltip>
         );
 
 
         const pauseButton = (
-            <MyTooltip label="Pause Task">
-                <Button size="compact-sm" variant="light" leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
+            <MyTooltip label="Pause Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
             </MyTooltip>
         );
 
 
         const resumeButton = (
-            <MyTooltip label="Resume Task">
-                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
+            <MyTooltip label="Resume Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
             </MyTooltip>
         );
 
 
         const cancelButton = (
-            <MyTooltip label="Cancel Task">
-                <Button size="compact-sm" variant="light" color="orange" leftSection={<IconCancel size={14} />} onClick={() => props.onCancelled(props.task)}>Cancel</Button>
+            <MyTooltip label="Cancel Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconCancel size={14} />} onClick={() => props.onCancelled(props.task)}>Cancel</Button>
             </MyTooltip>
         );
 
 
         const finishButton = (
-            <MyTooltip label="Finish Task">
-                <Button size="compact-sm" variant="light" color="teal" leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
+            <MyTooltip label="Finish Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
             </MyTooltip>
         );
 
 
         const restoreButton = (
-            <MyTooltip label="Restore Cancelled Task">
-                <Button size="compact-sm" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
+            <MyTooltip label="Restore Cancelled Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
             </MyTooltip>
         );
 
         const reopenButton = (
-            <MyTooltip label="Reopen Finished Task">
-                <Button size="compact-sm" variant="light" color="violet" leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
+            <MyTooltip label="Reopen Finished Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
             </MyTooltip>
         );
 
         const deleteButton = (
-            <MyTooltip label="Delete Task">
-                <Button size="compact-sm" variant="light" color="red" leftSection={<IconTrash size={14} />} onClick={() => props.onDeleted(props.task)}>Delete</Button>
+            <MyTooltip label="Delete Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconTrash size={14} />} onClick={() => props.onDeleted(props.task)}>Delete</Button>
             </MyTooltip>
         );
 
         const editButton = (
-            <MyTooltip label="Edit Task">
-                <Button size="compact-sm" variant="light" color="cyan" leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
+            <MyTooltip label="Edit Task" colorPalette={props.colorPalette}>
+                <Button size="compact-sm" variant={props.colorPalette.variant} color={props.colorPalette.colorName} leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
             </MyTooltip>
         );
 
@@ -174,9 +177,9 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
             <Grid.Col span={6}>
                 <TextInput label="Actual Complete Date" value={props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed"} readOnly />
             </Grid.Col>
-            <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} />}</Grid.Col>
+            <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} colorPalette={props.colorPalette} />}</Grid.Col>
             <Grid.Col span={12}>
-                <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
+                <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} colorPalette={props.colorPalette} />
             </Grid.Col>
             <Grid.Col span={12}>
                 <Group gap={6}>

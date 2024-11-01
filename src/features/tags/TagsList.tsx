@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Modal, Stack, Text, TextInput } from "@mantine/core";
+import { ActionIcon, Button, Group, Modal, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
@@ -8,8 +8,8 @@ import { useEffect, useState } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setCurrentTagPage, setTagPageSize, setTagSearchParams, setTagSortStatus } from "../../redux/reducers/settingsSlice";
-import { BG_COLOR, FG_COLOR } from "../../utilities/colorUtilities";
 import { validateLength } from "../../utilities/formUtilities";
+import useColorService from "../settings/hooks/useColorService";
 import useFetchTags from "./hooks/useFetchTags";
 import useTagService from "./hooks/useTagService";
 import { NewTag, Tag } from "./types/Tag";
@@ -24,7 +24,9 @@ function TagsList() {
     const isTouchScreen = useMediaQuery('(pointer: coarse)');
 
     const { tags, recordCount, fetchTags } = useFetchTags(tagSearchParams);
-
+    const theme = useMantineTheme();
+    const userSettings = useAppSelector(state => state.settings.userSettings);
+    const { colorPalette } = useColorService(theme, userSettings);
 
     const [newFormOpened, newFormActions] = useDisclosure(false);
     const [editFormOpened, editFormActions] = useDisclosure(false);
@@ -155,8 +157,8 @@ function TagsList() {
             <Group justify="space-between">
                 <Text size="xl">Tags</Text>
                 <Group>
-                    <MyTooltip label="Create New Tag" position="left">
-                        <ActionIcon variant="light" color="cyan" onClick={() => newFormActions.open()}>
+                    <MyTooltip label="Create New Tag" position="left" colorPalette={colorPalette}>
+                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => newFormActions.open()}>
                             <IconPlus />
                         </ActionIcon>
                     </MyTooltip>
@@ -182,8 +184,8 @@ function TagsList() {
                     key={"id"}
                     sortStatus={sortStatus}
                     onSortStatusChange={status => dispatch(setTagSortStatus(status))}
-                    paginationActiveBackgroundColor={BG_COLOR}
-                    paginationActiveTextColor={FG_COLOR}
+                    paginationActiveBackgroundColor={colorPalette.background}
+                    paginationActiveTextColor={colorPalette.color}
                     paginationSize="xs"
                 />}
             <Modal opened={newFormOpened} onClose={closeNewForm} title="New Tag" closeOnClickOutside={false} closeOnEscape={false}>
@@ -192,7 +194,7 @@ function TagsList() {
                         <TextInput withAsterisk label="Tag" key={newForm.key("value")} {...newForm.getInputProps("value")} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant="light" color="cyan" disabled={!newForm.isValid()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!newForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>
@@ -202,7 +204,7 @@ function TagsList() {
                         <TextInput withAsterisk label="Tag" key={editForm.key("value")} {...editForm.getInputProps("value")} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant="light" color="cyan" disabled={!editForm.isValid()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!editForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>

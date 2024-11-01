@@ -29,10 +29,11 @@ pub fn update_user_settings(
 
     found.home_page = settings.home_page;
     found.page_size = settings.page_size;
+    found.color_scheme = settings.color_scheme;
 
-    diesel::update(user_settings::table)
-        .set(&found)
-        .execute(&mut connection)
+    found
+        .save_changes::<UserSettings>(&mut connection)
+        .map(|_| ())
         .map_err(|err| err.to_string())?;
 
     Ok(found)

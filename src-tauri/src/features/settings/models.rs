@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 pub struct UpdateUserSettings {
     pub home_page: String,
     pub page_size: i32,
+    pub color_scheme: String,
 }
 
 #[derive(
@@ -18,9 +19,5 @@ pub struct UserSettings {
     pub id: i32,
     pub page_size: i32,
     pub home_page: String,
-}
-
-#[derive(Debug, Clone)]
-pub enum ColorScheme {
-    Cyan,
+    pub color_scheme: String,
 }

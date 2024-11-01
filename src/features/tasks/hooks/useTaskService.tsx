@@ -2,11 +2,12 @@ import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { ColorPalette } from "../../settings/hooks/useColorService";
 import { EditTask, NewTask, Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
 
 /** Create a task service to interact with tauri data. */
-const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
+const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise<void> | void) => {
     const { invoke } = useTauri();
 
     /** Search for tasks that meet the search parameters.
@@ -89,8 +90,8 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
                 <Text>Are you sure you want to cancel this task?</Text>
             ),
             labels: { confirm: "Confirm", cancel: "Deny" },
-            confirmProps: { variant: "light", color: "cyan" },
-            cancelProps: { variant: "light", color: "indigo" },
+            confirmProps: { variant: colorPalette.variant, color: "red" },
+            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName },
             onCancel: () => { },
             onConfirm: async () => await invoke<void>({
                 command: "cancel_task",
@@ -134,8 +135,8 @@ const useTaskService = (fetchAllData?: () => Promise<void> | void) => {
             children: (
                 <Text>Are you sure you want to delete this task?</Text>
             ),
-            confirmProps: { variant: "light", color: "cyan" },
-            cancelProps: { variant: "light", color: "indigo" },
+            confirmProps: { variant: colorPalette.variant, color: "red" },
+            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName },
             labels: { confirm: "Confirm", cancel: "Deny" },
             onCancel: () => { },
             onConfirm: async () => await invoke<void>({

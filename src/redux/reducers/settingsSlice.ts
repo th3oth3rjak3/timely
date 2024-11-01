@@ -73,6 +73,7 @@ const initialState: SettingsState = {
     userSettings: {
         homePage: "",
         pageSize: 5,
+        colorScheme: "orange",
     }
 };
 

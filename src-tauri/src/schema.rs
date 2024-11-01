@@ -45,6 +45,7 @@ diesel::table! {
         id -> Integer,
         page_size -> Integer,
         home_page -> Text,
+        color_scheme -> Text,
     }
 }
 
@@ -52,4 +53,10 @@ diesel::joinable!(comments -> tasks (task_id));
 diesel::joinable!(task_tags -> tags (tag_id));
 diesel::joinable!(task_tags -> tasks (task_id));
 
-diesel::allow_tables_to_appear_in_same_query!(comments, tags, task_tags, tasks, user_settings,);
+diesel::allow_tables_to_appear_in_same_query!(
+    comments,
+    tags,
+    task_tags,
+    tasks,
+    user_settings,
+);

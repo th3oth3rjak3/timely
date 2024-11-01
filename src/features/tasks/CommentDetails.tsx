@@ -4,11 +4,14 @@ import { modals } from "@mantine/modals";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import MyTooltip from "../../components/MyTooltip";
+import { ColorPalette } from "../settings/hooks/useColorService";
 import useCommentService from "./hooks/useCommentService";
-import { Comment, Task } from "./types/Task";
+import { Comment } from "./types/Comment";
+import { Task } from "./types/Task";
 
 type Props = {
-    task: Task
+    task: Task;
+    colorPalette: ColorPalette;
     onCommentChanged: () => void;
 }
 
@@ -50,7 +53,7 @@ function CommentDetails(props: Props) {
                 <Stack>
                     <TextInput label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} />
                     <Group>
-                        <Button type="submit" variant="light" color="cyan">Save</Button>
+                        <Button type="submit" variant={props.colorPalette.variant} color={props.colorPalette.colorName}>Save</Button>
                     </Group>
                 </Stack>
             </form>
@@ -68,7 +71,7 @@ function CommentDetails(props: Props) {
                     <Stack>
                         <TextInput label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} />
                         <Group>
-                            <Button type="submit" variant="light" color="cyan">Save</Button>
+                            <Button type="submit" variant={props.colorPalette.variant} color={props.colorPalette.colorName}>Save</Button>
                         </Group>
                     </Stack>
                 </form>
@@ -81,8 +84,8 @@ function CommentDetails(props: Props) {
         children: (
             <Text>Are you sure you want to delete this comment?</Text>
         ),
-        confirmProps: { variant: "light", color: "cyan" },
-        cancelProps: { variant: "light", color: "indigo" },
+        confirmProps: { variant: props.colorPalette.variant, color: "red" },
+        cancelProps: { variant: props.colorPalette.variant, color: props.colorPalette.colorName },
         labels: { confirm: "Confirm", cancel: "Deny" },
         onCancel: () => { },
         onConfirm: () => deleteExistingComment(comment)
@@ -124,13 +127,13 @@ function CommentDetails(props: Props) {
                 <Group>
                     <Text size="xs" style={{ fontStyle: "italic" }}>{"Created: " + dayjs(comment.created).format("MM/DD/YYYY hh:mm:ss A")}</Text>
                     {comment.modified !== null ? <Text size="xs" style={{ fontStyle: "italic" }}>{"Modified: " + dayjs(comment.modified).format("MM/DD/YYYY hh:mm:ss A")}</Text> : null}
-                    <MyTooltip label="Edit Comment" position="right">
-                        <ActionIcon size="xs" variant="light" color="cyan" onClick={() => openEditCommentModal(comment)}>
+                    <MyTooltip label="Edit Comment" position="right" colorPalette={props.colorPalette}>
+                        <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openEditCommentModal(comment)}>
                             <IconEdit />
                         </ActionIcon>
                     </MyTooltip>
-                    <MyTooltip label="Delete Comment" position="right">
-                        <ActionIcon size="xs" variant="light" color="red" onClick={() => openDeleteModal(comment)}>
+                    <MyTooltip label="Delete Comment" position="right" colorPalette={props.colorPalette}>
+                        <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openDeleteModal(comment)}>
                             <IconTrash />
                         </ActionIcon>
                     </MyTooltip>
@@ -143,8 +146,8 @@ function CommentDetails(props: Props) {
         <Stack gap={10}>
             <Group>
                 <Text size="sm">Comments</Text>
-                <MyTooltip label="Add Comment" position="right">
-                    <ActionIcon size="xs" variant="light" color="cyan" onClick={() => openNewCommentModal()}>
+                <MyTooltip label="Add Comment" position="right" colorPalette={props.colorPalette}>
+                    <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openNewCommentModal()}>
                         <IconPlus />
                     </ActionIcon>
                 </MyTooltip>

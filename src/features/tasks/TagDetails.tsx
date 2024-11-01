@@ -1,10 +1,13 @@
 import { TagsInput } from "@mantine/core";
+import { ColorPalette } from "../settings/hooks/useColorService";
 import useTagService from "../tags/hooks/useTagService";
-import { Tag, Task } from "./types/Task";
+import { Tag } from "../tags/types/Tag";
+import { Task } from "./types/Task";
 
 type Props = {
     task: Task;
     tagOptions: Tag[];
+    colorPalette: ColorPalette;
     onTagsChanged: () => void;
 }
 
@@ -44,6 +47,7 @@ function TagDetails(props: Props) {
     return (
         <TagsInput
             label="Tags"
+            color={props.colorPalette.colorName}
             data={tagOptions}
             defaultValue={selectedTags}
             onRemove={(tagName) => removeTagByName(tagName)}

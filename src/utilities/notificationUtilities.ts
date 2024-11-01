@@ -6,7 +6,7 @@ export function showSuccessNotification<T extends Stringer>(message: T, duration
         title: "Success",
         message: message.toString(),
         autoClose: duration,
-        color: "cyan",
+        color: "green",
         withBorder: true,
     });
 }

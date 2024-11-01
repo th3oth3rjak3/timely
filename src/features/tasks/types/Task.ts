@@ -1,4 +1,5 @@
 import { Tag } from "../../tags/types/Tag";
+import { Comment } from "./Comment";
 
 /** A task to be completed by the user. */
 export type Task = {
