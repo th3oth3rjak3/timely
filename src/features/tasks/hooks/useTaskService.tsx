@@ -14,16 +14,21 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
      * @param params - The search parameters to use to find tasks.
      */
     const searchForTasks = async (params: TaskSearchParams) => {
-        return await invoke<PagedData<Task>>({
+        const tasks = await invoke<PagedData<Task>>({
             command: "get_tasks",
             params: { params },
         });
+
+        console.log(JSON.stringify(tasks, undefined, 2));
+
+        return tasks;
     }
 
     /** Create a new task. 
      * @param task - The task to create.
     */
     const createTask = async (task: NewTask) => {
+        console.log(JSON.stringify(task, undefined, 2));
         await invoke<void>({
             command: "create_task",
             params: { newTask: task },

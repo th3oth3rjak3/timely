@@ -1,5 +1,5 @@
 import '@mantine/charts/styles.css';
-import { MantineProvider } from '@mantine/core';
+import { createTheme, MantineProvider } from '@mantine/core';
 import '@mantine/core/styles.css';
 import '@mantine/core/styles.layer.css';
 import '@mantine/dates/styles.css';
@@ -17,7 +17,7 @@ import Settings from './features/settings/Settings';
 import TasksList from './features/tasks/TaskList';
 import Timer from './features/timer/Timer';
 import MainLayout from './layout/MainLayout';
-import { useAppDispatch } from './redux/hooks';
+import { useAppDispatch, useAppSelector } from './redux/hooks';
 import { setUserSettings } from './redux/reducers/settingsSlice';
 
 import { ContextMenuProvider } from 'mantine-contextmenu';
@@ -30,6 +30,7 @@ function App() {
   const dispatch = useAppDispatch();
   const { getUserSettings } = useSettingsService();
   const [router, setRouter] = useState<Router>();
+  const userSettings = useAppSelector(state => state.settings.userSettings);
 
   useEffect(() => {
     getUserSettings()
@@ -72,10 +73,13 @@ function App() {
       })
   }, []);
 
+  const theme = createTheme({
+    primaryColor: userSettings.colorScheme,
+  });
 
   if (!!router) {
     return (
-      <MantineProvider defaultColorScheme="dark" >
+      <MantineProvider defaultColorScheme="dark" theme={theme}>
         <ContextMenuProvider>
           <ModalsProvider>
             <Notifications />

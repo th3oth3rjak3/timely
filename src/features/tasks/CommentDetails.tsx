@@ -53,7 +53,7 @@ function CommentDetails(props: Props) {
                 <Stack>
                     <TextInput label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} />
                     <Group>
-                        <Button type="submit" variant={props.colorPalette.variant} color={props.colorPalette.colorName}>Save</Button>
+                        <Button type="submit" variant={props.colorPalette.variant} >Save</Button>
                     </Group>
                 </Stack>
             </form>
@@ -71,7 +71,7 @@ function CommentDetails(props: Props) {
                     <Stack>
                         <TextInput label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} />
                         <Group>
-                            <Button type="submit" variant={props.colorPalette.variant} color={props.colorPalette.colorName}>Save</Button>
+                            <Button type="submit" variant={props.colorPalette.variant} >Save</Button>
                         </Group>
                     </Stack>
                 </form>
@@ -85,7 +85,7 @@ function CommentDetails(props: Props) {
             <Text>Are you sure you want to delete this comment?</Text>
         ),
         confirmProps: { variant: props.colorPalette.variant, color: "red" },
-        cancelProps: { variant: props.colorPalette.variant, color: props.colorPalette.colorName },
+        cancelProps: { variant: props.colorPalette.variant },
         labels: { confirm: "Confirm", cancel: "Deny" },
         onCancel: () => { },
         onConfirm: () => deleteExistingComment(comment)
@@ -128,12 +128,12 @@ function CommentDetails(props: Props) {
                     <Text size="xs" style={{ fontStyle: "italic" }}>{"Created: " + dayjs(comment.created).format("MM/DD/YYYY hh:mm:ss A")}</Text>
                     {comment.modified !== null ? <Text size="xs" style={{ fontStyle: "italic" }}>{"Modified: " + dayjs(comment.modified).format("MM/DD/YYYY hh:mm:ss A")}</Text> : null}
                     <MyTooltip label="Edit Comment" position="right" colorPalette={props.colorPalette}>
-                        <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openEditCommentModal(comment)}>
+                        <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openEditCommentModal(comment)}>
                             <IconEdit />
                         </ActionIcon>
                     </MyTooltip>
                     <MyTooltip label="Delete Comment" position="right" colorPalette={props.colorPalette}>
-                        <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openDeleteModal(comment)}>
+                        <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openDeleteModal(comment)}>
                             <IconTrash />
                         </ActionIcon>
                     </MyTooltip>
@@ -147,7 +147,7 @@ function CommentDetails(props: Props) {
             <Group>
                 <Text size="sm">Comments</Text>
                 <MyTooltip label="Add Comment" position="right" colorPalette={props.colorPalette}>
-                    <ActionIcon size="xs" variant={props.colorPalette.variant} color={props.colorPalette.colorName} onClick={() => openNewCommentModal()}>
+                    <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openNewCommentModal()}>
                         <IconPlus />
                     </ActionIcon>
                 </MyTooltip>

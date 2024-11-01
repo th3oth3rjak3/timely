@@ -1,9 +1,7 @@
-import { NavLink, useMantineTheme } from "@mantine/core";
+import { NavLink } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Icon, IconAlarm, IconListDetails, IconSettings, IconTags } from "@tabler/icons-react";
 import { NavLink as RouterDomNavLink } from "react-router-dom";
-import useColorService from "../features/settings/hooks/useColorService";
-import { useAppSelector } from "../redux/hooks";
 
 type LinkDetail = {
     href: string;
@@ -24,10 +22,6 @@ type Props = {
 };
 
 function Navbar(props: Props) {
-
-    const theme = useMantineTheme();
-    const userSettings = useAppSelector(state => state.settings.userSettings);
-    const { colorPalette } = useColorService(theme, userSettings);
     const isSmallBreakpoint = useMediaQuery('(max-width: 48em)')
 
     const navLinkElements = navLinks.map((item) => (
@@ -43,7 +37,6 @@ function Navbar(props: Props) {
                     props.closeNavMenu();
                 }
             }}
-            color={colorPalette.colorName}
             style={{ borderRadius: 4 }}
         />
     ));

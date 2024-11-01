@@ -74,7 +74,7 @@ function Settings() {
                         </Grid.Col>
                     </Grid>
                     <Group mt={20}>
-                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!form.isDirty()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} disabled={!form.isDirty()}>Submit</Button>
                         <Button type="reset" variant={colorPalette.variant} color="red" disabled={!form.isDirty()} onClick={resetForm}>Reset</Button>
                     </Group>
                 </Stack>

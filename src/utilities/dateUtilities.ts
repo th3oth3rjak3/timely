@@ -4,8 +4,11 @@ export function maybeDate(date: Date | null): Date | null {
     if (date === null) {
         return null;
     }
+    console.log(JSON.stringify(date, undefined, 2));
 
-    return dayjs(date).toDate();
+    const ret = dayjs(date).toDate();
+    console.log(JSON.stringify(ret, undefined, 2));
+    return ret;
 }
 
 export function maybeFormattedDate(date: Date | null, format: string): string | null {

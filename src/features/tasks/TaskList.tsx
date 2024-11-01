@@ -3,6 +3,7 @@ import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPause, IconPlayerPlay, IconPlus, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import dayjs from "dayjs";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useState } from "react";
@@ -367,12 +368,12 @@ function TaskList() {
                 <Text size="xl">Tasks</Text>
                 <Group>
                     <MyTooltip label="Create New Task" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => newFormActions.open()}>
+                        <ActionIcon variant={colorPalette.variant} onClick={() => newFormActions.open()}>
                             <IconPlus />
                         </ActionIcon>
                     </MyTooltip>
                     <MyTooltip label="Refresh Tasks" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
+                        <ActionIcon variant={colorPalette.variant} onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
                             <IconRefresh />
                         </ActionIcon>
                     </MyTooltip>
@@ -433,7 +434,7 @@ function TaskList() {
                             valueFormat="MM/DD/YYYY"
                             highlightToday={true}
                             clearable
-                            defaultValue={new Date()}
+                            defaultValue={dayjs()}
                             label="Start By"
                             key={newForm.key("scheduledStartDate")}
                             {...newForm.getInputProps("scheduledStartDate")} />
@@ -494,7 +495,7 @@ function TaskList() {
                         <NumberInput label="Elapsed Duration" key={editForm.key("elapsedDuration")} {...editForm.getInputProps("elapsedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!editForm.isValid()}>Submit</Button>
+                        <Button type="submit" variant={colorPalette.variant} disabled={!editForm.isValid()}>Submit</Button>
                     </Group>
                 </form>
             </Modal>

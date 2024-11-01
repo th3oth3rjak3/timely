@@ -71,17 +71,17 @@ function MainLayout() {
                         <Text size="xl">Timely</Text>
                         <Group justify="flex-end" gap={10} data-tauri-drag-region>
                             <MyTooltip label="Minimize" position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={hideWindow} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
+                                <ActionIcon onClick={hideWindow} variant={colorPalette.variant} size={28}>
                                     <IconMinus />
                                 </ActionIcon>
                             </MyTooltip>
                             <MyTooltip label={maximized ? "Restore" : "Maximize"} position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={toggleMaximize} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
+                                <ActionIcon onClick={toggleMaximize} variant={colorPalette.variant} size={28} >
                                     {maximized ? <IconMinimize /> : <IconMaximize />}
                                 </ActionIcon>
                             </MyTooltip>
                             <MyTooltip label="Exit" position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={closeWindow} variant={colorPalette.variant} size={28} color={colorPalette.colorName}>
+                                <ActionIcon onClick={closeWindow} variant={colorPalette.variant} size={28} >
                                     <IconX />
                                 </ActionIcon>
                             </MyTooltip>

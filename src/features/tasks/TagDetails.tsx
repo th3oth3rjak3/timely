@@ -47,7 +47,6 @@ function TagDetails(props: Props) {
     return (
         <TagsInput
             label="Tags"
-            color={props.colorPalette.colorName}
             data={tagOptions}
             defaultValue={selectedTags}
             onRemove={(tagName) => removeTagByName(tagName)}

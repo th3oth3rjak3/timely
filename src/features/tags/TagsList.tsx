@@ -158,7 +158,7 @@ function TagsList() {
                 <Text size="xl">Tags</Text>
                 <Group>
                     <MyTooltip label="Create New Tag" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} color={colorPalette.colorName} onClick={() => newFormActions.open()}>
+                        <ActionIcon variant={colorPalette.variant} onClick={() => newFormActions.open()}>
                             <IconPlus />
                         </ActionIcon>
                     </MyTooltip>

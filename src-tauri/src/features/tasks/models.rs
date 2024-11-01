@@ -1,4 +1,4 @@
-use chrono::{DateTime, Local, NaiveDateTime};
+use chrono::{DateTime, NaiveDateTime, Utc};
 use diesel::{
     deserialize::FromSqlRow,
     expression::AsExpression,
@@ -74,11 +74,11 @@ pub struct TaskRead {
     pub title: String,
     pub description: String,
     pub status: Status,
-    pub scheduled_start_date: Option<DateTime<Local>>,
-    pub scheduled_complete_date: Option<DateTime<Local>>,
-    pub actual_start_date: Option<DateTime<Local>>,
-    pub actual_complete_date: Option<DateTime<Local>>,
-    pub last_resumed_date: Option<DateTime<Local>>,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub actual_start_date: Option<DateTime<Utc>>,
+    pub actual_complete_date: Option<DateTime<Utc>>,
+    pub last_resumed_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
     pub elapsed_duration: i32,
     pub comments: Vec<Comment>,
@@ -115,7 +115,7 @@ impl From<CreateComment> for NewComment {
         NewComment {
             task_id: value.task_id,
             message: value.message,
-            created: Local::now().naive_local(),
+            created: Utc::now().naive_utc(),
             modified: None,
         }
     }
@@ -153,10 +153,10 @@ pub struct EditTask {
     pub title: String,
     pub description: String,
     pub status: Status,
-    pub scheduled_start_date: Option<DateTime<Local>>,
-    pub scheduled_complete_date: Option<DateTime<Local>>,
-    pub actual_start_date: Option<DateTime<Local>>,
-    pub actual_complete_date: Option<DateTime<Local>>,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
+    pub actual_start_date: Option<DateTime<Utc>>,
+    pub actual_complete_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
     pub elapsed_duration: Option<i32>,
 }
@@ -184,8 +184,8 @@ pub struct CreateTask {
     pub title: String,
     pub description: String,
     pub status: Status,
-    pub scheduled_start_date: Option<DateTime<Local>>,
-    pub scheduled_complete_date: Option<DateTime<Local>>,
+    pub scheduled_start_date: Option<DateTime<Utc>>,
+    pub scheduled_complete_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
 }
 
@@ -195,8 +195,8 @@ impl From<CreateTask> for NewTask {
             title: value.title,
             description: value.description,
             status: value.status,
-            scheduled_start_date: value.scheduled_start_date.map(|dt| dt.naive_local()),
-            scheduled_complete_date: value.scheduled_complete_date.map(|dt| dt.naive_local()),
+            scheduled_start_date: value.scheduled_start_date.map(|dt| dt.naive_utc()),
+            scheduled_complete_date: value.scheduled_complete_date.map(|dt| dt.naive_utc()),
             estimated_duration: value.estimated_duration,
             elapsed_duration: 0,
         }
