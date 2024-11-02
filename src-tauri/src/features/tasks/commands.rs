@@ -166,7 +166,10 @@ pub async fn get_tasks(
                 last_resumed_date: task.last_resumed_date.map(|dt| dt.and_utc()),
                 estimated_duration: task.estimated_duration,
                 elapsed_duration,
-                comments,
+                comments: comments
+                    .into_iter()
+                    .map(|c| c.into())
+                    .collect::<Vec<CommentRead>>(),
                 tags,
             }
         })

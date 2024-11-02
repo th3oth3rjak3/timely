@@ -1,3 +1,5 @@
+import { parseISO, toDate } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import dayjs from "dayjs";
 
 export function maybeDate(date: Date | null): Date | null {
@@ -18,3 +20,19 @@ export function maybeFormattedDate(date: Date | null, format: string): string | 
 
     return dayjs(date).format(format);
 }
+
+export function convertUtcToLocal(utcDateString: string): Date {
+    console.log("input: ", utcDateString);
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    console.log("timezone: ", timezone);
+    const dateUtc = parseISO(utcDateString);
+    const localDate = toZonedTime(dateUtc, timezone);
+    console.log(`Local Attempt: ${toDate(dateUtc).toLocaleTimeString()}`)
+    return toDate(dateUtc);
+}
+
+export function tryConvertUtcToLocal(utcDateString: string | null): Date | null {
+    if (utcDateString === null) return null;
+    const dateUtc = parseISO(utcDateString);
+    return toDate(dateUtc);
+} 

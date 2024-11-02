@@ -160,7 +160,7 @@ function TagsList() {
     ];
 
     return (
-        <Stack m={10}>
+        <Stack m={25}>
             <Group justify="space-between">
                 <Text size="xl">Tags</Text>
                 <Group>

@@ -95,8 +95,8 @@ function CommentDetails(props: Props) {
         children: (
             <Text>Are you sure you want to delete this comment?</Text>
         ),
-        confirmProps: { variant: props.colorPalette.variant, color: "red" },
-        cancelProps: { variant: props.colorPalette.variant },
+        confirmProps: { variant: props.colorPalette.variant, color: "red", gradient: { ...props.colorPalette.gradient, from: "red" } },
+        cancelProps: { variant: props.colorPalette.variant, gradient: props.colorPalette.gradient },
         labels: { confirm: "Confirm", cancel: "Deny" },
         onCancel: () => { },
         onConfirm: () => deleteExistingComment(comment)

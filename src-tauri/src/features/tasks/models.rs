@@ -81,7 +81,7 @@ pub struct TaskRead {
     pub last_resumed_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
     pub elapsed_duration: i32,
-    pub comments: Vec<Comment>,
+    pub comments: Vec<CommentRead>,
     pub tags: Vec<Tag>,
 }
 
@@ -144,6 +144,39 @@ pub struct Comment {
     pub message: String,
     pub created: NaiveDateTime,
     pub modified: Option<NaiveDateTime>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CommentRead {
+    pub id: i32,
+    pub task_id: i32,
+    pub message: String,
+    pub created: DateTime<Utc>,
+    pub modified: Option<DateTime<Utc>>,
+}
+
+impl From<Comment> for CommentRead {
+    fn from(value: Comment) -> Self {
+        Self {
+            id: value.id,
+            task_id: value.task_id,
+            message: value.message,
+            created: value.created.and_utc(),
+            modified: value.modified.map(|v| v.and_utc()),
+        }
+    }
+}
+
+impl From<CommentRead> for Comment {
+    fn from(value: CommentRead) -> Self {
+        Self {
+            id: value.id,
+            task_id: value.task_id,
+            message: value.message,
+            created: value.created.naive_utc(),
+            modified: value.modified.map(|dt| dt.naive_utc()),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]

@@ -1,4 +1,7 @@
+import { useMantineTheme } from "@mantine/core";
 import { useState } from "react";
+import { useAppSelector } from "../../../redux/hooks";
+import useColorService from "../../settings/hooks/useColorService";
 import useTagService from "../../tags/hooks/useTagService";
 import { Tag } from "../../tags/types/Tag";
 import { Task } from "../types/Task";
@@ -11,8 +14,12 @@ const useFetchTasks = (searchParams: TaskSearchParams) => {
     const [isFetchingTasks, setIsFetchingTasks] = useState(false);
     const [tagOptions, setTagOptions] = useState<Tag[]>([]);
     const [isFetchingTags, setIsFetchingTags] = useState(false);
+    const theme = useMantineTheme();
+    const userSettings = useAppSelector(state => state.settings.userSettings);
+    const { colorPalette } = useColorService(theme, userSettings);
 
-    const { searchForTasks } = useTaskService();
+
+    const { searchForTasks } = useTaskService(colorPalette);
     const { getAllTags } = useTagService();
 
     const fetchTags = async () => {

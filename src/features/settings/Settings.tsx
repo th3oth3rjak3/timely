@@ -86,6 +86,8 @@ function Settings() {
         setControlledVariant(colorPalette.variant);
         if (colorPalette.variant === "gradient") {
             setShowGradientOptions(true);
+        } else {
+            setShowGradientOptions(false);
         }
     }
 
@@ -137,20 +139,21 @@ function Settings() {
     );
 
     return (
-        <Stack m={10}>
+        <Stack m={25}>
             <Group justify="space-between">
                 <Text size="lg">Settings</Text>
             </Group>
             <form onSubmit={form.onSubmit(setSettingsValues)}>
-                <Tabs defaultValue="general" orientation="vertical" placement="right" >
-                    <Tabs.List>
+                <Tabs defaultValue="general">
+                    {/* orientation="vertical" placement="right" > */}
+                    <Tabs.List grow>
                         <Tabs.Tab value="general">General</Tabs.Tab>
                         <Tabs.Tab value="appearance">Appearance</Tabs.Tab>
                         <Tabs.Tab value="notifications">Notifications</Tabs.Tab>
                     </Tabs.List>
 
-                    <Tabs.Panel value="general" mr="sm">
-                        <Stack>
+                    <Tabs.Panel value="general">
+                        <Stack my="md">
                             <Grid gutter="lg" grow>
                                 <Grid.Col span={6}>
                                     <Select label="Home Page" data={homePageOptions} {...form.getInputProps('homePage')} allowDeselect={false} />
@@ -167,8 +170,8 @@ function Settings() {
                         </Stack>
                     </Tabs.Panel>
 
-                    <Tabs.Panel value="appearance" mr="sm">
-                        <Stack >
+                    <Tabs.Panel value="appearance">
+                        <Stack my="md">
                             <Grid gutter="lg" grow>
                                 <Grid.Col span={12}>
                                     <StyledButton
@@ -215,7 +218,11 @@ function Settings() {
                         </Stack>
                     </Tabs.Panel>
 
-                    <Tabs.Panel value="notifications" mr="sm">TODO: Notification Content</Tabs.Panel>
+                    <Tabs.Panel value="notifications">
+                        <Stack my="md">
+                            TODO: Notification Content
+                        </Stack>
+                    </Tabs.Panel>
                 </Tabs>
 
                 <Group mt={20}>
