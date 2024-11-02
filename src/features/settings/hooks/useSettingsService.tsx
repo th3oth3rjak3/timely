@@ -22,10 +22,10 @@ function useSettingsService() {
     }
 
     /** Update existing user settings. */
-    const updateUserSettings = async (settings: Settings, callback: () => void | Promise<void>) => {
+    const updateUserSettings = async (settings: UserSettings, callback: () => void | Promise<void>) => {
         const updated = await invoke<UserSettings>({
             command: "update_user_settings",
-            params: { settings: { homePage: settings.homePage, pageSize: Number(settings.pageSize), colorScheme: settings.colorScheme } },
+            params: { settings: { ...settings, } },
             successMessage: "Successfully updated settings.",
             callback
         });

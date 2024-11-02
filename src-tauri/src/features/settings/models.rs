@@ -7,6 +7,10 @@ pub struct UpdateUserSettings {
     pub home_page: String,
     pub page_size: i32,
     pub color_scheme: String,
+    pub button_variant: String,
+    pub gradient_to: String,
+    pub gradient_from: String,
+    pub gradient_degrees: i32,
 }
 
 #[derive(
@@ -20,4 +24,23 @@ pub struct UserSettings {
     pub page_size: i32,
     pub home_page: String,
     pub color_scheme: String,
+    pub button_variant: String,
+    pub gradient_to: String,
+    pub gradient_from: String,
+    pub gradient_degrees: i32,
+}
+
+impl UserSettings {
+    pub fn with_update(self, update: UpdateUserSettings) -> UserSettings {
+        UserSettings {
+            id: self.id,
+            page_size: update.page_size,
+            home_page: update.home_page,
+            color_scheme: update.color_scheme,
+            button_variant: update.button_variant,
+            gradient_to: update.gradient_to,
+            gradient_from: update.gradient_from,
+            gradient_degrees: update.gradient_degrees,
+        }
+    }
 }

@@ -1,9 +1,10 @@
-import { ActionIcon, Button, Group, Stack, Text, TextInput } from "@mantine/core";
+import { Group, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import MyTooltip from "../../components/MyTooltip";
+import StyledActionIcon from "../../components/StyledActionIcon";
+import StyledButton from "../../components/StyledButton";
 import { ColorPalette } from "../settings/hooks/useColorService";
 import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
@@ -53,7 +54,12 @@ function CommentDetails(props: Props) {
                 <Stack>
                     <TextInput label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} />
                     <Group>
-                        <Button type="submit" variant={props.colorPalette.variant} >Save</Button>
+                        <StyledButton
+                            type="submit"
+                            label="Save"
+                            colorPalette={props.colorPalette}
+                            tooltipLabel="Save Comment"
+                        />
                     </Group>
                 </Stack>
             </form>
@@ -71,7 +77,12 @@ function CommentDetails(props: Props) {
                     <Stack>
                         <TextInput label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} />
                         <Group>
-                            <Button type="submit" variant={props.colorPalette.variant} >Save</Button>
+                            <StyledButton
+                                type="submit"
+                                label="Save"
+                                colorPalette={props.colorPalette}
+                                tooltipLabel="Save Comment"
+                            />
                         </Group>
                     </Stack>
                 </form>
@@ -127,16 +138,24 @@ function CommentDetails(props: Props) {
                 <Group>
                     <Text size="xs" style={{ fontStyle: "italic" }}>{"Created: " + dayjs(comment.created).format("MM/DD/YYYY hh:mm:ss A")}</Text>
                     {comment.modified !== null ? <Text size="xs" style={{ fontStyle: "italic" }}>{"Modified: " + dayjs(comment.modified).format("MM/DD/YYYY hh:mm:ss A")}</Text> : null}
-                    <MyTooltip label="Edit Comment" position="right" colorPalette={props.colorPalette}>
-                        <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openEditCommentModal(comment)}>
-                            <IconEdit />
-                        </ActionIcon>
-                    </MyTooltip>
-                    <MyTooltip label="Delete Comment" position="right" colorPalette={props.colorPalette}>
-                        <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openDeleteModal(comment)}>
-                            <IconTrash />
-                        </ActionIcon>
-                    </MyTooltip>
+                    <StyledActionIcon
+                        size="xs"
+                        onClick={() => openEditCommentModal(comment)}
+                        colorPalette={props.colorPalette}
+                        tooltipLabel="Edit Comment"
+                        tooltipPosition="right"
+                    >
+                        <IconEdit />
+                    </StyledActionIcon>
+                    <StyledActionIcon
+                        size="xs"
+                        onClick={() => openDeleteModal(comment)}
+                        colorPalette={props.colorPalette}
+                        tooltipLabel="Delete Comment"
+                        tooltipPosition="right"
+                    >
+                        <IconTrash />
+                    </StyledActionIcon>
                 </Group>
             </Stack>
         );
@@ -146,11 +165,15 @@ function CommentDetails(props: Props) {
         <Stack gap={10}>
             <Group>
                 <Text size="sm">Comments</Text>
-                <MyTooltip label="Add Comment" position="right" colorPalette={props.colorPalette}>
-                    <ActionIcon size="xs" variant={props.colorPalette.variant} onClick={() => openNewCommentModal()}>
-                        <IconPlus />
-                    </ActionIcon>
-                </MyTooltip>
+                <StyledActionIcon
+                    size="xs"
+                    onClick={() => openNewCommentModal()}
+                    colorPalette={props.colorPalette}
+                    tooltipLabel="Add Comment"
+                    tooltipPosition="right"
+                >
+                    <IconPlus />
+                </StyledActionIcon>
             </Group>
             {props.task.comments.length == 0 ? <Text size="xs">No Comments</Text> : props.task.comments.map(comment => commentRow(comment))}
         </Stack>

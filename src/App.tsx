@@ -75,6 +75,11 @@ function App() {
 
   const theme = createTheme({
     primaryColor: userSettings.colorScheme,
+    defaultGradient: {
+      to: userSettings.gradientTo,
+      from: userSettings.gradientFrom,
+      deg: userSettings.gradientDegrees
+    }
   });
 
   if (!!router) {

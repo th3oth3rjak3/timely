@@ -1,4 +1,4 @@
-import { ActionIcon, Button, Group, Modal, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput, useMantineTheme } from "@mantine/core";
+import { Group, Modal, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput, useMantineTheme } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
@@ -7,7 +7,8 @@ import dayjs from "dayjs";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useState } from "react";
-import MyTooltip from "../../components/MyTooltip.tsx";
+import StyledActionIcon from "../../components/StyledActionIcon.tsx";
+import StyledButton from "../../components/StyledButton.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
@@ -128,6 +129,10 @@ function TaskList() {
     function updatePageSize(size: number) {
         dispatch(setCurrentTaskPage(1));
         dispatch(setTaskPageSize(size));
+    }
+
+    function updateCurrentPage(page: number) {
+        dispatch(setCurrentTaskPage(page));
     }
 
     function getContextMenuItems(task: Task): ContextMenuContent {
@@ -303,9 +308,15 @@ function TaskList() {
                     placeholder="Search..."
                     leftSection={<IconSearch size={16} />}
                     rightSection={
-                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => updateDescriptionQuery("")}>
+                        <StyledActionIcon
+                            size="sm"
+                            variant="transparent"
+                            color="dimmed"
+                            onClick={() => updateDescriptionQuery("")}
+                            colorPalette={colorPalette}
+                        >
                             <IconX size={14} />
-                        </ActionIcon>
+                        </StyledActionIcon>
                     }
                     value={taskSearchParams.queryString || ""}
                     onChange={(e) => updateDescriptionQuery(e.currentTarget.value)}
@@ -367,16 +378,22 @@ function TaskList() {
             <Group justify="space-between">
                 <Text size="xl">Tasks</Text>
                 <Group>
-                    <MyTooltip label="Create New Task" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} onClick={() => newFormActions.open()}>
-                            <IconPlus />
-                        </ActionIcon>
-                    </MyTooltip>
-                    <MyTooltip label="Refresh Tasks" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}>
-                            <IconRefresh />
-                        </ActionIcon>
-                    </MyTooltip>
+                    <StyledActionIcon
+                        onClick={() => newFormActions.open()}
+                        colorPalette={colorPalette}
+                        tooltipLabel="Create New Task"
+                        tooltipPosition="left"
+                    >
+                        <IconPlus />
+                    </StyledActionIcon>
+                    <StyledActionIcon
+                        colorPalette={colorPalette}
+                        onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}
+                        tooltipLabel="Refresh Tasks"
+                        tooltipPosition="left"
+                    >
+                        <IconRefresh />
+                    </StyledActionIcon>
                 </Group>
             </Group>
             {loading
@@ -393,7 +410,7 @@ function TaskList() {
                     page={taskSearchParams.page}
                     totalRecords={recordCount}
                     recordsPerPage={pageSize}
-                    onPageChange={(page) => dispatch(setCurrentTaskPage(page))}
+                    onPageChange={(page) => updateCurrentPage(page)}
                     recordsPerPageOptions={pageSizeOptions}
                     onRecordsPerPageChange={(size) => updatePageSize(size)}
                     key={"id"}
@@ -420,8 +437,6 @@ function TaskList() {
                             );
                         }
                     }}
-                    paginationActiveBackgroundColor={colorPalette.background}
-                    paginationActiveTextColor={colorPalette.color}
                     paginationSize="xs"
                 />}
             <Modal opened={newFormOpened} onClose={closeNewForm} title="New Task" closeOnClickOutside={false} closeOnEscape={false}>
@@ -449,7 +464,13 @@ function TaskList() {
                         <NumberInput label="Estimated Duration (Hours)" key={newForm.key("estimatedDuration")} {...newForm.getInputProps("estimatedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!newForm.isValid()}>Submit</Button>
+                        <StyledButton
+                            type="submit"
+                            label="Submit"
+                            disabled={!newForm.isValid()}
+                            colorPalette={colorPalette}
+                            tooltipLabel="Save New Task"
+                        />
                     </Group>
                 </form>
             </Modal>
@@ -495,7 +516,13 @@ function TaskList() {
                         <NumberInput label="Elapsed Duration" key={editForm.key("elapsedDuration")} {...editForm.getInputProps("elapsedDuration")} suffix=" hour(s)" decimalScale={1} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant={colorPalette.variant} disabled={!editForm.isValid()}>Submit</Button>
+                        <StyledButton
+                            type="submit"
+                            disabled={!editForm.isValid()}
+                            label="Submit"
+                            colorPalette={colorPalette}
+                            tooltipLabel="Save Edited Task"
+                        />
                     </Group>
                 </form>
             </Modal>

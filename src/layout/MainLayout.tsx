@@ -1,9 +1,9 @@
-import { ActionIcon, AppShell, Burger, Group, ScrollArea, Text, useMantineTheme } from "@mantine/core";
-import { IconMaximize, IconMinimize, IconMinus, IconX } from "@tabler/icons-react";
+import { AppShell, Group, ScrollArea, Text, useMantineTheme } from "@mantine/core";
+import { IconMaximize, IconMenu3, IconMinimize, IconMinus, IconX } from "@tabler/icons-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
-import MyTooltip from "../components/MyTooltip";
+import StyledActionIcon from "../components/StyledActionIcon";
 import useColorService from "../features/settings/hooks/useColorService";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { closeNavbar, toggleNavbar } from "../redux/reducers/settingsSlice";
@@ -40,13 +40,13 @@ function MainLayout() {
 
 
     /** Close the current window and shut down the application. */
-    const closeWindow = async (_: React.MouseEvent) => await getCurrentWindow().close();
+    const closeWindow = async () => await getCurrentWindow().close();
 
     /** Minimize the window to the task bar. */
-    const hideWindow = async (_: React.MouseEvent) => await getCurrentWindow().minimize();
+    const hideWindow = async () => await getCurrentWindow().minimize();
 
     /** Toggle the window maximized state. */
-    const toggleMaximize = async (_: React.MouseEvent) => await getCurrentWindow().toggleMaximize();
+    const toggleMaximize = async () => await getCurrentWindow().toggleMaximize();
 
     return (
         <AppShell
@@ -56,35 +56,45 @@ function MainLayout() {
         >
             <AppShell.Header data-tauri-drag-region>
                 <Group h="100%" px="md" align="center" data-tauri-drag-region>
-                    <MyTooltip label={navOpened ? "Close Menu" : "Open Menu"} position="right" colorPalette={colorPalette}>
-                        <Burger
-                            opened={navOpened}
-                            onClick={() => dispatch(toggleNavbar())}
-                            size={18}
-                            color={colorPalette.color}
-                            bg={colorPalette.background}
-                            style={{ borderRadius: 4 }}
-                            lineSize={2}
-                        />
-                    </MyTooltip>
+                    <StyledActionIcon
+                        colorPalette={colorPalette}
+                        onClick={() => dispatch(toggleNavbar())}
+                        size={28}
+                        tooltipLabel={navOpened ? "Close Menu" : "Open Menu"}
+                        tooltipPosition="right"
+                    >
+                        {navOpened ? <IconX /> : <IconMenu3 />}
+                    </StyledActionIcon>
                     <Group justify="space-between" align="center" style={{ flex: 1 }} data-tauri-drag-region>
                         <Text size="xl">Timely</Text>
                         <Group justify="flex-end" gap={10} data-tauri-drag-region>
-                            <MyTooltip label="Minimize" position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={hideWindow} variant={colorPalette.variant} size={28}>
-                                    <IconMinus />
-                                </ActionIcon>
-                            </MyTooltip>
-                            <MyTooltip label={maximized ? "Restore" : "Maximize"} position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={toggleMaximize} variant={colorPalette.variant} size={28} >
-                                    {maximized ? <IconMinimize /> : <IconMaximize />}
-                                </ActionIcon>
-                            </MyTooltip>
-                            <MyTooltip label="Exit" position="left" colorPalette={colorPalette}>
-                                <ActionIcon onClick={closeWindow} variant={colorPalette.variant} size={28} >
-                                    <IconX />
-                                </ActionIcon>
-                            </MyTooltip>
+                            <StyledActionIcon
+                                colorPalette={colorPalette}
+                                onClick={hideWindow}
+                                size={28}
+                                tooltipLabel="Minimize"
+                                tooltipPosition="left"
+                            >
+                                <IconMinus />
+                            </StyledActionIcon>
+                            <StyledActionIcon
+                                colorPalette={colorPalette}
+                                onClick={toggleMaximize}
+                                size={28}
+                                tooltipLabel={maximized ? "Restore" : "Maximize"}
+                                tooltipPosition="left"
+                            >
+                                {maximized ? <IconMinimize /> : <IconMaximize />}
+                            </StyledActionIcon>
+                            <StyledActionIcon
+                                onClick={closeWindow}
+                                size={28}
+                                colorPalette={colorPalette}
+                                tooltipLabel="Exit"
+                                tooltipPosition="left"
+                            >
+                                <IconX />
+                            </StyledActionIcon>
                         </Group>
                     </Group>
                 </Group>
@@ -92,7 +102,7 @@ function MainLayout() {
             </AppShell.Header>
             <AppShell.Navbar p="md" maw="200px">
                 <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6}>
-                    <Navbar closeNavMenu={() => dispatch(closeNavbar())} />
+                    <Navbar closeNavMenu={() => dispatch(closeNavbar())} colorPalette={colorPalette} />
                 </ScrollArea>
             </AppShell.Navbar>
             <AppShell.Main>

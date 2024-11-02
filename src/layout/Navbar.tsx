@@ -1,7 +1,9 @@
-import { NavLink } from "@mantine/core";
+import { Stack } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
 import { Icon, IconAlarm, IconListDetails, IconSettings, IconTags } from "@tabler/icons-react";
-import { NavLink as RouterDomNavLink } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import StyledButton from "../components/StyledButton";
+import { ColorPalette } from "../features/settings/hooks/useColorService";
 
 type LinkDetail = {
     href: string;
@@ -11,40 +13,59 @@ type LinkDetail = {
 }
 
 const navLinks: LinkDetail[] = [
-    { href: "/timer", icon: IconAlarm, label: "Timer" },
-    { href: "/tasks", icon: IconListDetails, label: "Tasks" },
-    { href: "/tags", icon: IconTags, label: "Tags" },
-    { href: "/settings", icon: IconSettings, label: "Settings" },
+    { href: "/timer", icon: IconAlarm, label: "Timer", description: "Timer Page" },
+    { href: "/tasks", icon: IconListDetails, label: "Tasks", description: "Tasks Page" },
+    { href: "/tags", icon: IconTags, label: "Tags", description: "Tags Page" },
+    { href: "/settings", icon: IconSettings, label: "Settings", description: "Settings Page" },
 ];
 
 type Props = {
+    colorPalette: ColorPalette;
     closeNavMenu: () => void;
 };
 
 function Navbar(props: Props) {
     const isSmallBreakpoint = useMediaQuery('(max-width: 48em)')
+    const navigate = useNavigate();
+    const location = useLocation();
+
+    const getColor = (item: LinkDetail) => {
+        if (item.href !== location.pathname) {
+            return "dimmed";
+        }
+
+        else undefined;
+    }
+
+    const getVariant = (item: LinkDetail) => {
+        if (item.href !== location.pathname) {
+            return "subtle";
+        }
+    }
 
     const navLinkElements = navLinks.map((item) => (
-        <NavLink
-            component={RouterDomNavLink}
-            to={item.href}
+        <StyledButton
             key={item.label}
+            colorPalette={props.colorPalette}
+            color={getColor(item)}
+            variant={getVariant(item)}
             label={item.label}
-            description={item.description}
-            leftSection={<item.icon size="1rem" stroke={1.5} />}
             onClick={() => {
+                navigate(item.href);
                 if (isSmallBreakpoint) {
                     props.closeNavMenu();
                 }
             }}
-            style={{ borderRadius: 4 }}
+            leftSection={<item.icon size="1rem" stroke={1.5} />}
+            tooltipLabel={item.description}
+            tooltipPosition="right"
         />
     ));
 
     return (
-        <>
+        <Stack gap="sm">
             {navLinkElements}
-        </>
+        </Stack>
     );
 }
 

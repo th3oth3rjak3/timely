@@ -27,9 +27,7 @@ pub fn update_user_settings(
         .first(&mut connection)
         .map_err(|err| err.to_string())?;
 
-    found.home_page = settings.home_page;
-    found.page_size = settings.page_size;
-    found.color_scheme = settings.color_scheme;
+    found = found.with_update(settings);
 
     found
         .save_changes::<UserSettings>(&mut connection)

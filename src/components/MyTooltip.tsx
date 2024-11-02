@@ -5,6 +5,7 @@ import { ColorPalette } from "../features/settings/hooks/useColorService";
 type MyTooltipProps = {
     label: string;
     children: ReactNode;
+    color?: string;
     colorPalette: ColorPalette;
     position?: FloatingPosition;
 }
@@ -33,12 +34,14 @@ function MyTooltip(props: MyTooltipProps) {
         return "fade";
     }
 
+    const innerColor = props.color !== undefined ? props.color : props.colorPalette.colorName;
+
     return (
         <Tooltip
             label={props.label}
             openDelay={500}
             transitionProps={{ transition: transition(position), duration: 300 }}
-            color={props.colorPalette.colorName}
+            color={innerColor}
             variant={props.colorPalette.variant}
             position={position}
             offset={10}

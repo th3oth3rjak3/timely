@@ -95,8 +95,10 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
                 <Text>Are you sure you want to cancel this task?</Text>
             ),
             labels: { confirm: "Confirm", cancel: "Deny" },
-            confirmProps: { variant: colorPalette.variant, color: "red" },
-            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName },
+            confirmProps: {
+                variant: colorPalette.variant, color: "red", gradient: { ...colorPalette.gradient, from: "red" }
+            },
+            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName, gradient: colorPalette.gradient },
             onCancel: () => { },
             onConfirm: async () => await invoke<void>({
                 command: "cancel_task",
@@ -140,8 +142,10 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             children: (
                 <Text>Are you sure you want to delete this task?</Text>
             ),
-            confirmProps: { variant: colorPalette.variant, color: "red" },
-            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName },
+            confirmProps: {
+                variant: colorPalette.variant, color: "red", gradient: { ...colorPalette.gradient, from: "red" }
+            },
+            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName, gradient: colorPalette.gradient },
             labels: { confirm: "Confirm", cancel: "Deny" },
             onCancel: () => { },
             onConfirm: async () => await invoke<void>({

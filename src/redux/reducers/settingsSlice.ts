@@ -73,7 +73,11 @@ const initialState: SettingsState = {
     userSettings: {
         homePage: "",
         pageSize: 5,
-        colorScheme: "orange",
+        colorScheme: "blue",
+        buttonVariant: "filled",
+        gradientFrom: "",
+        gradientTo: "",
+        gradientDegrees: 0
     }
 };
 

@@ -1,7 +1,7 @@
-import { Button, Grid, Group, Textarea, TextInput } from "@mantine/core";
+import { Grid, Group, Textarea, TextInput } from "@mantine/core";
 import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import MyTooltip from "../../components/MyTooltip";
+import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
 import { ColorPalette } from "../settings/hooks/useColorService";
 import { Tag } from "../tags/types/Tag";
@@ -37,62 +37,116 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         const status = statusDescription.toLowerCase();
 
         const startButton = (
-            <MyTooltip label="Start Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onStarted(props.task)}>Start</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Start"
+                onClick={() => props.onStarted(props.task)}
+                tooltipLabel="Start Task"
+                tooltipPosition="top"
+                leftSection={<IconPlayerPlayFilled size={14} />}
+            />
         );
 
 
         const pauseButton = (
-            <MyTooltip label="Pause Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconPlayerPauseFilled size={14} />} onClick={() => props.onPaused(props.task)}>Pause</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Pause"
+                onClick={() => props.onPaused(props.task)}
+                tooltipLabel="Pause Task"
+                tooltipPosition="top"
+                leftSection={<IconPlayerPauseFilled size={14} />}
+            />
         );
 
 
         const resumeButton = (
-            <MyTooltip label="Resume Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconPlayerPlayFilled size={14} />} onClick={() => props.onResumed(props.task)}>Resume</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Resume"
+                onClick={() => props.onResumed(props.task)}
+                tooltipLabel="Resume Task"
+                tooltipPosition="top"
+                leftSection={<IconPlayerPlayFilled size={14} />}
+            />
         );
 
 
         const cancelButton = (
-            <MyTooltip label="Cancel Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconCancel size={14} />} onClick={() => props.onCancelled(props.task)}>Cancel</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Cancel"
+                onClick={() => props.onCancelled(props.task)}
+                tooltipLabel="Cancel Task"
+                tooltipPosition="top"
+                leftSection={<IconCancel size={14} />}
+            />
         );
 
 
         const finishButton = (
-            <MyTooltip label="Finish Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconCheck size={14} />} onClick={() => props.onFinished(props.task)}>Finish</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Finish"
+                onClick={() => props.onFinished(props.task)}
+                tooltipLabel="Finish Task"
+                tooltipPosition="top"
+                leftSection={<IconCheck size={14} />}
+            />
         );
 
 
         const restoreButton = (
-            <MyTooltip label="Restore Cancelled Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onRestored(props.task)}>Restore</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Restore"
+                onClick={() => props.onRestored(props.task)}
+                tooltipLabel="Restore Cancelled Task"
+                tooltipPosition="top"
+                leftSection={<IconArrowBackUp size={14} />}
+            />
         );
 
         const reopenButton = (
-            <MyTooltip label="Reopen Finished Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconArrowBackUp size={14} />} onClick={() => props.onReopened(props.task)}>Reopen</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Reopen"
+                onClick={() => props.onFinished(props.task)}
+                tooltipLabel="Reopen Finished Task"
+                tooltipPosition="top"
+                leftSection={<IconArrowBackUp size={14} />}
+            />
         );
 
         const deleteButton = (
-            <MyTooltip label="Delete Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconTrash size={14} />} onClick={() => props.onDeleted(props.task)}>Delete</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Delete"
+                onClick={() => props.onDeleted(props.task)}
+                tooltipLabel="Delete Task"
+                tooltipPosition="top"
+                leftSection={<IconTrash size={14} />}
+            />
         );
 
         const editButton = (
-            <MyTooltip label="Edit Task" colorPalette={props.colorPalette}>
-                <Button size="compact-sm" variant={props.colorPalette.variant} leftSection={<IconEdit size={14} />} onClick={() => props.onEdited(props.task)}>Edit</Button>
-            </MyTooltip>
+            <StyledButton
+                colorPalette={props.colorPalette}
+                size="compact-sm"
+                label="Edit"
+                onClick={() => props.onEdited(props.task)}
+                tooltipLabel="Edit Task"
+                tooltipPosition="top"
+                leftSection={<IconEdit size={14} />}
+            />
         );
 
         if (status === "todo") {

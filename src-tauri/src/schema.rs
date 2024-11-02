@@ -46,6 +46,10 @@ diesel::table! {
         page_size -> Integer,
         home_page -> Text,
         color_scheme -> Text,
+        button_variant -> Text,
+        gradient_from -> Text,
+        gradient_to -> Text,
+        gradient_degrees -> Integer,
     }
 }
 

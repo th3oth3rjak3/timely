@@ -1,11 +1,12 @@
-import { ActionIcon, Button, Group, Modal, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
+import { Group, Modal, Stack, Text, TextInput, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import { IconEdit, IconPlus, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useState } from "react";
-import MyTooltip from "../../components/MyTooltip";
+import StyledActionIcon from "../../components/StyledActionIcon";
+import StyledButton from "../../components/StyledButton";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import { setCurrentTagPage, setTagPageSize, setTagSearchParams, setTagSortStatus } from "../../redux/reducers/settingsSlice";
 import { validateLength } from "../../utilities/formUtilities";
@@ -139,9 +140,15 @@ function TagsList() {
                     placeholder="Search..."
                     leftSection={<IconSearch size={16} />}
                     rightSection={
-                        <ActionIcon size="sm" variant="transparent" c="dimmed" onClick={() => updateTagQuery("")}>
+                        <StyledActionIcon
+                            size="sm"
+                            variant="transparent"
+                            color="dimmed"
+                            onClick={() => updateTagQuery("")}
+                            colorPalette={colorPalette}
+                        >
                             <IconX size={14} />
-                        </ActionIcon>
+                        </StyledActionIcon>
                     }
                     value={tagSearchParams.queryString || ""}
                     onChange={(e) => updateTagQuery(e.currentTarget.value)}
@@ -157,11 +164,14 @@ function TagsList() {
             <Group justify="space-between">
                 <Text size="xl">Tags</Text>
                 <Group>
-                    <MyTooltip label="Create New Tag" position="left" colorPalette={colorPalette}>
-                        <ActionIcon variant={colorPalette.variant} onClick={() => newFormActions.open()}>
-                            <IconPlus />
-                        </ActionIcon>
-                    </MyTooltip>
+                    <StyledActionIcon
+                        colorPalette={colorPalette}
+                        onClick={() => newFormActions.open()}
+                        tooltipLabel="Create New Tag"
+                        tooltipPosition="left"
+                    >
+                        <IconPlus />
+                    </StyledActionIcon>
                 </Group>
             </Group>
             {loading
@@ -184,8 +194,6 @@ function TagsList() {
                     key={"id"}
                     sortStatus={sortStatus}
                     onSortStatusChange={status => dispatch(setTagSortStatus(status))}
-                    paginationActiveBackgroundColor={colorPalette.background}
-                    paginationActiveTextColor={colorPalette.color}
                     paginationSize="xs"
                 />}
             <Modal opened={newFormOpened} onClose={closeNewForm} title="New Tag" closeOnClickOutside={false} closeOnEscape={false}>
@@ -194,7 +202,13 @@ function TagsList() {
                         <TextInput withAsterisk label="Tag" key={newForm.key("value")} {...newForm.getInputProps("value")} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!newForm.isValid()}>Submit</Button>
+                        <StyledButton
+                            label="Submit"
+                            colorPalette={colorPalette}
+                            type="submit"
+                            disabled={!newForm.isValid()}
+                            tooltipLabel="Submit New Tag"
+                        />
                     </Group>
                 </form>
             </Modal>
@@ -204,7 +218,13 @@ function TagsList() {
                         <TextInput withAsterisk label="Tag" key={editForm.key("value")} {...editForm.getInputProps("value")} />
                     </Stack>
                     <Group justify="flex-end" mt="md">
-                        <Button type="submit" variant={colorPalette.variant} color={colorPalette.colorName} disabled={!editForm.isValid()}>Submit</Button>
+                        <StyledButton
+                            type="submit"
+                            label="Submit"
+                            colorPalette={colorPalette}
+                            disabled={!editForm.isValid()}
+                            tooltipLabel="Submit Updated Tag"
+                        />
                     </Group>
                 </form>
             </Modal>

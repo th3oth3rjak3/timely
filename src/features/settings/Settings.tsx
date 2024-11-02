@@ -1,5 +1,9 @@
-import { Button, Grid, Group, Select, Stack, Text, useMantineTheme } from "@mantine/core";
+import { ActionIcon, Card, Grid, Group, Select, Slider, Stack, Tabs, Text, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { IconCheck } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import MyTooltip from "../../components/MyTooltip";
+import StyledButton from "../../components/StyledButton";
 import { useAppSelector } from "../../redux/hooks";
 import { toSelectOptions } from "../../utilities/formUtilities";
 import { toProperCase } from "../../utilities/stringUtilities";
@@ -13,37 +17,124 @@ import useSettingsService from "./hooks/useSettingsService";
 function Settings() {
     const { updateUserSettings } = useSettingsService();
 
-
-    type Settings = {
-        pageSize: string;
-        homePage: string;
-        colorScheme: string;
-    }
-
     const userSettings = useAppSelector(state => state.settings.userSettings);
     const pageSizeOptions = useAppSelector(state => state.settings.taskListSettings.pageSizeOptions);
     const homePageOptions = useAppSelector(state => state.settings.homePageOptions);
 
     const theme = useMantineTheme();
     const { colorPalette } = useColorService(theme, userSettings);
+    const [showGradientOptions, setShowGradientOptions] = useState(colorPalette.variant === "gradient");
+    const [gradientDegrees, setGradientDegrees] = useState(colorPalette.gradient.deg);
+    const [gradientTo, setGradientTo] = useState(colorPalette.gradient.to);
+    const [controlledVariant, setControlledVariant] = useState(colorPalette.variant);
 
+    type FormUserSettings = {
+        pageSize: string;
+        homePage: string;
+        colorScheme: string;
+        buttonVariant: string;
+        gradientTo: string;
+        gradientDegrees?: number;
+    }
 
-    const form = useForm<Settings>({
+    const form = useForm<FormUserSettings>({
         mode: 'controlled',
-        initialValues: { pageSize: userSettings.pageSize.toString(), homePage: userSettings.homePage, colorScheme: userSettings.colorScheme },
-        initialDirty: { pageSize: false, homePage: false, colorScheme: false },
-        initialTouched: { pageSize: false, homePage: false, colorScheme: false }
+        initialValues: {
+            ...colorPalette,
+            homePage: userSettings.homePage,
+            pageSize: userSettings.pageSize.toString(),
+            colorScheme: colorPalette.colorName,
+            buttonVariant: colorPalette.variant,
+            gradientTo: colorPalette.gradient.to,
+            gradientDegrees: colorPalette.gradient.deg,
+        },
+        initialDirty: {
+            pageSize: false,
+            homePage: false,
+            colorScheme: false,
+            buttonVariant: false,
+            gradientTo: false,
+            gradientDegrees: false,
+        },
+        initialTouched: {
+            pageSize: false,
+            homePage: false,
+            colorScheme: false,
+            buttonVariant: false,
+            gradientTo: false,
+            gradientDegrees: false,
+        },
     });
 
-    async function setSettingsValues(settings: Settings) {
-        await updateUserSettings(settings, () => form.resetDirty());
+    async function setSettingsValues(settings: FormUserSettings) {
+        const userSettings = {
+            ...settings,
+            pageSize: Number(settings.pageSize),
+            gradientFrom: settings.colorScheme,
+            gradientTo,
+            gradientDegrees: gradientDegrees ?? 0,
+        };
+        await updateUserSettings(userSettings, () => form.resetDirty());
     }
 
     function resetForm() {
         form.reset();
+        form.resetDirty();
+        form.resetTouched();
+        setGradientTo(colorPalette.gradient.to);
+        setGradientDegrees(colorPalette.gradient.deg);
+        setControlledVariant(colorPalette.variant);
+        if (colorPalette.variant === "gradient") {
+            setShowGradientOptions(true);
+        }
     }
 
-    const colorOptions = ["blue", "cyan", "grape", "gray", "green", "indigo", "lime", "orange", "pink", "red", "teal", "violet", "yellow"];
+    const isDirty = useMemo(() => {
+        const controlledVariantChanged = controlledVariant !== colorPalette.variant;
+        const gradientDegreesChanged = gradientDegrees !== colorPalette.gradient.deg;
+        const gradientToChanged = gradientTo !== colorPalette.gradient.to;
+        return form.isDirty() || controlledVariantChanged || gradientDegreesChanged || gradientToChanged;
+    }, [controlledVariant, gradientDegrees, gradientTo, colorPalette, form]);
+
+
+    const colorOptions = ["blue", "cyan", "dark", "grape", "gray", "green", "indigo", "lime", "orange", "pink", "red", "teal", "violet", "yellow"];
+    const buttonVariants = ["filled", "gradient", "light", "subtle", "outline", "transparent", "white"];
+
+    const gradientSelector: JSX.Element = (
+        <Card>
+            <Card.Section>
+                <Group justify="center">
+                    <Text m="lg">Secondary Color</Text>
+                </Group>
+                <Group gap="sm" justify="center" px="sm">
+                    {colorOptions.map(opt =>
+                        <MyTooltip label={toProperCase(opt)} colorPalette={colorPalette} color={opt} key={`color-option-${opt}`}>
+                            <ActionIcon size="lg" my="sm" color={opt} onClick={() => setGradientTo(opt)} >
+                                {gradientTo === opt ? <IconCheck size={24} /> : null}
+                            </ActionIcon>
+                        </MyTooltip>
+                    )}
+                </Group>
+            </Card.Section>
+        </Card>
+    );
+
+    const gradientDegreeSlider: JSX.Element = (
+        <Slider
+            min={0}
+            max={360}
+            onChange={setGradientDegrees}
+            value={gradientDegrees}
+            label={(value) => `${value}°`}
+            marks={[
+                { value: 90, label: '90°' },
+                { value: 180, label: '180°' },
+                { value: 270, label: '270°' },
+            ]}
+            step={10}
+            mb="sm"
+        />
+    );
 
     return (
         <Stack m={10}>
@@ -51,35 +142,105 @@ function Settings() {
                 <Text size="lg">Settings</Text>
             </Group>
             <form onSubmit={form.onSubmit(setSettingsValues)}>
-                <Stack>
-                    <Grid gutter="lg" grow>
-                        <Grid.Col span={6}>
-                            <Select label="Home Page" data={homePageOptions} {...form.getInputProps('homePage')} allowDeselect={false} />
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                            <Select
-                                label="Page Size"
-                                data={toSelectOptions(pageSizeOptions, pageSizeOptions.map(opt => opt.toString()))}
-                                {...form.getInputProps("pageSize")}
-                                allowDeselect={false}
-                            />
-                        </Grid.Col>
-                        <Grid.Col span={6}>
-                            <Select
-                                label="Color"
-                                data={toSelectOptions(colorOptions, colorOptions.map(opt => toProperCase(opt)))}
-                                {...form.getInputProps("colorScheme")}
-                                allowDeselect={false}
-                            />
-                        </Grid.Col>
-                    </Grid>
-                    <Group mt={20}>
-                        <Button type="submit" variant={colorPalette.variant} disabled={!form.isDirty()}>Submit</Button>
-                        <Button type="reset" variant={colorPalette.variant} color="red" disabled={!form.isDirty()} onClick={resetForm}>Reset</Button>
-                    </Group>
-                </Stack>
+                <Tabs defaultValue="general" orientation="vertical" placement="right" >
+                    <Tabs.List>
+                        <Tabs.Tab value="general">General</Tabs.Tab>
+                        <Tabs.Tab value="appearance">Appearance</Tabs.Tab>
+                        <Tabs.Tab value="notifications">Notifications</Tabs.Tab>
+                    </Tabs.List>
+
+                    <Tabs.Panel value="general" mr="sm">
+                        <Stack>
+                            <Grid gutter="lg" grow>
+                                <Grid.Col span={6}>
+                                    <Select label="Home Page" data={homePageOptions} {...form.getInputProps('homePage')} allowDeselect={false} />
+                                </Grid.Col>
+                                <Grid.Col span={6}>
+                                    <Select
+                                        label="Page Size"
+                                        data={toSelectOptions(pageSizeOptions, pageSizeOptions.map(opt => opt.toString()))}
+                                        {...form.getInputProps("pageSize")}
+                                        allowDeselect={false}
+                                    />
+                                </Grid.Col>
+                            </Grid>
+                        </Stack>
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="appearance" mr="sm">
+                        <Stack >
+                            <Grid gutter="lg" grow>
+                                <Grid.Col span={12}>
+                                    <StyledButton
+                                        colorPalette={colorPalette}
+                                        color={form.getValues().colorScheme}
+                                        variant={form.getValues().buttonVariant}
+                                        type="button"
+                                        label="Sample Button"
+                                        gradient={{ from: form.getValues().colorScheme, to: gradientTo, deg: gradientDegrees }}
+                                        tooltipLabel="Sample Tooltip"
+                                        tooltipPosition="right"
+                                        tooltipColor={form.getValues().colorScheme}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={6}>
+                                    <Select
+                                        label="Color"
+                                        data={toSelectOptions(colorOptions, colorOptions.map(opt => toProperCase(opt)))}
+                                        {...form.getInputProps("colorScheme")}
+                                        allowDeselect={false}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={6}>
+                                    <Select
+                                        label="Button Style"
+                                        data={toSelectOptions(buttonVariants, buttonVariants.map(opt => toProperCase(opt)))}
+                                        {...form.getInputProps("buttonVariant")}
+                                        allowDeselect={false}
+                                        onChange={value => {
+                                            if (value === "gradient") {
+                                                setShowGradientOptions(true);
+                                            } else {
+                                                setShowGradientOptions(false);
+                                            }
+                                            setControlledVariant(value ?? "");
+                                            form.setValues({ buttonVariant: value ?? "" });
+                                        }}
+                                        value={controlledVariant}
+                                    />
+                                </Grid.Col>
+                                {showGradientOptions ? <Grid.Col span={12} >{gradientSelector}</Grid.Col> : null}
+                                {showGradientOptions ? <Grid.Col span={12}>{gradientDegreeSlider}</Grid.Col> : null}
+                            </Grid>
+                        </Stack>
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="notifications" mr="sm">TODO: Notification Content</Tabs.Panel>
+                </Tabs>
+
+                <Group mt={20}>
+                    <StyledButton
+                        type="submit"
+                        label="Submit"
+                        disabled={!isDirty}
+                        colorPalette={colorPalette}
+                        tooltipLabel="Save Updated Settings"
+                        tooltipPosition="right"
+                    />
+                    <StyledButton
+                        type="reset"
+                        gradient={{ ...colorPalette.gradient, from: "red" }}
+                        color="red"
+                        disabled={!isDirty}
+                        onClick={resetForm}
+                        label="Reset"
+                        colorPalette={colorPalette}
+                        tooltipLabel="Reset Changes"
+                        tooltipPosition="right"
+                    />
+                </Group>
             </form>
-        </Stack>
+        </Stack >
     );
 }
 
