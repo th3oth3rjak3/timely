@@ -16,6 +16,8 @@ export type UserSettings = {
     gradientTo: string;
     /** The number of degrees to transform the gradient. */
     gradientDegrees: number;
+    /** Whether to start the application with the navbar opened or not. */
+    navbarOpened: boolean;
     /** The settings that enable notifications of certain types. */
     notificationSettings: NotificationSetting[];
 };

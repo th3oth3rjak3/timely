@@ -65,6 +65,7 @@ function Settings() {
         buttonVariant: string;
         gradientTo: string;
         gradientDegrees?: number;
+        navbarOpened: string;
     }
 
     const form = useForm<FormUserSettings>({
@@ -77,6 +78,7 @@ function Settings() {
             buttonVariant: colorPalette.variant,
             gradientTo: colorPalette.gradient.to,
             gradientDegrees: colorPalette.gradient.deg,
+            navbarOpened: userSettings.navbarOpened.toString(),
         },
         initialDirty: {
             pageSize: false,
@@ -85,6 +87,7 @@ function Settings() {
             buttonVariant: false,
             gradientTo: false,
             gradientDegrees: false,
+            navbarOpened: false,
         },
         initialTouched: {
             pageSize: false,
@@ -93,6 +96,7 @@ function Settings() {
             buttonVariant: false,
             gradientTo: false,
             gradientDegrees: false,
+            navbarOpened: false,
         },
     });
 
@@ -103,6 +107,7 @@ function Settings() {
             gradientFrom: settings.colorScheme,
             gradientTo,
             gradientDegrees: gradientDegrees ?? 0,
+            navbarOpened: settings.navbarOpened === 'true',
             notificationSettings: notificationSettings,
         };
         await updateUserSettings(userSettings, () => form.resetDirty());
@@ -195,6 +200,14 @@ function Settings() {
                                         label="Page Size"
                                         data={toSelectOptions(pageSizeOptions, pageSizeOptions.map(opt => opt.toString()))}
                                         {...form.getInputProps("pageSize")}
+                                        allowDeselect={false}
+                                    />
+                                </Grid.Col>
+                                <Grid.Col span={6}>
+                                    <Select
+                                        label="Start With Navbar Open"
+                                        data={toSelectOptions([true, false], ["True", "False"])}
+                                        {...form.getInputProps("navbarOpened")}
                                         allowDeselect={false}
                                     />
                                 </Grid.Col>

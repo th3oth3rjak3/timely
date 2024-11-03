@@ -18,7 +18,7 @@ import TasksList from './features/tasks/TaskList';
 import Timer from './features/timer/Timer';
 import MainLayout from './layout/MainLayout';
 import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { setUserSettings } from './redux/reducers/settingsSlice';
+import { setNavbar, setUserSettings } from './redux/reducers/settingsSlice';
 
 import { ContextMenuProvider } from 'mantine-contextmenu';
 import './App.css';
@@ -37,6 +37,7 @@ function App() {
       .then((userSettings) => {
         if (!!userSettings && userSettings !== null) {
           dispatch(setUserSettings(userSettings));
+          dispatch(setNavbar(userSettings.navbarOpened));
 
           const browserRouter = createBrowserRouter([
             {

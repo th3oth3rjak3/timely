@@ -11,6 +11,7 @@ pub struct UpdateUserSettings {
     pub gradient_to: String,
     pub gradient_from: String,
     pub gradient_degrees: i32,
+    pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
 }
 
@@ -29,6 +30,7 @@ pub struct UserSetting {
     pub gradient_to: String,
     pub gradient_from: String,
     pub gradient_degrees: i32,
+    pub navbar_opened: bool,
 }
 
 impl UserSetting {
@@ -42,6 +44,7 @@ impl UserSetting {
             gradient_to: update.gradient_to,
             gradient_from: update.gradient_from,
             gradient_degrees: update.gradient_degrees,
+            navbar_opened: update.navbar_opened,
         }
     }
 }
@@ -58,6 +61,7 @@ impl From<UserSetting> for UserSettingRead {
             gradient_from: value.gradient_from,
             gradient_degrees: value.gradient_degrees,
             notification_settings: Vec::new(),
+            navbar_opened: value.navbar_opened,
         }
     }
 }
@@ -73,6 +77,7 @@ impl From<UserSettingRead> for UserSetting {
             gradient_to: value.gradient_to,
             gradient_from: value.gradient_from,
             gradient_degrees: value.gradient_degrees,
+            navbar_opened: value.navbar_opened,
         }
     }
 }
@@ -88,6 +93,7 @@ pub struct UserSettingRead {
     pub gradient_to: String,
     pub gradient_from: String,
     pub gradient_degrees: i32,
+    pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
 }
 

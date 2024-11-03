@@ -78,6 +78,7 @@ const initialState: SettingsState = {
         gradientFrom: "",
         gradientTo: "",
         gradientDegrees: 0,
+        navbarOpened: false,
         notificationSettings: []
     }
 };
@@ -115,6 +116,9 @@ export const settingsSlice = createSlice({
         toggleNavbar: (state) => {
             state.navbarOpen = !state.navbarOpen;
         },
+        setNavbar: (state, action: PayloadAction<boolean>) => {
+            state.navbarOpen = action.payload;
+        },
         setCurrentTagPage: (state, action: PayloadAction<number>) => {
             state.tagListSettings.params.page = action.payload;
         },
@@ -144,6 +148,7 @@ export const {
     setTagPageSize,
     setTagSortStatus,
     setTagSearchParams,
+    setNavbar,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

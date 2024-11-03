@@ -15,7 +15,6 @@ use super::*;
 pub async fn create_task(new_task: CreateTask, db: State<'_, Diesel>) -> Result<(), String> {
     let mut connection = db.pool.get().map_err(|err| err.to_string())?;
     let new_task = NewTask::from(new_task);
-    println!("{:#?}", &new_task);
     diesel::insert_into(tasks::table)
         .values(&new_task)
         .execute(&mut connection)

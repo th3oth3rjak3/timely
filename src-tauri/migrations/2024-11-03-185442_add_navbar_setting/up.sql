@@ -1,0 +1,2 @@
+ALTER TABLE user_settings
+ADD COLUMN navbar_opened BOOL NOT NULL DEFAULT 0;

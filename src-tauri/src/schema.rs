@@ -59,6 +59,7 @@ diesel::table! {
         gradient_from -> Text,
         gradient_to -> Text,
         gradient_degrees -> Integer,
+        navbar_opened -> Bool,
     }
 }
 
