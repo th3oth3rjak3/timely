@@ -77,7 +77,8 @@ const initialState: SettingsState = {
         buttonVariant: "filled",
         gradientFrom: "",
         gradientTo: "",
-        gradientDegrees: 0
+        gradientDegrees: 0,
+        notificationSettings: []
     }
 };
 

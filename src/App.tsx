@@ -38,7 +38,6 @@ function App() {
         if (!!userSettings && userSettings !== null) {
           dispatch(setUserSettings(userSettings));
 
-
           const browserRouter = createBrowserRouter([
             {
               path: "/",

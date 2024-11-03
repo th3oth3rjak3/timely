@@ -34,7 +34,7 @@ function TagsList() {
 
     const { showContextMenu, hideContextMenu } = useContextMenu();
     const dispatch = useAppDispatch();
-    const { deleteTag, createNewTag, editTag } = useTagService(fetchTags);
+    const { deleteTag, createNewTag, editTag } = useTagService(userSettings, colorPalette, recordCount, fetchTags);
 
     useEffect(() => {
         fetchTags().then(() => setLoading(false));

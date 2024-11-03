@@ -4,6 +4,7 @@ import dayjs from "dayjs";
 import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
 import { ColorPalette } from "../settings/hooks/useColorService";
+import { UserSettings } from "../settings/UserSettings";
 import { Tag } from "../tags/types/Tag";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
@@ -11,8 +12,9 @@ import { Task } from "./types/Task";
 
 export type TaskDetailParams = {
     task: Task;
-    tagOptions: Tag[],
-    colorPalette: ColorPalette,
+    tagOptions: Tag[];
+    colorPalette: ColorPalette;
+    userSettings: UserSettings;
     onStarted: (task: Task) => void;
     onPaused: (task: Task) => void;
     onResumed: (task: Task) => void;
@@ -231,7 +233,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
             <Grid.Col span={6}>
                 <TextInput label="Actual Complete Date" value={props.task.actualCompleteDate !== null ? dayjs(props.task.actualCompleteDate).format("MM/DD/YYYY") : "Not Completed"} readOnly />
             </Grid.Col>
-            <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} colorPalette={props.colorPalette} />}</Grid.Col>
+            <Grid.Col span={12}>{<TagDetails task={props.task} onTagsChanged={props.onTagsChanged} tagOptions={props.tagOptions} colorPalette={props.colorPalette} userSettings={props.userSettings} />}</Grid.Col>
             <Grid.Col span={12}>
                 <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} colorPalette={props.colorPalette} />
             </Grid.Col>

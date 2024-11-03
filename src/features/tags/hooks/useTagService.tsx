@@ -1,13 +1,38 @@
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useMemo } from "react";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { setCurrentTagPage } from "../../../redux/reducers/settingsSlice";
+import { findLastPage } from "../../../utilities/dataTableUtilities";
+import { NotificationType } from "../../../utilities/notificationUtilities";
+import { ColorPalette } from "../../settings/hooks/useColorService";
+import { UserSettings } from "../../settings/UserSettings";
 import { Tag } from "../types/Tag";
 import { TagSearchParams } from "../types/TagSearchParams";
 
-const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
+const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, recordCount: number, fetchAllTags?: () => Promise<void> | void) => {
 
     const { invoke } = useTauri();
+
+    const tagSearchParams = useAppSelector(state => state.settings.tagListSettings.params);
+    const dispatch = useAppDispatch();
+    const lastPage = useMemo(() => {
+        return findLastPage(recordCount - 1, tagSearchParams.pageSize);
+    }, [recordCount, tagSearchParams]);
+
+    const shouldChangePages = useMemo(() => {
+        return lastPage < tagSearchParams.page;
+    }, [lastPage, tagSearchParams]);
+
+    const handleDataFetch = async () => {
+        if (shouldChangePages) {
+            dispatch(setCurrentTagPage(lastPage));
+        } else {
+            await fetchAllTags?.();
+        }
+    }
 
     const getAllTags = async () => {
         return await invoke<Tag[]>({ command: "get_all_tags" });
@@ -25,7 +50,9 @@ const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
             command: "add_new_tag",
             params: { newTag: tagName },
             successMessage: "New tag created successfully.",
-            callback: fetchAllTags
+            notificationType: NotificationType.AddNewTag,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -33,7 +60,9 @@ const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
         await invoke<void>({
             command: "add_tag_to_task",
             params: { taskId, tagId: tag.id },
-            successMessage: "Successfully added tag."
+            successMessage: "Successfully added tag.",
+            notificationType: NotificationType.AddTagToTask,
+            userSettings,
         });
     }
 
@@ -43,6 +72,8 @@ const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
             command: "remove_tag_from_task",
             params: { taskId, tagId: tag.id },
             successMessage: "Successfully removed tag.",
+            notificationType: NotificationType.RemoveTagFromTask,
+            userSettings,
         });
     }
 
@@ -52,15 +83,19 @@ const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
             children: (
                 <Text>{`Are you sure you want to delete tag: ${tag.value}?`}</Text>
             ),
-            confirmProps: { variant: "light", color: "cyan" },
-            cancelProps: { variant: "light", color: "indigo" },
+            confirmProps: {
+                variant: colorPalette.variant, color: "red", gradient: { ...colorPalette.gradient, from: "red" }
+            },
+            cancelProps: { variant: colorPalette.variant, color: colorPalette.colorName, gradient: colorPalette.gradient },
             labels: { confirm: "Confirm", cancel: "Deny" },
             onCancel: () => { },
             onConfirm: async () => await invoke<void>({
                 command: "delete_tag",
                 params: { tagId: tag.id },
                 successMessage: "Successfully deleted tag.",
-                callback: fetchAllTags,
+                notificationType: NotificationType.DeleteTag,
+                userSettings,
+                callback: handleDataFetch,
             })
         });
 
@@ -78,7 +113,9 @@ const useTagService = (fetchAllTags?: () => Promise<void> | void) => {
             command: "edit_tag",
             params: { tag: params },
             successMessage: "Updated tag successfully.",
-            callback: fetchAllTags,
+            notificationType: NotificationType.EditTag,
+            userSettings,
+            callback: handleDataFetch,
         });
     }
 

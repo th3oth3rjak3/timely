@@ -1,11 +1,14 @@
 import { InvokeArgs, invoke as tauriInvoke } from "@tauri-apps/api/core";
-import { showErrorNotification, showSuccessNotification } from "../utilities/notificationUtilities";
+import { UserSettings } from "../features/settings/UserSettings";
+import { NotificationType, showErrorNotification, showSuccessNotification } from "../utilities/notificationUtilities";
 
 const useTauri = () => {
     type Props = {
         command: string,
         params?: InvokeArgs,
         successMessage?: string,
+        notificationType?: NotificationType,
+        userSettings?: UserSettings,
         callback?: () => void | Promise<void>
     }
 
@@ -13,16 +16,18 @@ const useTauri = () => {
         command,
         params,
         successMessage,
+        notificationType,
+        userSettings,
         callback }: Props
     ): Promise<T | undefined> {
 
         try {
             const result = await tauriInvoke<T>(command, params);
-            if (callback) {
+            if (callback !== undefined) {
                 await callback();
             }
-            if (successMessage) {
-                showSuccessNotification(successMessage);
+            if (successMessage !== undefined && notificationType !== undefined && userSettings !== undefined) {
+                showSuccessNotification(notificationType, userSettings, successMessage);
             }
 
             return result;

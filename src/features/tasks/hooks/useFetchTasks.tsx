@@ -1,6 +1,7 @@
 import { useMantineTheme } from "@mantine/core";
 import { useState } from "react";
-import { useAppSelector } from "../../../redux/hooks";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { setCurrentTaskPage, setTaskPageSize } from "../../../redux/reducers/settingsSlice";
 import useColorService from "../../settings/hooks/useColorService";
 import useTagService from "../../tags/hooks/useTagService";
 import { Tag } from "../../tags/types/Tag";
@@ -18,9 +19,11 @@ const useFetchTasks = (searchParams: TaskSearchParams) => {
     const userSettings = useAppSelector(state => state.settings.userSettings);
     const { colorPalette } = useColorService(theme, userSettings);
 
+    const dispatch = useAppDispatch();
 
-    const { searchForTasks } = useTaskService(colorPalette);
-    const { getAllTags } = useTagService();
+
+    const { searchForTasks } = useTaskService(colorPalette, userSettings);
+    const { getAllTags } = useTagService(userSettings, colorPalette);
 
     const fetchTags = async () => {
         setIsFetchingTags(false);
@@ -37,6 +40,8 @@ const useFetchTasks = (searchParams: TaskSearchParams) => {
         if (!paged) return;
         setTasks(paged.data);
         setRecordCount(paged.totalItemCount);
+        dispatch(setCurrentTaskPage(paged.page));
+        dispatch(setTaskPageSize(paged.pageSize));
     }
 
     const fetchAllData = async () => {

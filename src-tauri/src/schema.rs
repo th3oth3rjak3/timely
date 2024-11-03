@@ -11,6 +11,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    notification_settings (id) {
+        id -> Integer,
+        user_setting_id -> Integer,
+        name -> Text,
+        enabled -> Bool,
+    }
+}
+
+diesel::table! {
     tags (id) {
         id -> Integer,
         value -> Text,
@@ -54,11 +63,13 @@ diesel::table! {
 }
 
 diesel::joinable!(comments -> tasks (task_id));
+diesel::joinable!(notification_settings -> user_settings (user_setting_id));
 diesel::joinable!(task_tags -> tags (tag_id));
 diesel::joinable!(task_tags -> tasks (task_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     comments,
+    notification_settings,
     tags,
     task_tags,
     tasks,

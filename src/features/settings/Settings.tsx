@@ -1,7 +1,7 @@
-import { ActionIcon, Card, Grid, Group, Select, Slider, Stack, Tabs, Text, useMantineTheme } from "@mantine/core";
+import { ActionIcon, Card, Grid, Group, Select, Slider, Stack, Switch, Table, Tabs, Text, useMantineTheme } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import StyledButton from "../../components/StyledButton";
 import { useAppSelector } from "../../redux/hooks";
@@ -9,6 +9,7 @@ import { toSelectOptions } from "../../utilities/formUtilities";
 import { toProperCase } from "../../utilities/stringUtilities";
 import useColorService from "./hooks/useColorService";
 import useSettingsService from "./hooks/useSettingsService";
+import { NotificationSetting } from "./UserSettings";
 
 
 /**
@@ -27,6 +28,35 @@ function Settings() {
     const [gradientDegrees, setGradientDegrees] = useState(colorPalette.gradient.deg);
     const [gradientTo, setGradientTo] = useState(colorPalette.gradient.to);
     const [controlledVariant, setControlledVariant] = useState(colorPalette.variant);
+    const [notificationSettings, setNotificationSettings] = useState<NotificationSetting[]>(userSettings.notificationSettings);
+
+    const notificationSettingsDirty = useMemo(() => {
+        return JSON.stringify(userSettings.notificationSettings) !== JSON.stringify(notificationSettings);
+    }, [notificationSettings]);
+
+    const notificationSettingTableRows = notificationSettings.map((setting) => (
+        <Table.Tr key={setting.name}>
+            <Table.Td>
+                {setting.name}
+            </Table.Td>
+            <Table.Td>
+                <Switch checked={setting.enabled} onChange={(event) => {
+                    let found = notificationSettings.find(s => s.id === setting.id);
+                    if (found === undefined) return;
+                    found = { ...found };
+                    if (found === undefined) return;
+                    found.enabled = event.currentTarget.checked;
+                    let updated = [...notificationSettings.filter(s => s.id !== found.id), found];
+                    updated.sort((a, b) => a.name.localeCompare(b.name));
+                    setNotificationSettings(updated);
+                }} />
+            </Table.Td>
+        </Table.Tr>
+    ));
+
+    useEffect(() => {
+        setNotificationSettings(userSettings.notificationSettings);
+    }, [userSettings]);
 
     type FormUserSettings = {
         pageSize: string;
@@ -73,6 +103,7 @@ function Settings() {
             gradientFrom: settings.colorScheme,
             gradientTo,
             gradientDegrees: gradientDegrees ?? 0,
+            notificationSettings: notificationSettings,
         };
         await updateUserSettings(userSettings, () => form.resetDirty());
     }
@@ -84,6 +115,7 @@ function Settings() {
         setGradientTo(colorPalette.gradient.to);
         setGradientDegrees(colorPalette.gradient.deg);
         setControlledVariant(colorPalette.variant);
+        setNotificationSettings(userSettings.notificationSettings);
         if (colorPalette.variant === "gradient") {
             setShowGradientOptions(true);
         } else {
@@ -95,7 +127,7 @@ function Settings() {
         const controlledVariantChanged = controlledVariant !== colorPalette.variant;
         const gradientDegreesChanged = gradientDegrees !== colorPalette.gradient.deg;
         const gradientToChanged = gradientTo !== colorPalette.gradient.to;
-        return form.isDirty() || controlledVariantChanged || gradientDegreesChanged || gradientToChanged;
+        return form.isDirty() || controlledVariantChanged || gradientDegreesChanged || gradientToChanged || notificationSettingsDirty;
     }, [controlledVariant, gradientDegrees, gradientTo, colorPalette, form]);
 
 
@@ -220,7 +252,15 @@ function Settings() {
 
                     <Tabs.Panel value="notifications">
                         <Stack my="md">
-                            TODO: Notification Content
+                            <Table>
+                                <Table.Thead>
+                                    <Table.Tr>
+                                        <Table.Th>Notification</Table.Th>
+                                        <Table.Th>Enabled</Table.Th>
+                                    </Table.Tr>
+                                </Table.Thead>
+                                <Table.Tbody>{notificationSettingTableRows}</Table.Tbody>
+                            </Table>
                         </Stack>
                     </Tabs.Panel>
                 </Tabs>

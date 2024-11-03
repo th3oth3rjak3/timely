@@ -1,10 +1,11 @@
-import { Group, Stack, Text, TextInput } from "@mantine/core";
+import { Group, Stack, Text, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
+import { useAppSelector } from "../../redux/hooks";
 import { ColorPalette } from "../settings/hooks/useColorService";
 import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
@@ -18,11 +19,13 @@ type Props = {
 
 function CommentDetails(props: Props) {
 
+    const userSettings = useAppSelector(state => state.settings.userSettings);
+
     const {
         addComment,
         editComment,
         deleteComment
-    } = useCommentService();
+    } = useCommentService(userSettings);
 
     const newCommentForm = useForm({
         mode: "uncontrolled",
@@ -47,12 +50,13 @@ function CommentDetails(props: Props) {
 
     const openNewCommentModal = () => modals.open({
         title: 'Add New Comment',
+        onClose: () => newCommentForm.reset(),
         closeOnClickOutside: false,
         closeOnEscape: false,
         children: (
             <form onSubmit={newCommentForm.onSubmit(addNewComment)}>
                 <Stack>
-                    <TextInput label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} />
+                    <Textarea label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} autosize maxRows={10} />
                     <Group>
                         <StyledButton
                             type="submit"
@@ -70,12 +74,13 @@ function CommentDetails(props: Props) {
         editCommentForm.setValues({ comment: comment.message, id: comment.id });
         modals.open({
             title: 'Edit Comment',
+            onClose: () => editCommentForm.reset(),
             closeOnClickOutside: false,
             closeOnEscape: false,
             children: (
                 <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
                     <Stack>
-                        <TextInput label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} />
+                        <Textarea label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} autosize maxRows={10} />
                         <Group>
                             <StyledButton
                                 type="submit"
@@ -143,7 +148,7 @@ function CommentDetails(props: Props) {
                         onClick={() => openEditCommentModal(comment)}
                         colorPalette={props.colorPalette}
                         tooltipLabel="Edit Comment"
-                        tooltipPosition="right"
+                        tooltipPosition="left"
                     >
                         <IconEdit />
                     </StyledActionIcon>
@@ -152,7 +157,7 @@ function CommentDetails(props: Props) {
                         onClick={() => openDeleteModal(comment)}
                         colorPalette={props.colorPalette}
                         tooltipLabel="Delete Comment"
-                        tooltipPosition="right"
+                        tooltipPosition="left"
                     >
                         <IconTrash />
                     </StyledActionIcon>

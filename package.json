@@ -23,8 +23,6 @@
     "@tauri-apps/api": ">=2.0.0",
     "@tauri-apps/plugin-shell": ">=2.0.0",
     "clsx": "^2.1.1",
-    "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0",
     "dayjs": "^1.11.13",
     "lodash": "^4.17.21",
     "mantine-contextmenu": "^7.12.2",

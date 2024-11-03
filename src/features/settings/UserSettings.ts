@@ -16,4 +16,13 @@ export type UserSettings = {
     gradientTo: string;
     /** The number of degrees to transform the gradient. */
     gradientDegrees: number;
+    /** The settings that enable notifications of certain types. */
+    notificationSettings: NotificationSetting[];
+};
+
+export type NotificationSetting = {
+    id: number,
+    userSettingId: number,
+    name: string,
+    enabled: boolean,
 };

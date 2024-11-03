@@ -1,14 +1,23 @@
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
+import { useMemo } from "react";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { setCurrentTaskPage } from "../../../redux/reducers/settingsSlice";
+import { findLastPage } from "../../../utilities/dataTableUtilities";
+import { NotificationType } from "../../../utilities/notificationUtilities";
 import { ColorPalette } from "../../settings/hooks/useColorService";
+import { UserSettings } from "../../settings/UserSettings";
 import { EditTask, NewTask, Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
 
 /** Create a task service to interact with tauri data. */
-const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise<void> | void) => {
+const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, recordCount: number, fetchAllData?: () => Promise<void> | void) => {
     const { invoke } = useTauri();
+    const taskSearchParams = useAppSelector(state => state.settings.taskListSettings.params);
+    const dispatch = useAppDispatch();
+
 
     /** Search for tasks that meet the search parameters.
      * @param params - The search parameters to use to find tasks.
@@ -22,6 +31,22 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
         return tasks;
     }
 
+    const lastPage = useMemo(() => {
+        return findLastPage(recordCount - 1, taskSearchParams.pageSize);
+    }, [recordCount, taskSearchParams]);
+
+    const shouldChangePages = useMemo(() => {
+        return lastPage < taskSearchParams.page;
+    }, [lastPage, taskSearchParams]);
+
+    const handleDataFetch = async () => {
+        if (shouldChangePages) {
+            dispatch(setCurrentTaskPage(lastPage));
+        } else {
+            await fetchAllData?.();
+        }
+    }
+
     /** Create a new task. 
      * @param task - The task to create.
     */
@@ -31,7 +56,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "create_task",
             params: { newTask: task },
             successMessage: "New task added successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.AddNewTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -43,7 +70,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "start_task",
             params: { taskId: task.id },
             successMessage: "Task started successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.StartTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -55,7 +84,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "pause_task",
             params: { taskId: task.id },
             successMessage: "Task paused successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.PauseTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -67,7 +98,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "resume_task",
             params: { taskId: task.id },
             successMessage: "Task resumed successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.ResumeTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -79,7 +112,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "finish_task",
             params: { taskId: task.id },
             successMessage: "Task finished successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.FinishTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -102,7 +137,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
                 command: "cancel_task",
                 params: { taskId: task.id },
                 successMessage: "Task cancelled successfully.",
-                callback: fetchAllData
+                notificationType: NotificationType.CancelTask,
+                userSettings,
+                callback: handleDataFetch
             })
         });
     }
@@ -115,7 +152,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "restore_task",
             params: { taskId: task.id },
             successMessage: "Task restored successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.RestoreCancelledTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -127,7 +166,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "reopen_task",
             params: { taskId: task.id },
             successMessage: "Task reopened successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.ReopenFinishedTask,
+            userSettings,
+            callback: handleDataFetch
         });
     }
 
@@ -150,7 +191,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
                 command: "delete_task",
                 params: { taskId: task.id },
                 successMessage: "Task deleted successfully.",
-                callback: fetchAllData
+                notificationType: NotificationType.DeleteTask,
+                userSettings,
+                callback: handleDataFetch
             })
         });
     }
@@ -169,7 +212,9 @@ const useTaskService = (colorPalette: ColorPalette, fetchAllData?: () => Promise
             command: "edit_task",
             params: { task },
             successMessage: "Task updated successfully.",
-            callback: fetchAllData
+            notificationType: NotificationType.EditTask,
+            userSettings,
+            callback: handleDataFetch
         });
         callback?.();
     }

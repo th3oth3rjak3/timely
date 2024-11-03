@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
 import { setCurrentTaskPage, setTaskPageSize, setTaskSearchParams, setTaskSortStatus } from "../../redux/reducers/settingsSlice.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { validateLength } from "../../utilities/formUtilities.ts";
-import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
+import { NotificationType, showSuccessNotification } from "../../utilities/notificationUtilities.ts";
 import useColorService from "../settings/hooks/useColorService.tsx";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
@@ -63,7 +63,7 @@ function TaskList() {
         deleteTask,
         finishTask,
         reopenTask,
-    } = useTaskService(colorPalette, fetchAllData);
+    } = useTaskService(colorPalette, userSettings, recordCount, fetchAllData);
 
     const isTouchScreen = useMediaQuery('(pointer: coarse)');
 
@@ -135,6 +135,10 @@ function TaskList() {
         dispatch(setCurrentTaskPage(page));
     }
 
+    function handleTaskDeletion(task: Task): () => void {
+        return () => deleteTask(task);
+    }
+
     function getContextMenuItems(task: Task): ContextMenuContent {
 
         const startTaskItem = {
@@ -190,7 +194,7 @@ function TaskList() {
             key: 'delete-task',
             title: 'Delete Task',
             icon: <IconTrash size={16} />,
-            onClick: () => deleteTask(task),
+            onClick: handleTaskDeletion(task),
         };
 
         const editTaskItem = {
@@ -388,7 +392,7 @@ function TaskList() {
                     </StyledActionIcon>
                     <StyledActionIcon
                         colorPalette={colorPalette}
-                        onClick={() => fetchAllData().then(() => showSuccessNotification("So fresh."))}
+                        onClick={() => fetchAllData().then(() => showSuccessNotification(NotificationType.RefreshTasks, userSettings, "So fresh."))}
                         tooltipLabel="Refresh Tasks"
                         tooltipPosition="left"
                     >
@@ -422,6 +426,7 @@ function TaskList() {
                                 <TaskDetail
                                     task={record}
                                     tagOptions={tagOptions}
+                                    userSettings={userSettings}
                                     colorPalette={colorPalette}
                                     onStarted={startTask}
                                     onPaused={pauseTask}
@@ -431,7 +436,7 @@ function TaskList() {
                                     onCancelled={cancelTask}
                                     onReopened={reopenTask}
                                     onEdited={beginEditingTask}
-                                    onDeleted={deleteTask}
+                                    onDeleted={handleTaskDeletion}
                                     onCommentChanged={fetchAllData}
                                     onTagsChanged={fetchAllData} />
                             );

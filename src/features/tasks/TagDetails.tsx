@@ -1,5 +1,6 @@
 import { TagsInput } from "@mantine/core";
 import { ColorPalette } from "../settings/hooks/useColorService";
+import { UserSettings } from "../settings/UserSettings";
 import useTagService from "../tags/hooks/useTagService";
 import { Tag } from "../tags/types/Tag";
 import { Task } from "./types/Task";
@@ -7,6 +8,7 @@ import { Task } from "./types/Task";
 type Props = {
     task: Task;
     tagOptions: Tag[];
+    userSettings: UserSettings;
     colorPalette: ColorPalette;
     onTagsChanged: () => void;
 }
@@ -18,7 +20,7 @@ function TagDetails(props: Props) {
         removeTagFromTask,
         createNewTag,
         addTagToTask,
-    } = useTagService();
+    } = useTagService(props.userSettings, props.colorPalette);
 
     /** All tag options mapped to their display value to choose from. */
     const tagOptions = props.tagOptions.map(opt => opt.value);
