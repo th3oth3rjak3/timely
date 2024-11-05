@@ -1,29 +1,12 @@
-import '@mantine/charts/styles.css';
-import { createTheme, MantineProvider } from '@mantine/core';
-import '@mantine/core/styles.css';
-import '@mantine/core/styles.layer.css';
-import '@mantine/dates/styles.css';
-import '@mantine/dropzone/styles.css';
-import { ModalsProvider } from '@mantine/modals';
-import { Notifications } from '@mantine/notifications';
-import '@mantine/notifications/styles.css';
 import { Router } from "@remix-run/router";
-import 'mantine-contextmenu/styles.css';
-import 'mantine-contextmenu/styles.layer.css';
-import 'mantine-datatable/styles.css';
 import { useEffect, useState } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
-import Settings from './features/settings/Settings';
-import TasksList from './features/tasks/TaskList';
-import Timer from './features/timer/Timer';
-import MainLayout from './layout/MainLayout';
-import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { setNavbar, setUserSettings } from './redux/reducers/settingsSlice';
-
-import { ContextMenuProvider } from 'mantine-contextmenu';
 import './App.css';
 import useSettingsService from './features/settings/hooks/useSettingsService';
-import TagsList from './features/tags/TagsList';
+import * as Mantine from './mantine';
+import * as Pages from './pages';
+import { useAppDispatch, useAppSelector } from './redux/hooks';
+import { setNavbar, setUserSettings } from './redux/reducers/settingsSlice';
 
 function App() {
 
@@ -42,7 +25,7 @@ function App() {
           const browserRouter = createBrowserRouter([
             {
               path: "/",
-              element: <MainLayout />,
+              element: <Pages.MainLayout />,
               children: [
                 {
                   path: "",
@@ -50,19 +33,19 @@ function App() {
                 },
                 {
                   path: "/timer",
-                  element: <Timer />
+                  element: <Pages.Timer />
                 },
                 {
                   path: "/tasks",
-                  element: <TasksList />
+                  element: <Pages.TasksList />
                 },
                 {
                   path: "/tags",
-                  element: <TagsList />
+                  element: <Pages.TagsList />
                 },
                 {
                   path: "/settings",
-                  element: <Settings />
+                  element: <Pages.Settings />
                 }
               ]
             }
@@ -73,7 +56,7 @@ function App() {
       })
   }, []);
 
-  const theme = createTheme({
+  const theme = Mantine.createTheme({
     primaryColor: userSettings.colorScheme,
     defaultGradient: {
       to: userSettings.gradientTo,
@@ -84,27 +67,26 @@ function App() {
 
   if (!!router) {
     return (
-      <MantineProvider defaultColorScheme="dark" theme={theme}>
-        <ContextMenuProvider>
-          <ModalsProvider>
-            <Notifications />
+      <Mantine.MantineProvider defaultColorScheme="dark" theme={theme}>
+        <Mantine.ContextMenuProvider>
+          <Mantine.ModalsProvider>
+            <Mantine.Notifications />
             <RouterProvider router={router} />
-          </ModalsProvider>
-        </ContextMenuProvider>
-      </MantineProvider>
+          </Mantine.ModalsProvider>
+        </Mantine.ContextMenuProvider>
+      </Mantine.MantineProvider>
     );
   }
 
   return (
-    <MantineProvider defaultColorScheme="dark" >
-      <ContextMenuProvider>
-        <ModalsProvider>
-          <Notifications />
-        </ModalsProvider>
-      </ContextMenuProvider>
-    </MantineProvider>
+    <Mantine.MantineProvider defaultColorScheme="dark" theme={theme}>
+      <Mantine.ContextMenuProvider>
+        <Mantine.ModalsProvider>
+          <Mantine.Notifications />
+        </Mantine.ModalsProvider>
+      </Mantine.ContextMenuProvider>
+    </Mantine.MantineProvider>
   );
-
 
 }
 

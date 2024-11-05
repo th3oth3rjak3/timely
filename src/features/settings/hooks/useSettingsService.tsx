@@ -1,7 +1,7 @@
 import useTauri from "../../../hooks/useTauri";
+import { TauriAction } from "../../../models/TauriAction";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setUserSettings } from "../../../redux/reducers/settingsSlice";
-import { NotificationType } from "../../../utilities/notificationUtilities";
 import { UserSettings } from "../UserSettings";
 
 export type Settings = {
@@ -29,7 +29,7 @@ function useSettingsService() {
             params: { settings: { ...settings, } },
             successMessage: "Successfully updated settings.",
             userSettings: settings,
-            notificationType: NotificationType.UpdateSettings,
+            notificationType: TauriAction.EditSettings,
             callback
         });
 

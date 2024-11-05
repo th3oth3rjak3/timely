@@ -1,5 +1,5 @@
 import useTauri from "../../../hooks/useTauri";
-import { NotificationType } from "../../../utilities/notificationUtilities";
+import { TauriAction } from "../../../models/TauriAction";
 import { UserSettings } from "../../settings/UserSettings";
 
 const useCommentService = (userSettings: UserSettings) => {
@@ -10,7 +10,7 @@ const useCommentService = (userSettings: UserSettings) => {
             command: "add_comment",
             params: { comment: { taskId, message } },
             successMessage: "Added comment successfully.",
-            notificationType: NotificationType.AddNewComment,
+            notificationType: TauriAction.AddNewComment,
             userSettings,
             callback
         });
@@ -21,7 +21,7 @@ const useCommentService = (userSettings: UserSettings) => {
             command: "update_comment",
             params: { comment: { id: commentId, message } },
             successMessage: "Updated comment successfully.",
-            notificationType: NotificationType.EditComment,
+            notificationType: TauriAction.EditComment,
             userSettings,
             callback
         });
@@ -32,7 +32,7 @@ const useCommentService = (userSettings: UserSettings) => {
             command: "delete_comment",
             params: { id: commentId },
             successMessage: "Deleted comment successfully.",
-            notificationType: NotificationType.DeleteComment,
+            notificationType: TauriAction.DeleteComment,
             userSettings,
             callback
         });

@@ -10,12 +10,14 @@ import { useEffect, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
 import StyledButton from "../../components/StyledButton.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
+import { TaskStatus } from "../../models/TaskStatus.ts";
+import { TauriAction } from "../../models/TauriAction.ts";
 import { TimeSpan } from "../../models/TimeSpan.ts";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
 import { setCurrentTaskPage, setTaskPageSize, setTaskSearchParams, setTaskSortStatus } from "../../redux/reducers/settingsSlice.ts";
 import { maybeDate, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
 import { validateLength } from "../../utilities/formUtilities.ts";
-import { NotificationType, showSuccessNotification } from "../../utilities/notificationUtilities.ts";
+import { showSuccessNotification } from "../../utilities/notificationUtilities.ts";
 import useColorService from "../settings/hooks/useColorService.tsx";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
@@ -121,7 +123,7 @@ function TaskList() {
         dispatch(setTaskSearchParams({
             ...taskSearchParams,
             page: 1,
-            statuses: statuses
+            statuses: statuses.map(st => st as TaskStatus)
         }));
     }
 
@@ -392,7 +394,7 @@ function TaskList() {
                     </StyledActionIcon>
                     <StyledActionIcon
                         colorPalette={colorPalette}
-                        onClick={() => fetchAllData().then(() => showSuccessNotification(NotificationType.RefreshTasks, userSettings, "So fresh."))}
+                        onClick={() => fetchAllData().then(() => showSuccessNotification(TauriAction.RefreshTasks, userSettings, "So fresh."))}
                         tooltipLabel="Refresh Tasks"
                         tooltipPosition="left"
                     >

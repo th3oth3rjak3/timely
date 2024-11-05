@@ -3,10 +3,11 @@ import { modals } from "@mantine/modals";
 import { useMemo } from "react";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { TaskStatus } from "../../../models/TaskStatus";
+import { TauriAction } from "../../../models/TauriAction";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTaskPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
-import { NotificationType } from "../../../utilities/notificationUtilities";
 import { ColorPalette } from "../../settings/hooks/useColorService";
 import { UserSettings } from "../../settings/UserSettings";
 import { EditTask, NewTask, Task } from "../types/Task";
@@ -35,30 +36,72 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
         return findLastPage(recordCount - 1, taskSearchParams.pageSize);
     }, [recordCount, taskSearchParams]);
 
-    const shouldChangePages = useMemo(() => {
-        return lastPage < taskSearchParams.page;
-    }, [lastPage, taskSearchParams]);
-
-    const handleDataFetch = async () => {
-        if (shouldChangePages) {
+    const handleDataFetch = (task: TaskLike, action: TauriAction): () => Promise<void> => async () => {
+        if (pageShouldChange(task, action, recordCount, taskSearchParams)) {
             dispatch(setCurrentTaskPage(lastPage));
         } else {
             await fetchAllData?.();
         }
     }
 
+    interface TaskLike {
+        elapsedDuration: number | null;
+        actualStartDate: Date | null;
+        title: string;
+        description: string;
+    }
+
+    const pageShouldChange = (task: TaskLike, action: TauriAction, recordCount: number, taskSearchParams: TaskSearchParams) : boolean => {
+        const remainder = recordCount % taskSearchParams.pageSize;
+        const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
+
+        switch (action) {
+            case TauriAction.CancelTask: 
+                return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Cancelled);
+            case TauriAction.DeleteTask: 
+                return lastItemOnThePage;
+            case TauriAction.StartTask:
+            case TauriAction.ResumeTask:
+            case TauriAction.ReopenFinishedTask:
+                return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Doing);
+            case TauriAction.PauseTask:
+                return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Paused);
+            case TauriAction.FinishTask:
+                return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Done);
+            case TauriAction.RestoreCancelledTask: 
+                return lastItemOnThePage && (
+                    (task.elapsedDuration !== null 
+                        && task.elapsedDuration > 0 
+                        && !taskSearchParams.statuses.includes(TaskStatus.Paused) 
+                        && task.actualStartDate !== null) 
+                    || (task.elapsedDuration === 0 && !taskSearchParams.statuses.includes(TaskStatus.Todo)));
+            case TauriAction.EditTask:
+                return lastItemOnThePage 
+                    && taskSearchParams.queryString !== null 
+                    && !(
+                        task.title.includes(taskSearchParams.queryString) 
+                        || task.description.includes(taskSearchParams.queryString)
+                    );
+            default:
+                return false;
+        }   
+    }
+
+
+
+
+
     /** Create a new task. 
      * @param task - The task to create.
     */
     const createTask = async (task: NewTask) => {
-        console.log(JSON.stringify(task, undefined, 2));
         await invoke<void>({
             command: "create_task",
             params: { newTask: task },
             successMessage: "New task added successfully.",
-            notificationType: NotificationType.AddNewTask,
+            notificationType: TauriAction.AddNewTask,
             userSettings,
-            callback: handleDataFetch
+            callback: fetchAllData
         });
     }
 
@@ -70,9 +113,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "start_task",
             params: { taskId: task.id },
             successMessage: "Task started successfully.",
-            notificationType: NotificationType.StartTask,
+            notificationType: TauriAction.StartTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.StartTask)
         });
     }
 
@@ -84,9 +127,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "pause_task",
             params: { taskId: task.id },
             successMessage: "Task paused successfully.",
-            notificationType: NotificationType.PauseTask,
+            notificationType: TauriAction.PauseTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.PauseTask)
         });
     }
 
@@ -98,9 +141,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "resume_task",
             params: { taskId: task.id },
             successMessage: "Task resumed successfully.",
-            notificationType: NotificationType.ResumeTask,
+            notificationType: TauriAction.ResumeTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.ResumeTask)
         });
     }
 
@@ -112,9 +155,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "finish_task",
             params: { taskId: task.id },
             successMessage: "Task finished successfully.",
-            notificationType: NotificationType.FinishTask,
+            notificationType: TauriAction.FinishTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.FinishTask)
         });
     }
 
@@ -137,9 +180,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
                 command: "cancel_task",
                 params: { taskId: task.id },
                 successMessage: "Task cancelled successfully.",
-                notificationType: NotificationType.CancelTask,
+                notificationType: TauriAction.CancelTask,
                 userSettings,
-                callback: handleDataFetch
+                callback: handleDataFetch(task, TauriAction.CancelTask)
             })
         });
     }
@@ -152,9 +195,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "restore_task",
             params: { taskId: task.id },
             successMessage: "Task restored successfully.",
-            notificationType: NotificationType.RestoreCancelledTask,
+            notificationType: TauriAction.RestoreCancelledTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.RestoreCancelledTask)
         });
     }
 
@@ -166,9 +209,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "reopen_task",
             params: { taskId: task.id },
             successMessage: "Task reopened successfully.",
-            notificationType: NotificationType.ReopenFinishedTask,
+            notificationType: TauriAction.ReopenFinishedTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.ReopenFinishedTask)
         });
     }
 
@@ -191,9 +234,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
                 command: "delete_task",
                 params: { taskId: task.id },
                 successMessage: "Task deleted successfully.",
-                notificationType: NotificationType.DeleteTask,
+                notificationType: TauriAction.DeleteTask,
                 userSettings,
-                callback: handleDataFetch
+                callback: handleDataFetch(task, TauriAction.DeleteTask)
             })
         });
     }
@@ -212,9 +255,9 @@ const useTaskService = (colorPalette: ColorPalette, userSettings: UserSettings, 
             command: "edit_task",
             params: { task },
             successMessage: "Task updated successfully.",
-            notificationType: NotificationType.EditTask,
+            notificationType: TauriAction.EditTask,
             userSettings,
-            callback: handleDataFetch
+            callback: handleDataFetch(task, TauriAction.EditTask)
         });
         callback?.();
     }

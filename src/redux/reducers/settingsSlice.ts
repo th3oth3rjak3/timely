@@ -6,81 +6,96 @@ import { tagSearchParams, TagSearchParams } from "../../features/tags/types/TagS
 import { Task } from "../../features/tasks/types/Task";
 import { taskSearchParams, TaskSearchParams } from "../../features/tasks/types/TaskSearchParams";
 import { Ordering } from "../../models/Ordering";
+import { TaskStatus } from "../../models/TaskStatus";
 import { SelectOption } from "../../utilities/formUtilities";
 
 /** Settings that are applied to the application. */
 export type SettingsState = {
-    /** Settings to retain the state of the task list for navigation away from the page and back again. */
-    taskListSettings: TaskListSettings;
-    /** The initial route to be shown when the application launches. 
-     * This will allow the user to specify their preferred start page. 
-     * */
-    homePage: string;
-    /** The list of pages available to select as the homepage. */
-    homePageOptions: SelectOption[];
-    /** The user settings from the database. */
-    userSettings: UserSettings;
-    /** Whether or not the navbar is open. */
-    navbarOpen: boolean;
-    /** Settings for the tags listing. */
-    tagListSettings: TagsListSettings;
-}
+  /** Settings to retain the state of the task list for navigation away from the page and back again. */
+  taskListSettings: TaskListSettings;
+  /** The initial route to be shown when the application launches.
+   * This will allow the user to specify their preferred start page.
+   * */
+  homePage: string;
+  /** The list of pages available to select as the homepage. */
+  homePageOptions: SelectOption[];
+  /** The user settings from the database. */
+  userSettings: UserSettings;
+  /** Whether or not the navbar is open. */
+  navbarOpen: boolean;
+  /** Settings for the tags listing. */
+  tagListSettings: TagsListSettings;
+};
 
 export type TagsListSettings = {
-    pageSizeOptions: number[];
-    params: TagSearchParams;
-    sortStatus: DataTableSortStatus<Tag>;
-}
+  pageSizeOptions: number[];
+  params: TagSearchParams;
+  sortStatus: DataTableSortStatus<Tag>;
+};
 
 export type TaskListSettings = {
-    /** The choices that should be shown in a list for number of items per page. */
-    pageSizeOptions: number[];
-    statusOptions: string[];
-    params: TaskSearchParams;
-    sortStatus: DataTableSortStatus<Task>;
-}
+  /** The choices that should be shown in a list for number of items per page. */
+  pageSizeOptions: number[];
+  statusOptions: TaskStatus[];
+  params: TaskSearchParams;
+  sortStatus: DataTableSortStatus<Task>;
+};
 
 const pageSizeOptions = [5, 10, 25, 50, 100];
 
 const initialState: SettingsState = {
-    navbarOpen: false,
-    taskListSettings: {
-        pageSizeOptions: pageSizeOptions,
-        statusOptions: ["Todo", "Doing", "Done", "Paused", "Cancelled"],
-        params: taskSearchParams(1, 5, ["Todo", "Doing", "Paused"], undefined, undefined, "scheduledCompleteDate", "asc"),
-        sortStatus: {
-            sortKey: 'tasks',
-            columnAccessor: 'scheduledCompleteDate',
-            direction: 'asc',
-        },
-    },
-    tagListSettings: {
-        pageSizeOptions: pageSizeOptions,
-        params: tagSearchParams(1, 5, undefined, 'value', 'asc'),
-        sortStatus: {
-            sortKey: 'tags',
-            columnAccessor: 'value',
-            direction: 'asc'
-        }
-    },
-    homePage: "",
-    homePageOptions: [
-        { label: "Timer", value: "/timer" },
-        { label: "Tasks List", value: "/tasks" },
-        { label: "Tags List", value: "/tags" },
-        { label: "Settings", value: "/settings" },
+  navbarOpen: false,
+  taskListSettings: {
+    pageSizeOptions: pageSizeOptions,
+    statusOptions: [
+      TaskStatus.Todo,
+      TaskStatus.Doing,
+      TaskStatus.Done,
+      TaskStatus.Paused,
+      TaskStatus.Cancelled,
     ],
-    userSettings: {
-        homePage: "",
-        pageSize: 5,
-        colorScheme: "blue",
-        buttonVariant: "filled",
-        gradientFrom: "",
-        gradientTo: "",
-        gradientDegrees: 0,
-        navbarOpened: false,
-        notificationSettings: []
-    }
+    params: taskSearchParams(
+      1,
+      5,
+      ["Todo", "Doing", "Paused"],
+      undefined,
+      undefined,
+      "scheduledCompleteDate",
+      "asc"
+    ),
+    sortStatus: {
+      sortKey: "tasks",
+      columnAccessor: "scheduledCompleteDate",
+      direction: "asc",
+    },
+  },
+  tagListSettings: {
+    pageSizeOptions: pageSizeOptions,
+    params: tagSearchParams(1, 5, undefined, "value", "asc"),
+    sortStatus: {
+      sortKey: "tags",
+      columnAccessor: "value",
+      direction: "asc",
+    },
+  },
+  homePage: "",
+  homePageOptions: [
+    { label: "Timer", value: "/timer" },
+    { label: "Tasks List", value: "/tasks" },
+    { label: "Tags List", value: "/tags" },
+    { label: "Settings", value: "/settings" },
+  ],
+  userSettings: {
+    homePage: "",
+    pageSize: 5,
+    colorScheme: "blue",
+    buttonVariant: "filled",
+    gradientFrom: "",
+    gradientTo: "",
+    gradientDegrees: 0,
+    navbarOpened: false,
+    notificationSettings: [],
+  },
 };
 
 export const settingsSlice = createSlice({

@@ -3,10 +3,10 @@ import { modals } from "@mantine/modals";
 import { useMemo } from "react";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
+import { TauriAction } from "../../../models/TauriAction";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTagPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
-import { NotificationType } from "../../../utilities/notificationUtilities";
 import { ColorPalette } from "../../settings/hooks/useColorService";
 import { UserSettings } from "../../settings/UserSettings";
 import { Tag } from "../types/Tag";
@@ -18,16 +18,33 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
 
     const tagSearchParams = useAppSelector(state => state.settings.tagListSettings.params);
     const dispatch = useAppDispatch();
+   
     const lastPage = useMemo(() => {
         return findLastPage(recordCount - 1, tagSearchParams.pageSize);
     }, [recordCount, tagSearchParams]);
 
-    const shouldChangePages = useMemo(() => {
-        return lastPage < tagSearchParams.page;
-    }, [lastPage, tagSearchParams]);
 
-    const handleDataFetch = async () => {
-        if (shouldChangePages) {
+    interface TagLike {
+        value: string;
+    }
+
+    const pageShouldChange = (tag: TagLike, action: TauriAction, recordCount: number, tagSearchParams: TagSearchParams) : boolean => {
+        const remainder = recordCount % tagSearchParams.pageSize;
+        const lastItemOnThePage = remainder === 1 && tagSearchParams.page > 1;
+
+        switch (action) {
+            case TauriAction.DeleteTag:
+                return lastItemOnThePage;
+            case TauriAction.EditTag:
+                return lastItemOnThePage && tagSearchParams.queryString !== null && !tag.value.includes(tagSearchParams.queryString)
+            default:
+                return false;
+        }   
+    }
+
+
+    const handleDataFetch = (tag: TagLike, action: TauriAction): () => void => async () => {
+        if (pageShouldChange(tag, action, recordCount, tagSearchParams)) {
             dispatch(setCurrentTagPage(lastPage));
         } else {
             await fetchAllTags?.();
@@ -50,9 +67,9 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
             command: "add_new_tag",
             params: { newTag: tagName },
             successMessage: "New tag created successfully.",
-            notificationType: NotificationType.AddNewTag,
+            notificationType: TauriAction.AddNewTag,
             userSettings,
-            callback: handleDataFetch
+            callback: fetchAllTags
         });
     }
 
@@ -61,7 +78,7 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
             command: "add_tag_to_task",
             params: { taskId, tagId: tag.id },
             successMessage: "Successfully added tag.",
-            notificationType: NotificationType.AddTagToTask,
+            notificationType: TauriAction.AddTagToTask,
             userSettings,
         });
     }
@@ -72,7 +89,7 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
             command: "remove_tag_from_task",
             params: { taskId, tagId: tag.id },
             successMessage: "Successfully removed tag.",
-            notificationType: NotificationType.RemoveTagFromTask,
+            notificationType: TauriAction.RemoveTagFromTask,
             userSettings,
         });
     }
@@ -93,9 +110,9 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
                 command: "delete_tag",
                 params: { tagId: tag.id },
                 successMessage: "Successfully deleted tag.",
-                notificationType: NotificationType.DeleteTag,
+                notificationType: TauriAction.DeleteTag,
                 userSettings,
-                callback: handleDataFetch,
+                callback: handleDataFetch(tag, TauriAction.DeleteTag),
             })
         });
 
@@ -113,9 +130,9 @@ const useTagService = (userSettings: UserSettings, colorPalette: ColorPalette, r
             command: "edit_tag",
             params: { tag: params },
             successMessage: "Updated tag successfully.",
-            notificationType: NotificationType.EditTag,
+            notificationType: TauriAction.EditTag,
             userSettings,
-            callback: handleDataFetch,
+            callback: handleDataFetch(params, TauriAction.EditTag),
         });
     }
 

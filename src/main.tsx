@@ -1,3 +1,12 @@
+import '@mantine/charts/styles.css';
+import '@mantine/core/styles.css';
+import '@mantine/core/styles.layer.css';
+import '@mantine/dates/styles.css';
+import '@mantine/dropzone/styles.css';
+import '@mantine/notifications/styles.css';
+import 'mantine-contextmenu/styles.css';
+import 'mantine-contextmenu/styles.layer.css';
+import 'mantine-datatable/styles.css';
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";

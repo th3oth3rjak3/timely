@@ -1,13 +1,13 @@
 import { InvokeArgs, invoke as tauriInvoke } from "@tauri-apps/api/core";
 import { UserSettings } from "../features/settings/UserSettings";
-import { NotificationType, showErrorNotification, showSuccessNotification } from "../utilities/notificationUtilities";
+import { TaskAction, showErrorNotification, showSuccessNotification } from "../utilities/notificationUtilities";
 
 const useTauri = () => {
     type Props = {
         command: string,
         params?: InvokeArgs,
         successMessage?: string,
-        notificationType?: NotificationType,
+        notificationType?: TaskAction,
         userSettings?: UserSettings,
         callback?: () => void | Promise<void>
     }
