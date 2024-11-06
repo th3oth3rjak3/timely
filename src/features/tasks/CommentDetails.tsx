@@ -28,107 +28,124 @@ function CommentDetails(props: Props) {
     } = useCommentService(userSettings);
 
     const newCommentForm = useForm({
-        mode: "uncontrolled",
-        initialValues: {
-            comment: ""
-        },
-        validate: {
-            comment: (comment) => !!comment && comment !== null && comment.trim().length > 0 ? null : "Comment must not be empty"
-        }
-    })
+      mode: "uncontrolled",
+      initialValues: {
+        comment: "",
+      },
+      validate: {
+        comment: (comment) =>
+          !!comment && comment !== null && comment.trim().length > 0
+            ? null
+            : "Comment must not be empty",
+      },
+    });
 
     const editCommentForm = useForm({
-        mode: "uncontrolled",
-        initialValues: {
-            comment: "",
-            id: -1,
-        },
-        validate: {
-            comment: (comment) => !!comment && comment !== null && comment.trim().length > 0 ? null : "Comment must not be empty"
-        }
-    })
+      mode: "uncontrolled",
+      initialValues: {
+        comment: "",
+        id: -1,
+      },
+      validate: {
+        comment: (comment) =>
+          !!comment && comment !== null && comment.trim().length > 0
+            ? null
+            : "Comment must not be empty",
+      },
+    });
 
-    const openNewCommentModal = () => modals.open({
-        title: 'Add New Comment',
+    const openNewCommentModal = () =>
+      modals.open({
+        title: "Add New Comment",
         onClose: () => newCommentForm.reset(),
         closeOnClickOutside: false,
         closeOnEscape: false,
         children: (
-            <form onSubmit={newCommentForm.onSubmit(addNewComment)}>
-                <Stack>
-                    <Textarea label="Comment" {...newCommentForm.getInputProps("comment")} key={newCommentForm.key("comment")} autosize maxRows={10} />
-                    <Group>
-                        <StyledButton
-                            type="submit"
-                            label="Save"
-                            colorPalette={props.colorPalette}
-                            tooltipLabel="Save Comment"
-                        />
-                    </Group>
-                </Stack>
-            </form>
-        )
-    });
+          <form onSubmit={newCommentForm.onSubmit(addNewComment)}>
+            <Stack>
+              <Textarea
+                label="Comment"
+                {...newCommentForm.getInputProps("comment")}
+                key={newCommentForm.key("comment")}
+                autosize
+                maxRows={10}
+              />
+              <Group>
+                <StyledButton
+                  type="submit"
+                  label="Save"
+                  colorPalette={props.colorPalette}
+                  tooltipLabel="Save Comment"
+                />
+              </Group>
+            </Stack>
+          </form>
+        ),
+      });
 
     const openEditCommentModal = (comment: Comment) => {
-        editCommentForm.setValues({ comment: comment.message, id: comment.id });
-        modals.open({
-            title: 'Edit Comment',
-            onClose: () => editCommentForm.reset(),
-            closeOnClickOutside: false,
-            closeOnEscape: false,
-            children: (
-                <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
-                    <Stack>
-                        <Textarea label="Comment" {...editCommentForm.getInputProps("comment")} key={editCommentForm.key("comment")} autosize maxRows={10} />
-                        <Group>
-                            <StyledButton
-                                type="submit"
-                                label="Save"
-                                colorPalette={props.colorPalette}
-                                tooltipLabel="Save Comment"
-                            />
-                        </Group>
-                    </Stack>
-                </form>
-            )
-        });
-    }
-
-    const openDeleteModal = (comment: Comment) => modals.openConfirmModal({
-        title: "Delete Comment",
+      editCommentForm.setValues({ comment: comment.message, id: comment.id });
+      modals.open({
+        title: "Edit Comment",
+        onClose: () => editCommentForm.reset(),
+        closeOnClickOutside: false,
+        closeOnEscape: false,
         children: (
-            <Text>Are you sure you want to delete this comment?</Text>
+          <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
+            <Stack>
+              <Textarea
+                label="Comment"
+                {...editCommentForm.getInputProps("comment")}
+                key={editCommentForm.key("comment")}
+                autosize
+                maxRows={10}
+              />
+              <Group>
+                <StyledButton
+                  type="submit"
+                  label="Save"
+                  colorPalette={props.colorPalette}
+                  tooltipLabel="Save Comment"
+                />
+              </Group>
+            </Stack>
+          </form>
         ),
-        confirmProps: { variant: props.colorPalette.variant, color: "red", gradient: { ...props.colorPalette.gradient, from: "red" } },
-        cancelProps: { variant: props.colorPalette.variant, gradient: props.colorPalette.gradient },
+      });
+    };
+
+    const openDeleteModal = (comment: Comment) =>
+      modals.openConfirmModal({
+        title: "Delete Comment",
+        children: <Text>Are you sure you want to delete this comment?</Text>,
+        confirmProps: {
+          variant: props.colorPalette.variant,
+          color: "red",
+          gradient: { ...props.colorPalette.gradient, from: "red" },
+        },
+        cancelProps: {
+          variant: props.colorPalette.variant,
+          gradient: props.colorPalette.gradient,
+        },
         labels: { confirm: "Confirm", cancel: "Deny" },
-        onCancel: () => { },
-        onConfirm: () => deleteExistingComment(comment)
-    });
+        onCancel: () => {},
+        onConfirm: () => deleteExistingComment(comment),
+      });
 
     async function addNewComment(values: typeof newCommentForm.values) {
-        await addComment(
-            props.task.id,
-            values.comment,
-            () => {
-                props.onCommentChanged();
-                newCommentForm.reset();
-                modals.closeAll();
-            }
-        );
+      await addComment(props.task.id, values.comment, () => {
+        modals.closeAll();
+        newCommentForm.reset();
+        props.onCommentChanged();
+      });
     }
 
     async function editExistingComment(comment: typeof editCommentForm.values) {
-        await editComment(
-            comment.id,
-            comment.comment,
-            () => {
-                props.onCommentChanged();
-                editCommentForm.reset();
-                modals.closeAll();
-            }
-        );
+      await editComment(comment.id, comment.comment, () => {
+        modals.closeAll();
+        editCommentForm.reset();
+        props.onCommentChanged();
+      });
     }
 
     async function deleteExistingComment(comment: Comment) {
