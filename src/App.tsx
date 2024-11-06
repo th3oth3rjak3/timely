@@ -3,57 +3,57 @@ import { useEffect, useState } from 'react';
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import './App.css';
 import useSettingsService from './features/settings/hooks/useSettingsService';
-import * as Mantine from './mantine';
-import * as Pages from './pages';
-import { useAppDispatch, useAppSelector } from './redux/hooks';
-import { setNavbar, setUserSettings } from './redux/reducers/settingsSlice';
+import useGlobalTimer from "./features/timer/hooks/useGlobalTimer";
+import * as Mantine from "./mantine";
+import * as Pages from "./pages";
+import { useAppDispatch, useAppSelector } from "./redux/hooks";
+import { setNavbar, setUserSettings } from "./redux/reducers/settingsSlice";
 
 function App() {
-
+  useGlobalTimer();
   const dispatch = useAppDispatch();
   const { getUserSettings } = useSettingsService();
   const [router, setRouter] = useState<Router>();
-  const userSettings = useAppSelector(state => state.settings.userSettings);
+  const userSettings = useAppSelector((state) => state.settings.userSettings);
 
   useEffect(() => {
-    getUserSettings()
-      .then((userSettings) => {
-        if (!!userSettings && userSettings !== null) {
-          dispatch(setUserSettings(userSettings));
-          dispatch(setNavbar(userSettings.navbarOpened));
+    getUserSettings().then((userSettings) => {
+      if (!!userSettings && userSettings !== null) {
+        dispatch(setUserSettings(userSettings));
+        dispatch(setNavbar(userSettings.navbarOpened));
 
-          const browserRouter = createBrowserRouter([
-            {
-              path: "/",
-              element: <Pages.MainLayout />,
-              children: [
-                {
-                  path: "",
-                  element: <Navigate to={userSettings.homePage} />
-                },
-                {
-                  path: "/timer",
-                  element: <Pages.Timer />
-                },
-                {
-                  path: "/tasks",
-                  element: <Pages.TasksList />
-                },
-                {
-                  path: "/tags",
-                  element: <Pages.TagsList />
-                },
-                {
-                  path: "/settings",
-                  element: <Pages.Settings />
-                }
-              ]
-            }
-          ]);
+        const browserRouter = createBrowserRouter([
+          {
+            path: "/",
+            element: <Pages.MainLayout />,
+            children: [
+              {
+                path: "",
+                element: <Navigate to={userSettings.homePage} />,
+              },
+              {
+                path: "/timer",
+                element: <Pages.Timer />,
+              },
+              {
+                path: "/tasks",
+                element: <Pages.TasksList />,
+              },
+              {
+                path: "/tags",
+                element: <Pages.TagsList />,
+              },
+              {
+                path: "/settings",
+                element: <Pages.Settings />,
+              },
+            ],
+          },
+        ]);
 
-          setRouter(browserRouter);
-        }
-      })
+        setRouter(browserRouter);
+      }
+    });
   }, []);
 
   const theme = Mantine.createTheme({
@@ -61,8 +61,8 @@ function App() {
     defaultGradient: {
       to: userSettings.gradientTo,
       from: userSettings.gradientFrom,
-      deg: userSettings.gradientDegrees
-    }
+      deg: userSettings.gradientDegrees,
+    },
   });
 
   if (!!router) {
@@ -87,7 +87,6 @@ function App() {
       </Mantine.ContextMenuProvider>
     </Mantine.MantineProvider>
   );
-
 }
 
 export default App;

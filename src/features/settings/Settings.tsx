@@ -178,7 +178,7 @@ function Settings() {
     return (
         <Stack m={25}>
             <Group justify="space-between">
-                <Text size="lg">Settings</Text>
+                <Text size="xl">Settings</Text>
             </Group>
             <form onSubmit={form.onSubmit(setSettingsValues)}>
                 <Tabs defaultValue="general">

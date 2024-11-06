@@ -2,7 +2,9 @@ import {
   ActionIcon,
   Button,
   createTheme,
+  Group,
   MantineProvider,
+  Stack,
   Text,
 } from "@mantine/core";
 import { ModalsProvider } from "@mantine/modals";
@@ -16,9 +18,11 @@ export {
   ActionIcon,
   Button,
   createTheme,
+  Group,
   MantineProvider,
   ModalsProvider,
   Notifications,
+  Stack,
   Text,
 };
 
@@ -27,3 +31,4 @@ export { ContextMenuProvider };
 
 // Mantine Data Table
 export { DataTable };
+
