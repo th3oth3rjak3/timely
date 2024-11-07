@@ -1,7 +1,23 @@
 import { notifications } from "@mantine/notifications";
+import { ColorPalette } from "../features/settings/hooks/useColorService";
 import { UserSettings } from "../features/settings/UserSettings";
 import { TimelyAction } from "../models/TauriAction";
 import { Stringer } from "./formUtilities";
+
+export function showTimerNotification<T extends Stringer>(
+  colorPalette: ColorPalette,
+  message: T,
+  callback: () => void
+) {
+  notifications.show({
+    title: "Time's Up!",
+    message: message.toString(),
+    autoClose: false,
+    color: colorPalette.colorName,
+    withBorder: true,
+    onClose: callback,
+  });
+}
 
 export function showSuccessNotification<T extends Stringer>(
   settingType: TimelyAction,

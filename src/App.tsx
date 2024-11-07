@@ -1,21 +1,23 @@
 import { Router } from "@remix-run/router";
-import { useEffect, useState } from 'react';
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
-import './App.css';
-import useSettingsService from './features/settings/hooks/useSettingsService';
-import useGlobalTimer from "./features/timer/hooks/useGlobalTimer";
+import { useEffect, useState } from "react";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
+import "./App.css";
+import useSettingsService from "./features/settings/hooks/useSettingsService";
+
 import * as Mantine from "./mantine";
 import * as Pages from "./pages";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import { setNavbar, setUserSettings } from "./redux/reducers/settingsSlice";
 
 function App() {
-  useGlobalTimer();
   const dispatch = useAppDispatch();
   const { getUserSettings } = useSettingsService();
   const [router, setRouter] = useState<Router>();
   const userSettings = useAppSelector((state) => state.settings.userSettings);
-
   useEffect(() => {
     getUserSettings().then((userSettings) => {
       if (!!userSettings && userSettings !== null) {

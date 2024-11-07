@@ -18,7 +18,7 @@ const initialState: TimerProps = {
   pendingChanges: [],
   isActive: false,
   isPaused: false,
-  message: "The timer is up!",
+  message: "Beep beep, time has run out.",
 };
 
 const timerSlice = createSlice({
