@@ -1,5 +1,4 @@
 import { useMantineTheme } from "@mantine/core";
-import { useEffect, useState } from "react";
 import StyledButton from "../../components/StyledButton";
 import * as Mantine from "../../mantine";
 import { TimeSpan } from "../../models/TimeSpan";
@@ -17,13 +16,8 @@ function CountdownTimer() {
   const userSettings = useAppSelector((state) => state.settings.userSettings);
   const theme = useMantineTheme();
   const { colorPalette } = useColorService(theme, userSettings);
-  const [displayTime, setDisplayTime] = useState(
-    TimeSpan.fromSeconds(time).toString()
-  );
 
-  useEffect(() => {
-    setDisplayTime(TimeSpan.fromSeconds(time).toString());
-  }, [time]);
+  const displayTime = TimeSpan.fromSeconds(time).toString();
 
   const handleTimerToggle = () => {
     if (!isActive || isPaused || time === 0) {

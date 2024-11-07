@@ -7,10 +7,10 @@ type TimerProps = {
   pendingChanges: TimeSpanLike[];
   isActive: boolean;
   isPaused: boolean;
-  locked: boolean;
+  message: string;
 };
 
-const defaultTime = TimeSpan.fromMinutes(15);
+const defaultTime = TimeSpan.fromSeconds(3);
 
 const initialState: TimerProps = {
   initialTime: defaultTime.toJSON(),
@@ -18,7 +18,7 @@ const initialState: TimerProps = {
   pendingChanges: [],
   isActive: false,
   isPaused: false,
-  locked: false,
+  message: "The timer is up!",
 };
 
 const timerSlice = createSlice({
@@ -34,7 +34,6 @@ const timerSlice = createSlice({
       state.isActive = false;
     },
     resetTimer: (state) => {
-      state.locked = true;
       state.isActive = false;
       state.isPaused = false;
       if (state.pendingChanges.length > 0) {
@@ -43,15 +42,11 @@ const timerSlice = createSlice({
         state.pendingChanges = [];
       }
       state.time = state.initialTime.seconds;
-      state.locked = false;
     },
     decrementTime: (state) => {
-      if (state.locked || state.time <= 0) return;
-      state.locked = true;
       if (state.time > 0) {
         state.time -= 1;
       }
-      state.locked = false;
     },
     setTime: (state, action: PayloadAction<TimeSpan>) => {
       if (!state.isActive && !state.isPaused) {

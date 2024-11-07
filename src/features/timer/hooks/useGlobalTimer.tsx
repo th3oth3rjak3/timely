@@ -1,27 +1,37 @@
 import { useEffect } from "react";
+import { TimelyAction } from "../../../models/TauriAction";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { decrementTime, resetTimer } from "../../../redux/reducers/timerSlice";
+import { showSuccessNotification } from "../../../utilities/notificationUtilities";
 
 const useGlobalTimer = () => {
   const dispatch = useAppDispatch();
-  const { time, isActive } = useAppSelector((state) => state.timer);
+  const { time, isActive, message } = useAppSelector((state) => state.timer);
+  const userSettings = useAppSelector((state) => state.settings.userSettings);
 
   useEffect(() => {
-    if (!isActive || time === 0) return;
+    if (!isActive) return;
 
     const intervalId = setInterval(() => {
       dispatch(decrementTime());
     }, 1000);
 
     if (time === 0) {
+      showSuccessNotification(
+        TimelyAction.TimerElapsed,
+        userSettings,
+        message,
+        () => dispatch(resetTimer()),
+        0
+      );
+
       clearInterval(intervalId);
-      dispatch(resetTimer());
     }
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [dispatch, time, isActive]);
+  }, [time, isActive]);
 };
 
 export default useGlobalTimer;

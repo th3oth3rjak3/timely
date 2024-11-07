@@ -1,4 +1,4 @@
-export enum TauriAction {
+export enum TimelyAction {
   AddNewComment = "Add New Comment",
   AddNewTag = "Add New Tag",
   AddNewTask = "Add New Task",
@@ -19,4 +19,5 @@ export enum TauriAction {
   EditComment = "Edit Comment",
   EditSettings = "Edit Settings",
   EditTask = "Edit Task",
+  TimerElapsed = "Timer Elapsed",
 }
