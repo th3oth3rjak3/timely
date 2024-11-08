@@ -140,4 +140,13 @@ export class TimeSpan extends Object {
   static fromJSON(input: TimeSpanLike): TimeSpan {
     return TimeSpan.fromSeconds(input.seconds);
   }
+
+  static add(...others: TimeSpan[]): TimeSpan {
+    let totalSeconds = 0;
+    for (let ts of others) {
+      totalSeconds += ts.totalSeconds;
+    }
+
+    return TimeSpan.fromSeconds(totalSeconds);
+  }
 }

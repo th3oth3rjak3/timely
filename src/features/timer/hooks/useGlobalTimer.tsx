@@ -1,7 +1,11 @@
 import { useMantineTheme } from "@mantine/core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import { decrementTime, resetTimer } from "../../../redux/reducers/timerSlice";
+import {
+  decrementTime,
+  resetTimer,
+  setIsPlaying,
+} from "../../../redux/reducers/timerSlice";
 import { showTimerNotification } from "../../../utilities/notificationUtilities";
 import useColorService from "../../settings/hooks/useColorService";
 
@@ -9,7 +13,7 @@ const useGlobalTimer = () => {
   const dispatch = useAppDispatch();
   const { time, isActive, message } = useAppSelector((state) => state.timer);
   const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const [playing, setPlaying] = useState(false);
+  const playing = useAppSelector((state) => state.timer.playingSound);
   const theme = useMantineTheme();
   const { colorPalette } = useColorService(theme, userSettings);
 
@@ -40,11 +44,10 @@ const useGlobalTimer = () => {
     }, 1000);
 
     if (time === 0) {
-      setPlaying(true);
-      showTimerNotification(colorPalette, message, () => {
-        dispatch(resetTimer());
-        setPlaying(false);
-      });
+      dispatch(setIsPlaying(true));
+      showTimerNotification(colorPalette, message, () =>
+        dispatch(resetTimer())
+      );
 
       clearInterval(intervalId);
     }
@@ -52,7 +55,7 @@ const useGlobalTimer = () => {
     return () => {
       clearInterval(intervalId);
     };
-  }, [time, isActive, dispatch, userSettings, message]);
+  }, [time, isActive, dispatch, userSettings]);
 };
 
 export default useGlobalTimer;

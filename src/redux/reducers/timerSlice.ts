@@ -4,26 +4,38 @@ import { TimeSpan, TimeSpanLike } from "../../models/TimeSpan";
 type TimerProps = {
   initialTime: TimeSpanLike;
   time: number;
-  pendingChanges: TimeSpanLike[];
   isActive: boolean;
   isPaused: boolean;
   message: string;
+  playingSound: boolean;
+  hours: number;
+  minutes: number;
+  seconds: number;
 };
-
-const defaultTime = TimeSpan.fromSeconds(3);
-
+const defaultHours = 1;
+const defaultMinutes = 0;
+const defaultSeconds = 0;
+const defaultTime = TimeSpan.add(
+  TimeSpan.fromHours(defaultHours),
+  TimeSpan.fromMinutes(defaultMinutes),
+  TimeSpan.fromSeconds(defaultSeconds)
+);
+const defaultMessage = "Beep beep, time has run out.";
 const initialState: TimerProps = {
   initialTime: defaultTime.toJSON(),
   time: defaultTime.totalSeconds,
-  pendingChanges: [],
   isActive: false,
   isPaused: false,
-  message: "Beep beep, time has run out.",
+  message: defaultMessage,
+  playingSound: false,
+  hours: defaultHours,
+  minutes: defaultMinutes,
+  seconds: defaultSeconds,
 };
 
 const timerSlice = createSlice({
   name: "timer",
-  initialState,
+  initialState: initialState,
   reducers: {
     startTimer: (state) => {
       state.isActive = true;
@@ -36,29 +48,74 @@ const timerSlice = createSlice({
     resetTimer: (state) => {
       state.isActive = false;
       state.isPaused = false;
-      if (state.pendingChanges.length > 0) {
-        state.initialTime =
-          state.pendingChanges[state.pendingChanges.length - 1];
-        state.pendingChanges = [];
-      }
       state.time = state.initialTime.seconds;
+      state.playingSound = false;
+    },
+    resetToDefault: (state) => {
+      state.initialTime = defaultTime.toJSON();
+      state.time = defaultTime.totalSeconds;
+      state.message = defaultMessage;
+      state.hours = defaultHours;
+      state.minutes = defaultMinutes;
+      state.seconds = defaultSeconds;
     },
     decrementTime: (state) => {
       if (state.time > 0) {
         state.time -= 1;
       }
     },
-    setTime: (state, action: PayloadAction<TimeSpan>) => {
-      if (!state.isActive && !state.isPaused) {
-        state.initialTime = action.payload.toJSON();
-      } else {
-        state.pendingChanges.push(action.payload.toJSON());
-      }
+    setIsPlaying: (state, action: PayloadAction<boolean>) => {
+      state.playingSound = action.payload;
+    },
+    setTimeoutMessage: (state, action: PayloadAction<string>) => {
+      state.message = action.payload;
+    },
+    setHours: (state, action: PayloadAction<number>) => {
+      const ts = TimeSpan.add(
+        TimeSpan.fromHours(action.payload),
+        TimeSpan.fromMinutes(state.minutes),
+        TimeSpan.fromSeconds(state.seconds)
+      );
+      state.hours = action.payload;
+      state.initialTime = ts.toJSON();
+      state.time = ts.totalSeconds;
+    },
+    setMinutes: (state, action: PayloadAction<number>) => {
+      const ts = TimeSpan.add(
+        TimeSpan.fromHours(state.hours),
+        TimeSpan.fromMinutes(action.payload),
+        TimeSpan.fromSeconds(state.seconds)
+      );
+
+      state.minutes = action.payload;
+      state.initialTime = ts.toJSON();
+      state.time = ts.totalSeconds;
+    },
+    setSeconds: (state, action: PayloadAction<number>) => {
+      const ts = TimeSpan.add(
+        TimeSpan.fromHours(state.hours),
+        TimeSpan.fromMinutes(state.minutes),
+        TimeSpan.fromSeconds(action.payload)
+      );
+
+      state.seconds = action.payload;
+      state.initialTime = ts.toJSON();
+      state.time = ts.totalSeconds;
     },
   },
 });
 
-export const { startTimer, pauseTimer, resetTimer, decrementTime, setTime } =
-  timerSlice.actions;
+export const {
+  startTimer,
+  pauseTimer,
+  resetTimer,
+  decrementTime,
+  setIsPlaying,
+  setTimeoutMessage,
+  resetToDefault,
+  setHours,
+  setMinutes,
+  setSeconds,
+} = timerSlice.actions;
 
 export default timerSlice.reducer;
