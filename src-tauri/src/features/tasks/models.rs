@@ -220,6 +220,7 @@ pub struct CreateTask {
     pub scheduled_start_date: Option<DateTime<Utc>>,
     pub scheduled_complete_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i32>,
+    pub tags: Option<Vec<Tag>>,
 }
 
 impl From<CreateTask> for NewTask {

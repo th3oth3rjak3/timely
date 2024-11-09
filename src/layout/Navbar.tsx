@@ -30,36 +30,34 @@ function Navbar(props: Props) {
     const location = useLocation();
 
     const getColor = (item: LinkDetail) => {
-        if (item.href !== location.pathname) {
-            return "dimmed";
-        }
-
-        else undefined;
-    }
+      if (item.href !== location.pathname) {
+        return "dimmed";
+      }
+    };
 
     const getVariant = (item: LinkDetail) => {
-        if (item.href !== location.pathname) {
-            return "subtle";
-        }
-    }
+      if (item.href !== location.pathname) {
+        return "default";
+      }
+    };
 
     const navLinkElements = navLinks.map((item) => (
-        <StyledButton
-            key={item.label}
-            colorPalette={props.colorPalette}
-            color={getColor(item)}
-            variant={getVariant(item)}
-            label={item.label}
-            onClick={() => {
-                navigate(item.href);
-                if (isSmallBreakpoint) {
-                    props.closeNavMenu();
-                }
-            }}
-            leftSection={<item.icon size="1rem" stroke={1.5} />}
-            tooltipLabel={item.description}
-            tooltipPosition="right"
-        />
+      <StyledButton
+        key={item.label}
+        colorPalette={props.colorPalette}
+        color={getColor(item)}
+        variant={getVariant(item)}
+        label={item.label}
+        onClick={() => {
+          navigate(item.href);
+          if (isSmallBreakpoint) {
+            props.closeNavMenu();
+          }
+        }}
+        leftSection={<item.icon size="1rem" stroke={1.5} />}
+        tooltipLabel={item.description}
+        tooltipPosition="right"
+      />
     ));
 
     return (

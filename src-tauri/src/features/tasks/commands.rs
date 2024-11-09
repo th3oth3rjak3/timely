@@ -14,12 +14,23 @@ use super::*;
 #[tauri::command]
 pub async fn create_task(new_task: CreateTask, db: State<'_, Diesel>) -> Result<(), String> {
     let mut connection = db.pool.get().map_err(|err| err.to_string())?;
+    let tags = new_task.tags.clone();
     let new_task = NewTask::from(new_task);
-    diesel::insert_into(tasks::table)
+    
+    let task = diesel::insert_into(tasks::table)
         .values(&new_task)
-        .execute(&mut connection)
-        .map(|_| ())
-        .map_err(|err| format!("Error creating new task: {}", err.to_string()))
+        .get_result::<Task>(&mut connection)
+        .map_err(|err| format!("Error creating new task: {}", err.to_string()))?;
+
+    if let Some(tags) = tags {
+        diesel::insert_into(task_tags::table)
+            .values(tags.into_iter().map(|tag| TaskTag { tag_id: tag.id, task_id: task.id }).collect::<Vec<_>>())
+            .execute(&mut connection)
+            .map(|_|())
+            .map_err(|err| err.to_string())?;
+    }
+
+    Ok(())
 }
 
 #[diesel::dsl::auto_type(no_type_alias)]

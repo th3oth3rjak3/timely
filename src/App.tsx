@@ -1,3 +1,8 @@
+import {
+  DEFAULT_THEME,
+  defaultVariantColorsResolver,
+  mergeMantineTheme,
+} from "@mantine/core";
 import { Router } from "@remix-run/router";
 import { useEffect, useState } from "react";
 import {
@@ -58,7 +63,7 @@ function App() {
     });
   }, []);
 
-  const theme = Mantine.createTheme({
+  let customTheme = Mantine.createTheme({
     primaryColor: userSettings.colorScheme,
     defaultGradient: {
       to: userSettings.gradientTo,
@@ -67,9 +72,31 @@ function App() {
     },
   });
 
+  const color = defaultVariantColorsResolver({
+    theme: mergeMantineTheme(DEFAULT_THEME, customTheme),
+    variant: userSettings.buttonVariant,
+    gradient: {
+      from: userSettings.gradientFrom,
+      to: userSettings.gradientTo,
+      deg: userSettings.gradientDegrees,
+    },
+    color: userSettings.colorScheme,
+  });
+
+  customTheme.components = {
+    Pill: {
+      styles: {
+        root: {
+          background: color.background,
+          color: color.color,
+        },
+      },
+    },
+  };
+
   if (!!router) {
     return (
-      <Mantine.MantineProvider defaultColorScheme="dark" theme={theme}>
+      <Mantine.MantineProvider defaultColorScheme="dark" theme={customTheme}>
         <Mantine.ContextMenuProvider>
           <Mantine.ModalsProvider>
             <Mantine.Notifications />
@@ -81,7 +108,7 @@ function App() {
   }
 
   return (
-    <Mantine.MantineProvider defaultColorScheme="dark" theme={theme}>
+    <Mantine.MantineProvider defaultColorScheme="dark" theme={customTheme}>
       <Mantine.ContextMenuProvider>
         <Mantine.ModalsProvider>
           <Mantine.Notifications />

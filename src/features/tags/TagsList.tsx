@@ -160,75 +160,103 @@ function TagsList() {
     ];
 
     return (
-        <Stack m={25}>
-            <Group justify="space-between">
-                <Text size="xl">Tags</Text>
-                <Group>
-                    <StyledActionIcon
-                        colorPalette={colorPalette}
-                        onClick={() => newFormActions.open()}
-                        tooltipLabel="Create New Tag"
-                        tooltipPosition="left"
-                    >
-                        <IconPlus />
-                    </StyledActionIcon>
-                </Group>
+      <Stack m={25}>
+        <Group justify="space-between">
+          <Text size="xl">Tags</Text>
+          <Group>
+            <StyledActionIcon
+              colorPalette={colorPalette}
+              onClick={() => newFormActions.open()}
+              tooltipLabel="Create New Tag"
+              tooltipPosition="left"
+            >
+              <IconPlus />
+            </StyledActionIcon>
+          </Group>
+        </Group>
+        {loading ? (
+          <></>
+        ) : (
+          <DataTable
+            textSelectionDisabled={isTouchScreen}
+            onRowContextMenu={({ record, event }) =>
+              showContextMenu(getContextMenuItems(record))(event)
+            }
+            onScroll={hideContextMenu}
+            withTableBorder
+            withColumnBorders
+            fz="sm"
+            columns={columns}
+            records={tags}
+            page={tagSearchParams.page}
+            totalRecords={recordCount}
+            recordsPerPage={pageSize}
+            onPageChange={(page) => dispatch(setCurrentTagPage(page))}
+            recordsPerPageOptions={pageSizeOptions}
+            onRecordsPerPageChange={(size) => updatePageSize(size)}
+            key={"id"}
+            sortStatus={sortStatus}
+            onSortStatusChange={(status) => dispatch(setTagSortStatus(status))}
+            paginationSize="xs"
+            paginationActiveBackgroundColor={colorPalette.background}
+            paginationActiveTextColor={colorPalette.color}
+          />
+        )}
+        <Modal
+          opened={newFormOpened}
+          onClose={closeNewForm}
+          title="New Tag"
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+        >
+          <form onSubmit={newForm.onSubmit(onValidNewTagSubmit, console.log)}>
+            <Stack gap="sm">
+              <TextInput
+                withAsterisk
+                label="Tag"
+                key={newForm.key("value")}
+                {...newForm.getInputProps("value")}
+              />
+            </Stack>
+            <Group justify="flex-end" mt="md">
+              <StyledButton
+                label="Submit"
+                colorPalette={colorPalette}
+                type="submit"
+                disabled={!newForm.isValid()}
+                tooltipLabel="Submit New Tag"
+              />
             </Group>
-            {loading
-                ? <></>
-                : <DataTable
-                    textSelectionDisabled={isTouchScreen}
-                    onRowContextMenu={({ record, event }) => showContextMenu(getContextMenuItems(record))(event)}
-                    onScroll={hideContextMenu}
-                    withTableBorder
-                    withColumnBorders
-                    fz="sm"
-                    columns={columns}
-                    records={tags}
-                    page={tagSearchParams.page}
-                    totalRecords={recordCount}
-                    recordsPerPage={pageSize}
-                    onPageChange={(page) => dispatch(setCurrentTagPage(page))}
-                    recordsPerPageOptions={pageSizeOptions}
-                    onRecordsPerPageChange={(size) => updatePageSize(size)}
-                    key={"id"}
-                    sortStatus={sortStatus}
-                    onSortStatusChange={status => dispatch(setTagSortStatus(status))}
-                    paginationSize="xs"
-                />}
-            <Modal opened={newFormOpened} onClose={closeNewForm} title="New Tag" closeOnClickOutside={false} closeOnEscape={false}>
-                <form onSubmit={newForm.onSubmit(onValidNewTagSubmit, console.log)}>
-                    <Stack gap="sm">
-                        <TextInput withAsterisk label="Tag" key={newForm.key("value")} {...newForm.getInputProps("value")} />
-                    </Stack>
-                    <Group justify="flex-end" mt="md">
-                        <StyledButton
-                            label="Submit"
-                            colorPalette={colorPalette}
-                            type="submit"
-                            disabled={!newForm.isValid()}
-                            tooltipLabel="Submit New Tag"
-                        />
-                    </Group>
-                </form>
-            </Modal>
-            <Modal opened={editFormOpened} title="Edit Tag" onClose={closeEditForm} closeOnClickOutside={false} closeOnEscape={false}>
-                <form onSubmit={editForm.onSubmit(onValidEditTagSubmit)}>
-                    <Stack gap="sm">
-                        <TextInput withAsterisk label="Tag" key={editForm.key("value")} {...editForm.getInputProps("value")} />
-                    </Stack>
-                    <Group justify="flex-end" mt="md">
-                        <StyledButton
-                            type="submit"
-                            label="Submit"
-                            colorPalette={colorPalette}
-                            disabled={!editForm.isValid()}
-                            tooltipLabel="Submit Updated Tag"
-                        />
-                    </Group>
-                </form>
-            </Modal>
-        </Stack>
+          </form>
+        </Modal>
+        <Modal
+          opened={editFormOpened}
+          title="Edit Tag"
+          onClose={closeEditForm}
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+        >
+          <form onSubmit={editForm.onSubmit(onValidEditTagSubmit)}>
+            <Stack gap="sm">
+              <TextInput
+                withAsterisk
+                label="Tag"
+                key={editForm.key("value")}
+                {...editForm.getInputProps("value")}
+              />
+            </Stack>
+            <Group justify="flex-end" mt="md">
+              <StyledButton
+                type="submit"
+                label="Submit"
+                colorPalette={colorPalette}
+                disabled={!editForm.isValid()}
+                tooltipLabel="Submit Updated Tag"
+              />
+            </Group>
+          </form>
+        </Modal>
+      </Stack>
     );
 }
 

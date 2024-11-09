@@ -1,12 +1,35 @@
-import { Group, Modal, MultiSelect, NumberInput, Stack, Text, Textarea, TextInput, useMantineTheme } from "@mantine/core";
+import {
+  Group,
+  Modal,
+  MultiSelect,
+  NumberInput,
+  Stack,
+  TagsInput,
+  Text,
+  Textarea,
+  TextInput,
+  useMantineTheme,
+} from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPause, IconPlayerPlay, IconPlus, IconRefresh, IconSearch, IconTrash, IconX } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconCancel,
+  IconCheck,
+  IconEdit,
+  IconPlayerPause,
+  IconPlayerPlay,
+  IconPlus,
+  IconRefresh,
+  IconSearch,
+  IconTrash,
+  IconX,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
 import StyledButton from "../../components/StyledButton.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
@@ -27,6 +50,8 @@ import {
 import { validateLength } from "../../utilities/formUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities";
 import useColorService from "../settings/hooks/useColorService.tsx";
+import useTagService from "../tags/hooks/useTagService.tsx";
+import { Tag } from "../tags/types/Tag.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
 import TaskDetail from "./TaskDetail.tsx";
@@ -59,6 +84,11 @@ function TaskList() {
   const [newFormOpened, newFormActions] = useDisclosure(false);
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [newTaskTags, setNewTaskTags] = useState<Tag[]>([]);
+
+  const editTags = useMemo(() => {
+    return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
+  }, [taskToEdit]);
 
   /** An app store dispatch function to update store values. */
   const dispatch = useAppDispatch();
@@ -118,6 +148,7 @@ function TaskList() {
       scheduledStartDate: null,
       scheduledCompleteDate: null,
       estimatedDuration: null,
+      tags: [],
     },
   });
 
@@ -164,10 +195,6 @@ function TaskList() {
 
   function updateCurrentPage(page: number) {
     dispatch(setCurrentTaskPage(page));
-  }
-
-  function handleTaskDeletion(task: Task): () => void {
-    return () => deleteTask(task);
   }
 
   function getContextMenuItems(task: Task): ContextMenuContent {
@@ -224,7 +251,7 @@ function TaskList() {
       key: "delete-task",
       title: "Delete Task",
       icon: <IconTrash size={16} />,
-      onClick: handleTaskDeletion(task),
+      onClick: () => deleteTask(task),
     };
 
     const editTaskItem = {
@@ -278,9 +305,11 @@ function TaskList() {
         newTask.estimatedDuration
       ).totalSeconds;
     }
+    newItem.tags = newTaskTags;
     await createTask(newItem);
     newForm.reset();
     newFormActions.close();
+    setNewTaskTags([]);
   };
 
   const onValidEditTaskSubmit = async (editedTask: Task) => {
@@ -320,10 +349,48 @@ function TaskList() {
         TimeSpan.tryFromSeconds(task.estimatedDuration)?.totalHours ?? null,
       elapsedDuration: TimeSpan.fromSeconds(task.elapsedDuration).totalHours,
       comments: task.comments,
-      tags: task.tags,
+      tags: task.tags ?? editTags,
     });
     editFormActions.open();
   };
+
+  const { tryFindTagByName, createNewTag, addTagToTask, removeTagFromTask } =
+    useTagService(userSettings, colorPalette, tagOptions.length);
+
+  async function removeTagByName(tagName: string) {
+    const maybeTag = tryFindTagByName(tagName, tagOptions);
+    if (!maybeTag) return;
+    setNewTaskTags(newTaskTags.filter((t) => t.value !== tagName));
+  }
+
+  async function addTagByName(tagName: string) {
+    let tag = tryFindTagByName(tagName, tagOptions);
+    if (!tag) {
+      tag = await createNewTag(tagName);
+      if (!tag) return;
+    }
+
+    setNewTaskTags([...newTaskTags, tag]);
+  }
+
+  async function removeTagByNameToEditForm(tagName: string) {
+    const maybeTag = tryFindTagByName(tagName, tagOptions);
+    if (!maybeTag || !taskToEdit) return;
+    removeTagFromTask(taskToEdit.id, maybeTag);
+    await fetchAllData();
+  }
+
+  async function addTagByNameToEditForm(tagName: string) {
+    let tag = tryFindTagByName(tagName, tagOptions);
+    if (!tag) {
+      tag = await createNewTag(tagName);
+      if (!tag) return;
+    }
+    if (taskToEdit !== null) {
+      addTagToTask(taskToEdit.id, tag);
+      await fetchAllData();
+    }
+  }
 
   //#endregion
 
@@ -390,7 +457,7 @@ function TaskList() {
       sortable: true,
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
-      filter: <></>,
+      filter: <></>, // TODO: finish
     },
     {
       accessor: "scheduledCompleteDate",
@@ -399,7 +466,7 @@ function TaskList() {
       sortable: true,
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
-      filter: <></>,
+      filter: <></>, // TODO: finish
     },
   ];
 
@@ -466,6 +533,8 @@ function TaskList() {
           key={"id"}
           sortStatus={sortStatus}
           onSortStatusChange={(status) => dispatch(setTaskSortStatus(status))}
+          paginationActiveBackgroundColor={colorPalette.background}
+          paginationActiveTextColor={colorPalette.color}
           rowExpansion={{
             content: ({ record }) => {
               return (
@@ -482,7 +551,7 @@ function TaskList() {
                   onCancelled={cancelTask}
                   onReopened={reopenTask}
                   onEdited={beginEditingTask}
-                  onDeleted={handleTaskDeletion}
+                  onDeleted={deleteTask}
                   onCommentChanged={fetchAllData}
                   onTagsChanged={fetchAllData}
                 />
@@ -544,6 +613,16 @@ function TaskList() {
               {...newForm.getInputProps("estimatedDuration")}
               suffix=" hour(s)"
               decimalScale={1}
+            />
+            <TagsInput
+              label="Tags"
+              data={tagOptions}
+              defaultValue={[]}
+              key={newForm.key("tags")}
+              {...newForm.getInputProps("tags")}
+              onRemove={(tagName) => removeTagByName(tagName)}
+              onOptionSubmit={(tagName) => addTagByName(tagName)}
+              acceptValueOnBlur={false}
             />
           </Stack>
           <Group justify="flex-end" mt="md">
@@ -635,6 +714,14 @@ function TaskList() {
               suffix=" hour(s)"
               decimalScale={1}
             />
+            <TagsInput
+              label="Tags"
+              data={tagOptions}
+              defaultValue={editTags}
+              onRemove={(tagName) => removeTagByNameToEditForm(tagName)}
+              onOptionSubmit={(tagName) => addTagByNameToEditForm(tagName)}
+              acceptValueOnBlur={false}
+            />
           </Stack>
           <Group justify="flex-end" mt="md">
             <StyledButton
@@ -651,6 +738,5 @@ function TaskList() {
   );
 }
 //#endregion
-
 
 export default TaskList;

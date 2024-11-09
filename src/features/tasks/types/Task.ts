@@ -30,13 +30,14 @@ export type Task = {
 }
 
 export type NewTask = {
-    title: string;
-    description: string;
-    status: string;
-    scheduledStartDate: Date | null;
-    scheduledCompleteDate: Date | null;
-    estimatedDuration: number | null;
-}
+  title: string;
+  description: string;
+  status: string;
+  scheduledStartDate: Date | null;
+  scheduledCompleteDate: Date | null;
+  estimatedDuration: number | null;
+  tags: Tag[];
+};
 
 export type EditTask = {
     /** The unique id of the task. */

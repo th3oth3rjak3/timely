@@ -41,13 +41,8 @@ function StyledButton(
     }: StyledButtonProps
 ): JSX.Element {
 
-    const innerGradient = gradient !== undefined
-        ? gradient
-        : {
-            from: colorPalette.gradientFrom,
-            to: colorPalette.gradientTo,
-            deg: colorPalette.gradientDegrees
-        };
+    const innerGradient =
+      gradient !== undefined ? gradient : colorPalette.gradient;
 
     const innerColor = color !== undefined ? color : colorPalette.colorName;
     const innerVariant = variant !== undefined ? variant : colorPalette.variant;
