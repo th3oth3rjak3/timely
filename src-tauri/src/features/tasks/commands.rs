@@ -1,12 +1,10 @@
 use super::models::Task;
 use chrono::Utc;
-use diesel::{dsl::*, prelude::*, sqlite::Sqlite};
+use diesel::{dsl::*, prelude::*, query_builder::{BoxedSqlQuery, QueryFragment}, sql_types::{Integer, Text}, sqlite::Sqlite};
 use tauri::State;
 
 use crate::{
-    features::tags::Tag,
-    schema::{comments, tags, task_tags, tasks},
-    Diesel, PagedData, SortDirection,
+    features::tags::Tag, schema::{comments::{self}, tags, task_tags, tasks}, Diesel, PagedData, SortDirection
 };
 
 use super::*;
@@ -33,18 +31,16 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Diesel>) -> Result<
     Ok(())
 }
 
+
 #[diesel::dsl::auto_type(no_type_alias)]
-fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
+fn generate_search_query<'a>(params: &'a TaskSearchParams, task_ids: Vec<i32>) ->  _ {
+    
     let mut task_query = tasks::table
-        .left_join(task_tags::table.on(task_tags::task_id.eq(tasks::id)))
-        .left_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
-        .into_boxed::<Sqlite>();
+    .left_join(task_tags::table.on(task_tags::task_id.eq(tasks::id)))
+    .left_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
+    .into_boxed::<Sqlite>();
 
-    task_query = task_query.filter(tasks::status.eq_any(&params.statuses));
-
-    if let Some(tags) = &params.tags {
-        task_query = task_query.filter(tags::value.eq_any(tags));
-    }
+    task_query = task_query.filter(tasks::status.eq_any(&params.statuses)).filter(tasks::id.eq_any(task_ids));
 
     if let Some(query) = &params.query_string {
         task_query = task_query.filter(
@@ -117,8 +113,27 @@ pub async fn get_tasks(
 ) -> Result<PagedData<TaskRead>, String> {
     let mut connection = db.pool.get().map_err(|err| err.to_string())?;
 
-    let count_query = generate_search_query(&params);
-    let task_query = generate_search_query(&params);
+    let tasks_with_tags_ids: Vec<i32> = match params.tags {
+        Some(ref tags) if tags.is_empty() => 
+            tasks::table
+            .left_join(task_tags::table.on(tasks::id.eq(task_tags::task_id)))
+            .filter(task_tags::task_id.is_null())
+            .select(tasks::id)
+            .distinct()
+            .load(&mut connection).map_err(|err| err.to_string())?,
+        Some(ref tags) => task_tags::table
+            .inner_join(tags::table.on(task_tags::tag_id.eq(tags::id)))
+            .filter(tags::value.eq_any(tags))
+            .group_by(task_tags::task_id)
+            .having(count_distinct(tags::id).ge(tags.len() as i64))
+            .select(task_tags::task_id)
+            .load(&mut connection).map_err(|err| err.to_string())?,
+        None => tasks::table.select(tasks::id).load(&mut connection).map_err(|err| err.to_string())?
+    };
+
+
+    let count_query = generate_search_query(&params, tasks_with_tags_ids.clone());
+    let task_query = generate_search_query(&params, tasks_with_tags_ids);
 
     let count: i64 = count_query
         .select(count_distinct(tasks::id))

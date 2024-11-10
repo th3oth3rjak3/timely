@@ -14,7 +14,7 @@ export type StyledButtonProps = {
     | "compact-lg"
     | "compact-xl"
     | undefined;
-  label: string;
+  label?: string;
   color?: string;
   gradient?: MantineGradient;
   disabled?: boolean;

@@ -55,6 +55,7 @@ import useTagService from "../tags/hooks/useTagService.tsx";
 import { Tag } from "../tags/types/Tag.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
+import TagFilter from "./TagFilter.tsx";
 import TaskDetail from "./TaskDetail.tsx";
 import { NewTask, Task } from "./types/Task.ts";
 
@@ -520,6 +521,18 @@ function TaskList() {
       <Group justify="space-between">
         <Text size="xl">Tasks</Text>
         <Group>
+          <TagFilter
+            tagOptions={tagOptions}
+            onFilter={(tags) =>
+              dispatch(
+                setTaskSearchParams({
+                  ...taskSearchParams,
+                  page: 1,
+                  tags: tags?.map((t) => t.value) ?? null,
+                })
+              )
+            }
+          />
           <StyledActionIcon
             onClick={() => newFormActions.open()}
             tooltipLabel="Create New Task"
