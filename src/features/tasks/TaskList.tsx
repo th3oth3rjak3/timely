@@ -10,7 +10,7 @@ import {
   TextInput,
   useMantineTheme,
 } from "@mantine/core";
-import { DateInput } from "@mantine/dates";
+import { DateInput, DatePicker } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
@@ -33,6 +33,7 @@ import { useEffect, useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
 import StyledButton from "../../components/StyledButton.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
+import { DateRange, toDateFilter } from "../../models/DateRange.ts";
 import { TaskStatus } from "../../models/TaskStatus.ts";
 import { TimelyAction } from "../../models/TauriAction.ts";
 import { TimeSpan } from "../../models/TimeSpan.ts";
@@ -44,6 +45,8 @@ import {
   setTaskSortStatus,
 } from "../../redux/reducers/settingsSlice.ts";
 import {
+  getDayProps,
+  getDayRangeProps,
   maybeDate,
   maybeFormattedDate,
 } from "../../utilities/dateUtilities.ts";
@@ -85,7 +88,8 @@ function TaskList() {
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [newTaskTags, setNewTaskTags] = useState<Tag[]>([]);
-
+  const [startByFilter, setStartByFilter] = useState<DateRange>([null, null]);
+  const [dueByFilter, setDueByFilter] = useState<DateRange>([null, null]);
   const editTags = useMemo(() => {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
@@ -130,14 +134,28 @@ function TaskList() {
   };
 
   const editForm = useForm<Task>({
-    mode: "uncontrolled",
+    mode: "controlled",
     validate: validators,
     validateInputOnChange: true,
     validateInputOnBlur: true,
+    initialValues: {
+      id: 0,
+      actualStartDate: null,
+      actualCompleteDate: null,
+      title: "",
+      description: "",
+      status: "Todo",
+      scheduledStartDate: null,
+      scheduledCompleteDate: null,
+      estimatedDuration: null,
+      tags: [],
+      comments: [],
+      elapsedDuration: 0,
+    },
   });
 
   const newForm = useForm<NewTask>({
-    mode: "uncontrolled",
+    mode: "controlled",
     validate: validators,
     validateInputOnChange: true,
     validateInputOnBlur: true,
@@ -185,6 +203,56 @@ function TaskList() {
         statuses: statuses.map((st) => st as TaskStatus),
       })
     );
+  }
+
+  function isEmptyRange(range: DateRange): boolean {
+    return range[0] === null && range[1] === null;
+  }
+
+  function isFullRange(range: DateRange): boolean {
+    return range[0] !== null && range[1] !== null;
+  }
+
+  function updateStartByFilters(dates: DateRange) {
+    setStartByFilter(dates);
+    if (isEmptyRange(dates)) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          startByFilter: null,
+        })
+      );
+    }
+
+    if (isFullRange(dates)) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          startByFilter: toDateFilter(dates),
+        })
+      );
+    }
+  }
+
+  function updateDueByFilters(dates: DateRange) {
+    setDueByFilter(dates);
+    if (isEmptyRange(dates)) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          dueByFilter: null,
+        })
+      );
+    }
+
+    if (isFullRange(dates)) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          dueByFilter: toDateFilter(dates),
+        })
+      );
+    }
   }
 
   /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
@@ -457,7 +525,36 @@ function TaskList() {
       sortable: true,
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
-      filter: <></>, // TODO: finish
+      filter: (
+        <Stack>
+          <DatePicker
+            type="range"
+            value={startByFilter}
+            getDayProps={getDayRangeProps(startByFilter, colorPalette)}
+            onChange={(dates) => updateStartByFilters(dates)}
+            highlightToday
+            allowSingleDateInRange
+          />
+          <Group justify="center">
+            <StyledButton
+              label="Today"
+              colorPalette={colorPalette}
+              onClick={() =>
+                updateStartByFilters([
+                  dayjs().startOf("day").toDate(),
+                  dayjs().endOf("day").toDate(),
+                ])
+              }
+            />
+            <StyledButton
+              label="Clear"
+              colorPalette={colorPalette}
+              onClick={() => updateStartByFilters([null, null])}
+            />
+          </Group>
+        </Stack>
+      ),
+      filtering: taskSearchParams.startByFilter !== null,
     },
     {
       accessor: "scheduledCompleteDate",
@@ -466,7 +563,36 @@ function TaskList() {
       sortable: true,
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
-      filter: <></>, // TODO: finish
+      filter: (
+        <Stack>
+          <DatePicker
+            type="range"
+            value={dueByFilter}
+            getDayProps={getDayRangeProps(dueByFilter, colorPalette)}
+            onChange={(dates) => updateDueByFilters(dates)}
+            highlightToday
+            allowSingleDateInRange
+          />
+          <Group justify="center">
+            <StyledButton
+              label="Today"
+              colorPalette={colorPalette}
+              onClick={() =>
+                updateDueByFilters([
+                  dayjs().startOf("day").toDate(),
+                  dayjs().endOf("day").toDate(),
+                ])
+              }
+            />
+            <StyledButton
+              label="Clear"
+              colorPalette={colorPalette}
+              onClick={() => updateDueByFilters([null, null])}
+            />
+          </Group>
+        </Stack>
+      ),
+      filtering: taskSearchParams.dueByFilter !== null,
     },
   ];
 
@@ -568,7 +694,7 @@ function TaskList() {
         closeOnClickOutside={false}
         closeOnEscape={false}
       >
-        <form onSubmit={newForm.onSubmit(onValidNewTaskSubmit, console.log)}>
+        <form onSubmit={newForm.onSubmit(onValidNewTaskSubmit)}>
           <Stack gap="sm">
             <TextInput
               withAsterisk
@@ -594,6 +720,10 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={dayjs()}
+              getDayProps={getDayProps(
+                newForm.getValues().scheduledStartDate,
+                colorPalette
+              )}
               label="Start By"
               key={newForm.key("scheduledStartDate")}
               {...newForm.getInputProps("scheduledStartDate")}
@@ -602,7 +732,11 @@ function TaskList() {
               valueFormat="MM/DD/YYYY"
               highlightToday={true}
               clearable
-              defaultValue={new Date()}
+              defaultValue={dayjs()}
+              getDayProps={getDayProps(
+                newForm.getValues().scheduledCompleteDate,
+                colorPalette
+              )}
               label="Due By"
               key={newForm.key("scheduledCompleteDate")}
               {...newForm.getInputProps("scheduledCompleteDate")}
@@ -669,6 +803,10 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().scheduledStartDate}
+              getDayProps={getDayProps(
+                editForm.getValues().scheduledStartDate,
+                colorPalette
+              )}
               label="Start By"
               key={editForm.key("scheduledStartDate")}
               {...editForm.getInputProps("scheduledStartDate")}
@@ -678,6 +816,10 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().scheduledCompleteDate}
+              getDayProps={getDayProps(
+                editForm.getValues().scheduledCompleteDate,
+                colorPalette
+              )}
               label="Due By"
               key={editForm.key("scheduledCompleteDate")}
               {...editForm.getInputProps("scheduledCompleteDate")}
@@ -687,6 +829,10 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualStartDate}
+              getDayProps={getDayProps(
+                editForm.getValues().actualStartDate,
+                colorPalette
+              )}
               label="Started On"
               key={editForm.key("actualStartDate")}
               {...editForm.getInputProps("actualStartDate")}
@@ -696,6 +842,10 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualCompleteDate}
+              getDayProps={getDayProps(
+                editForm.getValues().actualCompleteDate,
+                colorPalette
+              )}
               label="Finished On"
               key={editForm.key("actualCompleteDate")}
               {...editForm.getInputProps("actualCompleteDate")}

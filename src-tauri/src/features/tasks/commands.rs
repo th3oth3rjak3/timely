@@ -54,6 +54,15 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
         );
     }
 
+    if let Some(DateFilter { before: Some(before), after: Some(after) }) = &params.start_by_filter {
+            task_query = task_query.filter(tasks::scheduled_start_date.between(before.naive_utc(), after.naive_utc()))
+    }
+
+
+    if let Some(DateFilter { before: Some(before), after: Some(after) }) = &params.due_by_filter {
+        task_query = task_query.filter(tasks::scheduled_complete_date.between(before.naive_utc(), after.naive_utc()))
+    }
+ 
     match params.ordering.sort_direction {
         SortDirection::Ascending => match params.ordering.order_by.as_str() {
             "title" => task_query = task_query.order_by(tasks::title.asc()),

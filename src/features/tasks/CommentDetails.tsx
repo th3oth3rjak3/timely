@@ -133,19 +133,17 @@ function CommentDetails(props: Props) {
       });
 
     async function addNewComment(values: typeof newCommentForm.values) {
-      await addComment(props.task.id, values.comment, () => {
-        modals.closeAll();
-        newCommentForm.reset();
-        props.onCommentChanged();
-      });
+      modals.closeAll();
+      newCommentForm.reset();
+      await addComment(props.task.id, values.comment);
+      props.onCommentChanged();
     }
 
     async function editExistingComment(comment: typeof editCommentForm.values) {
-      await editComment(comment.id, comment.comment, () => {
-        modals.closeAll();
-        editCommentForm.reset();
-        props.onCommentChanged();
-      });
+      modals.closeAll();
+      editCommentForm.reset();
+      await editComment(comment.id, comment.comment);
+      props.onCommentChanged();
     }
 
     async function deleteExistingComment(comment: Comment) {

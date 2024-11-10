@@ -246,6 +246,14 @@ pub struct TaskSearchParams {
     pub statuses: Vec<String>,
     pub tags: Option<Vec<String>>,
     pub ordering: Ordering,
+    pub start_by_filter: Option<DateFilter>,
+    pub due_by_filter: Option<DateFilter>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DateFilter {
+    pub before: Option<DateTime<Utc>>,
+    pub after: Option<DateTime<Utc>>
 }
 
 #[derive(

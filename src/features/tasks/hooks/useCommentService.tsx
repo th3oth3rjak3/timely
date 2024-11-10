@@ -8,7 +8,7 @@ const useCommentService = (userSettings: UserSettings) => {
   const addComment = async (
     taskId: number,
     message: string,
-    callback: () => void | Promise<void>
+    callback?: () => void | Promise<void>
   ) => {
     await invoke<void>({
       command: "add_comment",
@@ -23,7 +23,7 @@ const useCommentService = (userSettings: UserSettings) => {
   const editComment = async (
     commentId: number,
     message: string,
-    callback: () => void | Promise<void>
+    callback?: () => void | Promise<void>
   ) => {
     await invoke<void>({
       command: "update_comment",
