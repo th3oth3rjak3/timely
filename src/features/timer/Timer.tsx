@@ -1,16 +1,14 @@
-import * as Mantine from "../../mantine";
+import { Group, Stack, Text } from "@mantine/core";
 import CountdownTimer from "./CountdownTimer";
 
 function Timer() {
-
-
   return (
-    <Mantine.Stack m={25}>
-      <Mantine.Group justify="space-between">
-        <Mantine.Text size="xl">Timer</Mantine.Text>
-      </Mantine.Group>
+    <Stack m={25}>
+      <Group justify="space-between">
+        <Text size="xl">Timer</Text>
+      </Group>
       <CountdownTimer />
-    </Mantine.Stack>
+    </Stack>
   );
 }
 

@@ -252,8 +252,8 @@ pub struct TaskSearchParams {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DateFilter {
-    pub before: Option<DateTime<Utc>>,
-    pub after: Option<DateTime<Utc>>
+    pub start: Option<DateTime<Utc>>,
+    pub end: Option<DateTime<Utc>>
 }
 
 #[derive(

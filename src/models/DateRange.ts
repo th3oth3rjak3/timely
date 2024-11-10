@@ -1,14 +1,14 @@
 import dayjs from "dayjs";
-import { DateFilter } from "./DateFilter";
+import { DateRangeFilter } from "./DateRangeFilter";
 
 export type DateRange = [Date | null, Date | null];
 
-export function toDateFilter(range: DateRange): DateFilter {
+export function toDateFilter(range: DateRange): DateRangeFilter {
   const beforeDate = range[0];
   const afterDate = dayjs(range[1]).endOf("day");
 
   return {
-    before: beforeDate?.toISOString() ?? null,
-    after: afterDate?.toISOString() ?? null,
+    start: beforeDate?.toISOString() ?? null,
+    end: afterDate?.toISOString() ?? null,
   };
 }

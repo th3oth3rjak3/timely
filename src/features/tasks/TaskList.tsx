@@ -8,9 +8,8 @@ import {
   Text,
   Textarea,
   TextInput,
-  useMantineTheme,
 } from "@mantine/core";
-import { DateInput, DatePicker } from "@mantine/dates";
+import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
@@ -30,10 +29,11 @@ import dayjs from "dayjs";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useState } from "react";
+import DateFilter from "../../components/DateFilter.tsx";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
 import StyledButton from "../../components/StyledButton.tsx";
+import useColorPalette from "../../hooks/useColorPalette.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
-import { DateRange, toDateFilter } from "../../models/DateRange.ts";
 import { TaskStatus } from "../../models/TaskStatus.ts";
 import { TimelyAction } from "../../models/TauriAction.ts";
 import { TimeSpan } from "../../models/TimeSpan.ts";
@@ -46,13 +46,11 @@ import {
 } from "../../redux/reducers/settingsSlice.ts";
 import {
   getDayProps,
-  getDayRangeProps,
   maybeDate,
   maybeFormattedDate,
 } from "../../utilities/dateUtilities.ts";
 import { validateLength } from "../../utilities/formUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities";
-import useColorService from "../settings/hooks/useColorService.tsx";
 import useTagService from "../tags/hooks/useTagService.tsx";
 import { Tag } from "../tags/types/Tag.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
@@ -64,9 +62,8 @@ function TaskList() {
   //#region State
 
   const { showContextMenu, hideContextMenu } = useContextMenu();
-  const theme = useMantineTheme();
   const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const { colorPalette } = useColorService(theme, userSettings);
+  const colorPalette = useColorPalette();
 
   /** The globally set number of items per page in the application. */
   const pageSize = useAppSelector(
@@ -88,8 +85,6 @@ function TaskList() {
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [newTaskTags, setNewTaskTags] = useState<Tag[]>([]);
-  const [startByFilter, setStartByFilter] = useState<DateRange>([null, null]);
-  const [dueByFilter, setDueByFilter] = useState<DateRange>([null, null]);
   const editTags = useMemo(() => {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
@@ -203,56 +198,6 @@ function TaskList() {
         statuses: statuses.map((st) => st as TaskStatus),
       })
     );
-  }
-
-  function isEmptyRange(range: DateRange): boolean {
-    return range[0] === null && range[1] === null;
-  }
-
-  function isFullRange(range: DateRange): boolean {
-    return range[0] !== null && range[1] !== null;
-  }
-
-  function updateStartByFilters(dates: DateRange) {
-    setStartByFilter(dates);
-    if (isEmptyRange(dates)) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          startByFilter: null,
-        })
-      );
-    }
-
-    if (isFullRange(dates)) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          startByFilter: toDateFilter(dates),
-        })
-      );
-    }
-  }
-
-  function updateDueByFilters(dates: DateRange) {
-    setDueByFilter(dates);
-    if (isEmptyRange(dates)) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          dueByFilter: null,
-        })
-      );
-    }
-
-    if (isFullRange(dates)) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          dueByFilter: toDateFilter(dates),
-        })
-      );
-    }
   }
 
   /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
@@ -481,7 +426,6 @@ function TaskList() {
               variant="transparent"
               color="dimmed"
               onClick={() => updateDescriptionQuery("")}
-              colorPalette={colorPalette}
             >
               <IconX size={14} />
             </StyledActionIcon>
@@ -526,33 +470,16 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
       filter: (
-        <Stack>
-          <DatePicker
-            type="range"
-            value={startByFilter}
-            getDayProps={getDayRangeProps(startByFilter, colorPalette)}
-            onChange={(dates) => updateStartByFilters(dates)}
-            highlightToday
-            allowSingleDateInRange
-          />
-          <Group justify="center">
-            <StyledButton
-              label="Today"
-              colorPalette={colorPalette}
-              onClick={() =>
-                updateStartByFilters([
-                  dayjs().startOf("day").toDate(),
-                  dayjs().endOf("day").toDate(),
-                ])
-              }
-            />
-            <StyledButton
-              label="Clear"
-              colorPalette={colorPalette}
-              onClick={() => updateStartByFilters([null, null])}
-            />
-          </Group>
-        </Stack>
+        <DateFilter
+          filter={useAppSelector(
+            (state) => state.settings.taskListSettings.params.startByFilter
+          )}
+          onRangeChanged={(value) =>
+            dispatch(
+              setTaskSearchParams({ ...taskSearchParams, startByFilter: value })
+            )
+          }
+        />
       ),
       filtering: taskSearchParams.startByFilter !== null,
     },
@@ -564,33 +491,16 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
       filter: (
-        <Stack>
-          <DatePicker
-            type="range"
-            value={dueByFilter}
-            getDayProps={getDayRangeProps(dueByFilter, colorPalette)}
-            onChange={(dates) => updateDueByFilters(dates)}
-            highlightToday
-            allowSingleDateInRange
-          />
-          <Group justify="center">
-            <StyledButton
-              label="Today"
-              colorPalette={colorPalette}
-              onClick={() =>
-                updateDueByFilters([
-                  dayjs().startOf("day").toDate(),
-                  dayjs().endOf("day").toDate(),
-                ])
-              }
-            />
-            <StyledButton
-              label="Clear"
-              colorPalette={colorPalette}
-              onClick={() => updateDueByFilters([null, null])}
-            />
-          </Group>
-        </Stack>
+        <DateFilter
+          filter={useAppSelector(
+            (state) => state.settings.taskListSettings.params.dueByFilter
+          )}
+          onRangeChanged={(value) =>
+            dispatch(
+              setTaskSearchParams({ ...taskSearchParams, dueByFilter: value })
+            )
+          }
+        />
       ),
       filtering: taskSearchParams.dueByFilter !== null,
     },
@@ -612,14 +522,12 @@ function TaskList() {
         <Group>
           <StyledActionIcon
             onClick={() => newFormActions.open()}
-            colorPalette={colorPalette}
             tooltipLabel="Create New Task"
             tooltipPosition="left"
           >
             <IconPlus />
           </StyledActionIcon>
           <StyledActionIcon
-            colorPalette={colorPalette}
             onClick={() =>
               fetchAllData().then(() =>
                 showSuccessNotification(
@@ -668,7 +576,6 @@ function TaskList() {
                   task={record}
                   tagOptions={tagOptions}
                   userSettings={userSettings}
-                  colorPalette={colorPalette}
                   onStarted={startTask}
                   onPaused={pauseTask}
                   onFinished={finishTask}
@@ -764,7 +671,6 @@ function TaskList() {
               type="submit"
               label="Submit"
               disabled={!newForm.isValid()}
-              colorPalette={colorPalette}
               tooltipLabel="Save New Task"
             />
           </Group>
@@ -878,7 +784,6 @@ function TaskList() {
               type="submit"
               disabled={!editForm.isValid()}
               label="Submit"
-              colorPalette={colorPalette}
               tooltipLabel="Save Edited Task"
             />
           </Group>

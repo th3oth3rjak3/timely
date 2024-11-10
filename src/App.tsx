@@ -1,6 +1,8 @@
 import {
+  createTheme,
   DEFAULT_THEME,
   defaultVariantColorsResolver,
+  MantineProvider,
   mergeMantineTheme,
 } from "@mantine/core";
 import { Router } from "@remix-run/router";
@@ -13,7 +15,9 @@ import {
 import "./App.css";
 import useSettingsService from "./features/settings/hooks/useSettingsService";
 
-import * as Mantine from "./mantine";
+import { ModalsProvider } from "@mantine/modals";
+import { Notifications } from "@mantine/notifications";
+import { ContextMenuProvider } from "mantine-contextmenu";
 import * as Pages from "./pages";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import { setNavbar, setUserSettings } from "./redux/reducers/settingsSlice";
@@ -63,7 +67,7 @@ function App() {
     });
   }, []);
 
-  let customTheme = Mantine.createTheme({
+  let customTheme = createTheme({
     primaryColor: userSettings.colorScheme,
     defaultGradient: {
       to: userSettings.gradientTo,
@@ -96,25 +100,25 @@ function App() {
 
   if (!!router) {
     return (
-      <Mantine.MantineProvider defaultColorScheme="dark" theme={customTheme}>
-        <Mantine.ContextMenuProvider>
-          <Mantine.ModalsProvider>
-            <Mantine.Notifications />
+      <MantineProvider defaultColorScheme="dark" theme={customTheme}>
+        <ContextMenuProvider>
+          <ModalsProvider>
+            <Notifications />
             <RouterProvider router={router} />
-          </Mantine.ModalsProvider>
-        </Mantine.ContextMenuProvider>
-      </Mantine.MantineProvider>
+          </ModalsProvider>
+        </ContextMenuProvider>
+      </MantineProvider>
     );
   }
 
   return (
-    <Mantine.MantineProvider defaultColorScheme="dark" theme={customTheme}>
-      <Mantine.ContextMenuProvider>
-        <Mantine.ModalsProvider>
-          <Mantine.Notifications />
-        </Mantine.ModalsProvider>
-      </Mantine.ContextMenuProvider>
-    </Mantine.MantineProvider>
+    <MantineProvider defaultColorScheme="dark" theme={customTheme}>
+      <ContextMenuProvider>
+        <ModalsProvider>
+          <Notifications />
+        </ModalsProvider>
+      </ContextMenuProvider>
+    </MantineProvider>
   );
 }
 

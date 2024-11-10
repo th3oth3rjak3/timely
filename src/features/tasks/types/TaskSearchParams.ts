@@ -1,4 +1,4 @@
-import { DateFilter } from "../../../models/DateFilter";
+import { DateRangeFilter } from "../../../models/DateRangeFilter";
 import { Ordering } from "../../../models/Ordering";
 import { SortDirection } from "../../../models/SortDirection";
 import { TaskStatus } from "../../../models/TaskStatus";
@@ -10,8 +10,8 @@ export type TaskSearchParams = {
   ordering: { orderBy: string; sortDirection: SortDirection } | null;
   statuses: TaskStatus[];
   tags: string[] | null;
-  startByFilter: DateFilter | null;
-  dueByFilter: DateFilter | null;
+  startByFilter: DateRangeFilter | null;
+  dueByFilter: DateRangeFilter | null;
 };
 
 export function taskSearchParams(
@@ -22,8 +22,8 @@ export function taskSearchParams(
   queryString?: string,
   sortField?: string,
   sortDirection?: string,
-  startByFilter?: DateFilter,
-  dueByFilter?: DateFilter
+  startByFilter?: DateRangeFilter,
+  dueByFilter?: DateRangeFilter
 ): TaskSearchParams {
   return {
     page,

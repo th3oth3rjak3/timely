@@ -10,10 +10,14 @@ const useFetchTags = (searchParams: TagSearchParams) => {
     const userSettings = useAppSelector(state => state.settings.userSettings);
     const theme = useMantineTheme();
     const { colorPalette } = useColorService(theme, userSettings);
-    const { searchForTags } = useTagService(userSettings, colorPalette);
     const [loadingTags, setLoadingTags] = useState(false);
     const [recordCount, setRecordCount] = useState(0);
     const [tags, setTags] = useState<Tag[]>([]);
+    const { searchForTags } = useTagService(
+      userSettings,
+      colorPalette,
+      recordCount
+    );
 
     const fetchTags = async () => {
         setLoadingTags(true);

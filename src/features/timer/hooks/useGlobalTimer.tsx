@@ -1,5 +1,5 @@
-import { useMantineTheme } from "@mantine/core";
 import { useEffect, useRef } from "react";
+import useColorPalette from "../../../hooks/useColorPalette";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import {
   decrementTime,
@@ -7,15 +7,13 @@ import {
   setIsPlaying,
 } from "../../../redux/reducers/timerSlice";
 import { showTimerNotification } from "../../../utilities/notificationUtilities";
-import useColorService from "../../settings/hooks/useColorService";
 
 const useGlobalTimer = () => {
   const dispatch = useAppDispatch();
   const { time, isActive, message } = useAppSelector((state) => state.timer);
   const userSettings = useAppSelector((state) => state.settings.userSettings);
   const playing = useAppSelector((state) => state.timer.playingSound);
-  const theme = useMantineTheme();
-  const { colorPalette } = useColorService(theme, userSettings);
+  const colorPalette = useColorPalette();
 
   // Reference to persist the Audio object across renders
   const sound = useRef(new Audio("/beep.mp3")).current;

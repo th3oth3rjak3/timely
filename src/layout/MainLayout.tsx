@@ -1,10 +1,15 @@
-import { AppShell, Group, ScrollArea, Text, useMantineTheme } from "@mantine/core";
-import { IconMaximize, IconMenu3, IconMinimize, IconMinus, IconX } from "@tabler/icons-react";
+import { AppShell, Group, ScrollArea, Text } from "@mantine/core";
+import {
+  IconMaximize,
+  IconMenu3,
+  IconMinimize,
+  IconMinus,
+  IconX,
+} from "@tabler/icons-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import StyledActionIcon from "../components/StyledActionIcon";
-import useColorService from "../features/settings/hooks/useColorService";
 import useGlobalTimer from "../features/timer/hooks/useGlobalTimer";
 import { useAppDispatch, useAppSelector } from "../redux/hooks";
 import { closeNavbar, toggleNavbar } from "../redux/reducers/settingsSlice";
@@ -14,9 +19,6 @@ function MainLayout() {
   /** An app store dispatch function to update store values. */
   const navOpened = useAppSelector((state) => state.settings.navbarOpen);
   const dispatch = useAppDispatch();
-  const theme = useMantineTheme();
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const { colorPalette } = useColorService(theme, userSettings);
   useGlobalTimer();
   const [maximized, setMaximized] = useState(false);
 
@@ -60,7 +62,6 @@ function MainLayout() {
       <AppShell.Header data-tauri-drag-region>
         <Group h="100%" px="md" align="center" data-tauri-drag-region>
           <StyledActionIcon
-            colorPalette={colorPalette}
             onClick={() => dispatch(toggleNavbar())}
             size={28}
             tooltipLabel={navOpened ? "Close Menu" : "Open Menu"}
@@ -77,7 +78,6 @@ function MainLayout() {
             <Text size="xl">Timely</Text>
             <Group justify="flex-end" gap={10} data-tauri-drag-region>
               <StyledActionIcon
-                colorPalette={colorPalette}
                 onClick={hideWindow}
                 size={28}
                 tooltipLabel="Minimize"
@@ -86,7 +86,6 @@ function MainLayout() {
                 <IconMinus />
               </StyledActionIcon>
               <StyledActionIcon
-                colorPalette={colorPalette}
                 onClick={toggleMaximize}
                 size={28}
                 tooltipLabel={maximized ? "Restore" : "Maximize"}
@@ -97,7 +96,6 @@ function MainLayout() {
               <StyledActionIcon
                 onClick={closeWindow}
                 size={28}
-                colorPalette={colorPalette}
                 tooltipLabel="Exit"
                 tooltipPosition="left"
               >
@@ -109,10 +107,7 @@ function MainLayout() {
       </AppShell.Header>
       <AppShell.Navbar p="md" maw="200px">
         <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6}>
-          <Navbar
-            closeNavMenu={() => dispatch(closeNavbar())}
-            colorPalette={colorPalette}
-          />
+          <Navbar closeNavMenu={() => dispatch(closeNavbar())} />
         </ScrollArea>
       </AppShell.Navbar>
       <AppShell.Main>

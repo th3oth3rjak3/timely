@@ -54,13 +54,13 @@ fn generate_search_query<'a>(params: &'a TaskSearchParams) -> _ {
         );
     }
 
-    if let Some(DateFilter { before: Some(before), after: Some(after) }) = &params.start_by_filter {
-            task_query = task_query.filter(tasks::scheduled_start_date.between(before.naive_utc(), after.naive_utc()))
+    if let Some(DateFilter { start: Some(start), end: Some(end) }) = &params.start_by_filter {
+            task_query = task_query.filter(tasks::scheduled_start_date.between(start.naive_utc(), end.naive_utc()))
     }
 
 
-    if let Some(DateFilter { before: Some(before), after: Some(after) }) = &params.due_by_filter {
-        task_query = task_query.filter(tasks::scheduled_complete_date.between(before.naive_utc(), after.naive_utc()))
+    if let Some(DateFilter { start: Some(start), end: Some(end) }) = &params.due_by_filter {
+        task_query = task_query.filter(tasks::scheduled_complete_date.between(start.naive_utc(), end.naive_utc()))
     }
  
     match params.ordering.sort_direction {
