@@ -581,7 +581,12 @@ function TaskList() {
           sortStatus={sortStatus}
           onSortStatusChange={(status) => dispatch(setTaskSortStatus(status))}
           paginationActiveBackgroundColor={colorPalette.background}
-          paginationActiveTextColor={colorPalette.color}
+          paginationActiveTextColor={
+            userSettings.buttonVariant === "filled" ||
+            userSettings.buttonVariant === "gradient"
+              ? "white"
+              : colorPalette.color
+          }
           rowExpansion={{
             content: ({ record }) => {
               return (

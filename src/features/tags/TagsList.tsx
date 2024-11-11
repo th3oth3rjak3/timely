@@ -220,7 +220,12 @@ function TagsList() {
           onSortStatusChange={(status) => dispatch(setTagSortStatus(status))}
           paginationSize="xs"
           paginationActiveBackgroundColor={colorPalette.background}
-          paginationActiveTextColor={colorPalette.color}
+          paginationActiveTextColor={
+            userSettings.buttonVariant === "filled" ||
+            userSettings.buttonVariant === "gradient"
+              ? "white"
+              : colorPalette.color
+          }
         />
       )}
       <Modal
