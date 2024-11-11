@@ -118,6 +118,7 @@ export const settingsSlice = createSlice({
             state.userSettings = action.payload;
             state.homePage = action.payload.homePage;
             state.taskListSettings.params.pageSize = action.payload.pageSize;
+            state.tagListSettings.params.pageSize = action.payload.pageSize;
         },
         setTaskSearchParams: (state, action: PayloadAction<TaskSearchParams>) => {
             state.taskListSettings.params = action.payload;
