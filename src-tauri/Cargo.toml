@@ -29,4 +29,4 @@ serde_json = "1"
 serde_repr = "0.1.19"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenvy = "0.15.7"
-sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio", "derive", "macros", "migrate", "chrono"] }
+sqlx = { version = "0.8.2", features = ["chrono", "sqlite"] }

@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n        INSERT INTO comments (task_id, message, created, modified)\n        VALUES (?, ?, ?, ?)\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "20c3093974ea3a0016c4473401394ea98731c3cf074c8fe835edc6c537e997ba"
+}

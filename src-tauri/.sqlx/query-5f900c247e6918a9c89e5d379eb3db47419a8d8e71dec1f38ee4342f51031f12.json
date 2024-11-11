@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\n                SELECT DISTINCT tasks.id as id\n                FROM tasks\n                LEFT JOIN task_tags on task_tags.task_id = tasks.id\n                WHERE task_tags.task_id IS NULL\n            ",
+  "describe": {
+    "columns": [
+      {
+        "name": "id",
+        "ordinal": 0,
+        "type_info": "Integer"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5f900c247e6918a9c89e5d379eb3db47419a8d8e71dec1f38ee4342f51031f12"
+}

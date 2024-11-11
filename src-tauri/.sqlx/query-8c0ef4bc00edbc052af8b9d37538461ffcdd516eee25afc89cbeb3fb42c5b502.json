@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "UPDATE notification_settings \n            SET name = ?,\n            enabled = ?\n            WHERE user_setting_id = ?\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": []
+  },
+  "hash": "8c0ef4bc00edbc052af8b9d37538461ffcdd516eee25afc89cbeb3fb42c5b502"
+}

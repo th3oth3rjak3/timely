@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            DELETE FROM comments\n            WHERE comments.id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "ff7b92accdc856c10ecbf5ddbad6960171e7b900abe377415549cc50487e897b"
+}

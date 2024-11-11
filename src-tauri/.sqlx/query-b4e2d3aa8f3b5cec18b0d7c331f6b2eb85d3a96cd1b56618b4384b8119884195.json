@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\n            UPDATE user_settings\n            SET page_size = ?,\n            home_page = ?,\n            color_scheme = ?,\n            button_variant = ?,\n            gradient_to = ?,\n            gradient_from = ?,\n            gradient_degrees = ?,\n            navbar_opened = ?\n            WHERE id = ?\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 9
+    },
+    "nullable": []
+  },
+  "hash": "b4e2d3aa8f3b5cec18b0d7c331f6b2eb85d3a96cd1b56618b4384b8119884195"
+}
