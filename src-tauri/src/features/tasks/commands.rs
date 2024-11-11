@@ -1,6 +1,6 @@
 use super::models::Task;
 use chrono::Utc;
-use diesel::{dsl::*, prelude::*, query_builder::{BoxedSqlQuery, QueryFragment}, sql_types::{Integer, Text}, sqlite::Sqlite};
+use diesel::{dsl::*, prelude::*, sqlite::Sqlite};
 use tauri::State;
 
 use crate::{
