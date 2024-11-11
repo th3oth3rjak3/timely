@@ -1,3 +1,4 @@
+use anyhow_tauri::{IntoTAResult, TAResult};
 use tauri::State;
 
 use crate::Data;
@@ -5,7 +6,7 @@ use crate::Data;
 use super::{models::UpdateUserSettings, NotificationSetting, UserSetting, UserSettingRead};
 
 #[tauri::command]
-pub async fn get_user_settings(db: State<'_, Data>) -> Result<UserSettingRead, String> {
+pub async fn get_user_settings(db: State<'_, Data>) -> TAResult<UserSettingRead> {
     let settings = sqlx::query_as!(UserSetting, r#"
             SELECT *
             FROM user_settings
@@ -13,7 +14,7 @@ pub async fn get_user_settings(db: State<'_, Data>) -> Result<UserSettingRead, S
         "#)
         .fetch_one(&db.pool)
         .await
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
 
     let notification_settings: Vec<NotificationSetting> =
         sqlx::query_as!(NotificationSetting, r#"
@@ -25,7 +26,7 @@ pub async fn get_user_settings(db: State<'_, Data>) -> Result<UserSettingRead, S
         settings.id)
         .fetch_all(&db.pool)
         .await
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
 
     let mut settings_read: UserSettingRead = settings.into();
     settings_read.notification_settings = notification_settings;
@@ -36,14 +37,14 @@ pub async fn get_user_settings(db: State<'_, Data>) -> Result<UserSettingRead, S
 pub async fn update_user_settings(
     settings: UpdateUserSettings,
     db: State<'_, Data>,
-) -> Result<UserSettingRead, String> {
+) -> TAResult<UserSettingRead> {
 
     let mut found = sqlx::query_as!(
         UserSetting,
         "SELECT * FROM user_settings LIMIT 1"
     ).fetch_one(&db.pool)
     .await
-    .map_err(|err| err.to_string())?;
+    .into_ta_result()?;
 
     let notification_settings = &settings.notification_settings.clone();
 
@@ -75,7 +76,7 @@ pub async fn update_user_settings(
         .execute(&db.pool)
         .await
         .map(|_|())
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
     
 
     for notification_setting in notification_settings.into_iter() {
@@ -94,7 +95,7 @@ pub async fn update_user_settings(
         .execute(&db.pool)
         .await
         .map(|_|())
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
     }
 
     get_user_settings(db).await

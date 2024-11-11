@@ -30,3 +30,5 @@ serde_repr = "0.1.19"
 chrono = { version = "0.4.38", features = ["serde"] }
 dotenvy = "0.15.7"
 sqlx = { version = "0.8.2", features = ["chrono", "sqlite", "runtime-tokio"] }
+anyhow = "1.0.93"
+anyhow-tauri = { version = "1.0.0", features = ["show_errs_in_release"] }

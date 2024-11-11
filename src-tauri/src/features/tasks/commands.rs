@@ -1,6 +1,7 @@
 use super::models::Task;
+use anyhow_tauri::{IntoTAResult, TAResult};
 use chrono::Utc;
-use sqlx::{QueryBuilder, Row};
+use sqlx::QueryBuilder;
 use tauri::State;
 
 use crate::{
@@ -10,7 +11,7 @@ use crate::{
 use super::*;
 
 #[tauri::command]
-pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> Result<(), String> {
+pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<()> {
     let tags = new_task.tags.clone();
     let new_task = NewTask::from(new_task);
     
@@ -26,7 +27,7 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> Result<()
         new_task.elapsed_duration
     ).execute(&db.pool)
     .await
-    .map_err(|err| err.to_string())?;
+    .into_ta_result()?;
 
 
     if let Some(tags) = tags {
@@ -35,7 +36,12 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> Result<()
             b.push_bind(tag.id).push_bind(result.last_insert_rowid());
         });
         
-        builder.build().execute(&db.pool).await.map(|_|()).map_err(|err| err.to_string())?;
+        builder
+            .build()
+            .execute(&db.pool)
+            .await
+            .map(|_|())
+            .into_ta_result()?;
     }
 
     Ok(())
@@ -130,20 +136,21 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 pub async fn get_tasks(
     params: TaskSearchParams,
     db: State<'_, Data>,
-) -> Result<PagedData<TaskRead>, String> {
+) -> TAResult<PagedData<TaskRead>> {
     let mut count_builder = QueryBuilder::<sqlx::Sqlite>::new("SELECT COUNT(DISTINCT id) FROM (");
 
     count_builder = generate_search_query(count_builder, &params);
     count_builder.push(")");
 
     let count_query = count_builder.build_query_scalar::<i64>();
-    let count = count_query.fetch_one(&db.pool).await.map_err(|err| err.to_string())?;
+    let count = count_query.fetch_one(&db.pool).await.into_ta_result()?;
+
 
     let mut task_query = generate_search_query(QueryBuilder::new(""), &params);
 
     task_query.push(format!(" LIMIT {} OFFSET {}", params.page_size, (params.page - 1) * params.page_size));
 
-    let all_tasks: Vec<Task> = task_query.build_query_as::<Task>().fetch_all(&db.pool).await.map_err(|err| err.to_string())?;
+    let all_tasks: Vec<Task> = task_query.build_query_as::<Task>().fetch_all(&db.pool).await.into_ta_result()?;
 
     let mut comments: Vec<Vec<Comment>> = Vec::new();
     let mut tags: Vec<Vec<Tag>> = Vec::new();
@@ -156,7 +163,7 @@ pub async fn get_tasks(
         task.id)
         .fetch_all(&db.pool)
         .await
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
 
         comments.push(task_comments);
 
@@ -169,7 +176,7 @@ pub async fn get_tasks(
         task.id)
         .fetch_all(&db.pool)
         .await
-        .map_err(|err| err.to_string())?;
+        .into_ta_result()?;
 
         tags.push(task_tags);
     }
@@ -216,76 +223,71 @@ pub async fn get_tasks(
 }
                     
 #[tauri::command]
-pub async fn start_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn start_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
             task.actual_start_date = Some(Utc::now().naive_utc());
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
 
 #[tauri::command]
-pub async fn pause_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn pause_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Paused);
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn resume_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn resume_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let task = set_task_model_active(model, Status::Doing);
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn finish_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn finish_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let mut task = set_task_model_inactive(model, Status::Done);
             task.actual_complete_date = Some(Utc::now().naive_utc());
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn cancel_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn cancel_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let task = set_task_model_inactive(model, Status::Cancelled);
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn reopen_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn reopen_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let mut task = set_task_model_active(model, Status::Doing);
             task.actual_complete_date = None;
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn restore_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn restore_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
             let mut task: Task;
@@ -298,26 +300,24 @@ pub async fn restore_task(task_id: i64, db: State<'_, Data>) -> Result<(), Strin
             }
             save_task(task, &db).await
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(_) => {
             sqlx::query!("DELETE FROM tasks WHERE tasks.id = ?", task_id)
                 .execute(&db.pool)
                 .await
                 .map(|_|())
-                .map_err(|err| err.to_string())
+                .into_ta_result()
         }
-        None => Err(not_found_message(task_id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
-pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> Result<(), String> {
+pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task.id, &db).await? {
         Some(model) => {
             let mut existing_task = model.clone();
@@ -365,12 +365,11 @@ pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> Result<(), String
 
             save_task(existing_task, &db).await
         }
-        None => Err(not_found_message(task.id)),
-    }
+        None => anyhow_tauri::bail!(not_found_message(task.id)),    }
 }
 
 #[tauri::command]
-pub async fn add_comment(comment: CreateComment, db: State<'_, Data>) -> Result<(), String> {
+pub async fn add_comment(comment: CreateComment, db: State<'_, Data>) -> TAResult<()> {
     let model = NewComment::from(comment);
 
     sqlx::query!(r#"
@@ -385,11 +384,11 @@ pub async fn add_comment(comment: CreateComment, db: State<'_, Data>) -> Result<
     .execute(&db.pool)
     .await
     .map(|_|())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 #[tauri::command]
-pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> Result<(), String> {
+pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> TAResult<()> {
     let mut found: Comment = sqlx::query_as!(
         Comment,
         r#"
@@ -401,7 +400,7 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> Result
     )
     .fetch_one(&db.pool)
     .await
-    .map_err(|err| err.to_string())?;
+    .into_ta_result()?;
 
     found.message = comment.message;
     found.modified = Some(Utc::now().naive_utc());
@@ -418,11 +417,11 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> Result
     .execute(&db.pool)
     .await
     .map(|_|())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 #[tauri::command]
-pub async fn delete_comment(id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn delete_comment(id: i64, db: State<'_, Data>) -> TAResult<()> {
     sqlx::query!(r#"
             DELETE FROM comments
             WHERE comments.id = ?
@@ -431,7 +430,7 @@ pub async fn delete_comment(id: i64, db: State<'_, Data>) -> Result<(), String> 
         .execute(&db.pool)
         .await
         .map(|_|())
-        .map_err(|err| err.to_string())
+        .into_ta_result()
 }
 
 fn update_inactive_elapsed(mut task: Task, maybe_elapsed: Option<i64>) -> Task {
@@ -456,7 +455,7 @@ fn not_found_message(task_id: i64) -> String {
     format!("Task with id '{}' not found.", task_id)
 }
 
-async fn save_task(task: Task, db: &State<'_, Data>) -> Result<(), String> {
+async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
     sqlx::query!(r#"
         UPDATE tasks
         SET title = ?,
@@ -485,15 +484,15 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> Result<(), String> {
     .execute(&db.pool)
     .await
     .map(|_|())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 /// Find a task by its id.
-async fn find_task(task_id: i64, db: &State<'_, Data>) -> Result<Option<Task>, String> {
+async fn find_task(task_id: i64, db: &State<'_, Data>) -> TAResult<Option<Task>> {
     sqlx::query_as!(Task, "SELECT * FROM tasks WHERE id = ?", task_id)
         .fetch_optional(&db.pool)
         .await
-        .map_err(|err| err.to_string())
+        .into_ta_result()
 }
 
 /// Update the status when transitioning to an active state.
@@ -523,7 +522,7 @@ pub async fn remove_tag_from_task(
     task_id: i64,
     tag_id: i64,
     db: State<'_, Data>,
-) -> Result<(), String> {
+) -> TAResult<()> {
 
     sqlx::query!(r#"
             DELETE FROM task_tags
@@ -536,11 +535,11 @@ pub async fn remove_tag_from_task(
     .execute(&db.pool)
     .await
     .map(|_| ())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 #[tauri::command]
-pub async fn get_all_tags(db: State<'_, Data>) -> Result<Vec<Tag>, String> {
+pub async fn get_all_tags(db: State<'_, Data>) -> TAResult<Vec<Tag>> {
     sqlx::query_as!(Tag, r#"
         SELECT *
         FROM tags
@@ -548,7 +547,7 @@ pub async fn get_all_tags(db: State<'_, Data>) -> Result<Vec<Tag>, String> {
     "#)
     .fetch_all(&db.pool)
     .await
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 #[tauri::command]
@@ -556,7 +555,7 @@ pub async fn add_tag_to_task(
     tag_id: i64,
     task_id: i64,
     db: State<'_, Data>,
-) -> Result<(), String> {
+) -> TAResult<()> {
     let maybe_exists = sqlx::query_as!(
         TaskTag, 
         r#"
@@ -569,7 +568,7 @@ pub async fn add_tag_to_task(
     )
     .fetch_optional(&db.pool)
     .await
-    .map_err(|err| err.to_string())?;
+    .into_ta_result()?;
 
     match maybe_exists {
         Some(_) => Ok(()),
@@ -582,13 +581,13 @@ pub async fn add_tag_to_task(
             .execute(&db.pool)
             .await
             .map(|_|())
-            .map_err(|err| err.to_string())
+            .into_ta_result()
         }
     }
 }
 
 #[tauri::command]
-pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> Result<Tag, String> {
+pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> TAResult<Tag> {
     // If a tag already exists, no need to add it again.
     let maybe_tag: Option<Tag> = sqlx::query_as!(Tag, r#"
             SELECT *
@@ -600,7 +599,7 @@ pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> Result<Tag, St
     )
     .fetch_optional(&db.pool)
     .await
-    .map_err(|err| err.to_string())?;
+    .into_ta_result()?;
 
     match maybe_tag {
         Some(existing) => Ok(existing),
@@ -608,7 +607,7 @@ pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> Result<Tag, St
             let result = sqlx::query!("INSERT INTO tags (value) VALUES (?)", new_tag)
                 .execute(&db.pool)
                 .await
-                .map_err(|err| err.to_string())?;
+                .into_ta_result()?;
 
             let inserted_id = result.last_insert_rowid();
 
@@ -618,7 +617,7 @@ pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> Result<Tag, St
                 inserted_id)
             .fetch_one(&db.pool)
             .await
-            .map_err(|err| err.to_string())
+            .into_ta_result()
         }
     }
 }

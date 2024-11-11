@@ -13,9 +13,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(Data {
-            pool,
-        })
+        .manage(Data { pool })
         .invoke_handler(tauri::generate_handler![
             features::tasks::get_tasks,
             features::tasks::create_task,

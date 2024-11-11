@@ -1,3 +1,4 @@
+use anyhow_tauri::{IntoTAResult, TAResult};
 use sqlx::QueryBuilder;
 use tauri::State;
 
@@ -32,16 +33,25 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 /// * state - The database state used to query a connection.
 /// * params - The search parameters used to filter/sort the results.
 #[tauri::command]
-pub async fn get_tags(params: TagSearchParams, db: State<'_, Data>) -> Result<PagedData<Tag>, String> {
+pub async fn get_tags(params: TagSearchParams, db: State<'_, Data>) -> TAResult<PagedData<Tag>> {
     let count_builder = QueryBuilder::new("SELECT COUNT(DISTINCT id) FROM(");
     let mut count_query = generate_search_query(count_builder, &params);
     count_query.push(")");
 
-    let count: i64 = count_query.build_query_scalar::<i64>().fetch_one(&db.pool).await.map_err(|err| err.to_string())?;
+    let count: i64 = count_query
+        .build_query_scalar::<i64>()
+        .fetch_one(&db.pool)
+        .await
+        .into_ta_result()?;
+
     let mut tag_query = generate_search_query(QueryBuilder::new(""), &params);
 
     tag_query.push(format!(" LIMIT {} OFFSET {} ", params.page_size, (params.page - 1) * params.page_size));
-    let all_tags = tag_query.build_query_as::<Tag>().fetch_all(&db.pool).await.map_err(|err| err.to_string())?;
+    let all_tags = tag_query
+        .build_query_as::<Tag>()
+        .fetch_all(&db.pool)
+        .await
+        .into_ta_result()?;
     
     Ok(PagedData::<Tag>::new(
         params.page,
@@ -53,19 +63,19 @@ pub async fn get_tags(params: TagSearchParams, db: State<'_, Data>) -> Result<Pa
 }
 
 #[tauri::command]
-pub async fn edit_tag(tag: Tag, db: State<'_, Data>) -> Result<(), String> {
+pub async fn edit_tag(tag: Tag, db: State<'_, Data>) -> TAResult<()> {
     sqlx::query!("UPDATE tags SET value = ? WHERE id = ?", tag.value, tag.id)
     .execute(&db.pool)
     .await
     .map(|_|())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
 
 #[tauri::command]
-pub async fn delete_tag(tag_id: i64, db: State<'_, Data>) -> Result<(), String> {
+pub async fn delete_tag(tag_id: i64, db: State<'_, Data>) -> TAResult<()> {
     sqlx::query!("DELETE FROM tags WHERE tags.id = ?", tag_id)
     .execute(&db.pool)
     .await
     .map(|_|())
-    .map_err(|err| err.to_string())
+    .into_ta_result()
 }
