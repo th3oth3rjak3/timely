@@ -9,10 +9,3 @@ proc-macro = true
 [dependencies]
 syn = "2.0"
 quote = "1.0"
-diesel = { version = "2.2.4", features = [
-    "sqlite",
-    "returning_clauses_for_sqlite_3_35",
-    "chrono",
-    "serde_json",
-    "r2d2",
-] }

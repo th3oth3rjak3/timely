@@ -1,35 +1,33 @@
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UpdateUserSettings {
     pub home_page: String,
-    pub page_size: i32,
+    pub page_size: i64,
     pub color_scheme: String,
     pub button_variant: String,
     pub gradient_to: String,
     pub gradient_from: String,
-    pub gradient_degrees: i32,
+    pub gradient_degrees: i64,
     pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
 }
 
 #[derive(
-    Debug, Clone, Identifiable, Queryable, Selectable, AsChangeset, Serialize, Deserialize,
+    Debug, Clone, Serialize, Deserialize,
 )]
-#[diesel(table_name = crate::schema::user_settings)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 #[serde(rename_all = "camelCase")]
 pub struct UserSetting {
-    pub id: i32,
-    pub page_size: i32,
+    pub id: i64,
+    pub page_size: i64,
     pub home_page: String,
     pub color_scheme: String,
     pub button_variant: String,
     pub gradient_to: String,
     pub gradient_from: String,
-    pub gradient_degrees: i32,
+    pub gradient_degrees: i64,
     pub navbar_opened: bool,
 }
 
@@ -85,14 +83,14 @@ impl From<UserSettingRead> for UserSetting {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSettingRead {
-    pub id: i32,
-    pub page_size: i32,
+    pub id: i64,
+    pub page_size: i64,
     pub home_page: String,
     pub color_scheme: String,
     pub button_variant: String,
     pub gradient_to: String,
     pub gradient_from: String,
-    pub gradient_degrees: i32,
+    pub gradient_degrees: i64,
     pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
 }
@@ -100,21 +98,14 @@ pub struct UserSettingRead {
 #[derive(
     Debug,
     Clone,
-    Identifiable,
-    Queryable,
-    Selectable,
-    AsChangeset,
     Serialize,
     Deserialize,
-    Associations,
+    FromRow
 )]
-#[diesel(table_name = crate::schema::notification_settings)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(belongs_to(UserSetting))]
 #[serde(rename_all = "camelCase")]
 pub struct NotificationSetting {
-    pub id: i32,
-    pub user_setting_id: i32,
+    pub id: i64,
+    pub user_setting_id: i64,
     pub name: String,
     pub enabled: bool,
 }

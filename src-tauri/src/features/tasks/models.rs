@@ -1,13 +1,7 @@
 use chrono::{DateTime, NaiveDateTime, Utc};
-use diesel::{
-    deserialize::FromSqlRow,
-    expression::AsExpression,
-    prelude::*,
-    sql_types::{self},
-};
 use serde::{Deserialize, Serialize};
-use timely_macros::SqliteTextEnum;
-
+use sqlx::prelude::FromRow;
+use timely_macros::EnumFromString;
 use crate::{features::tags::Tag, Ordering};
 
 /// The status of a task.
@@ -19,11 +13,10 @@ use crate::{features::tags::Tag, Ordering};
     PartialEq,
     Eq,
     Clone,
-    AsExpression,
-    SqliteTextEnum,
-    FromSqlRow,
+    sqlx::Type,
+    EnumFromString,
 )]
-#[diesel(sql_type = sql_types::Text)]
+#[sqlx(type_name = "TEXT")]
 pub enum Status {
     /// When a task has been cancelled and will not be worked.
     Cancelled,
@@ -41,20 +34,13 @@ pub enum Status {
 #[derive(
     Debug,
     Clone,
-    Identifiable,
-    Queryable,
-    Selectable,
-    AsChangeset,
     Deserialize,
     Serialize,
     PartialEq,
+    FromRow
 )]
-#[diesel(table_name = crate::schema::tasks)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(treat_none_as_null = true)]
-#[diesel(primary_key(id))]
 pub struct Task {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub description: String,
     pub status: Status,
@@ -63,14 +49,14 @@ pub struct Task {
     pub actual_start_date: Option<NaiveDateTime>,
     pub actual_complete_date: Option<NaiveDateTime>,
     pub last_resumed_date: Option<NaiveDateTime>,
-    pub estimated_duration: Option<i32>,
-    pub elapsed_duration: i32,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: i64,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TaskRead {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub description: String,
     pub status: Status,
@@ -79,8 +65,8 @@ pub struct TaskRead {
     pub actual_start_date: Option<DateTime<Utc>>,
     pub actual_complete_date: Option<DateTime<Utc>>,
     pub last_resumed_date: Option<DateTime<Utc>>,
-    pub estimated_duration: Option<i32>,
-    pub elapsed_duration: i32,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: i64,
     pub comments: Vec<CommentRead>,
     pub tags: Vec<Tag>,
 }
@@ -88,15 +74,14 @@ pub struct TaskRead {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditComment {
-    pub id: i32,
+    pub id: i64,
     pub message: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Insertable)]
-#[diesel(table_name = crate::schema::comments)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewComment {
-    pub task_id: i32,
+    pub task_id: i64,
     pub message: String,
     pub created: NaiveDateTime,
     pub modified: Option<NaiveDateTime>,
@@ -106,7 +91,7 @@ pub struct NewComment {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CreateComment {
-    pub task_id: i32,
+    pub task_id: i64,
     pub message: String,
 }
 
@@ -124,23 +109,13 @@ impl From<CreateComment> for NewComment {
 #[derive(
     Debug,
     Clone,
-    Queryable,
-    Selectable,
-    Identifiable,
-    AsChangeset,
     Serialize,
     Deserialize,
-    Associations,
 )]
-#[diesel(table_name = crate::schema::comments)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(belongs_to(Task))]
-#[diesel(primary_key(id))]
-#[diesel(treat_none_as_null = true)]
 #[serde(rename_all = "camelCase")]
 pub struct Comment {
-    pub id: i32,
-    pub task_id: i32,
+    pub id: i64,
+    pub task_id: i64,
     pub message: String,
     pub created: NaiveDateTime,
     pub modified: Option<NaiveDateTime>,
@@ -148,8 +123,8 @@ pub struct Comment {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CommentRead {
-    pub id: i32,
-    pub task_id: i32,
+    pub id: i64,
+    pub task_id: i64,
     pub message: String,
     pub created: DateTime<Utc>,
     pub modified: Option<DateTime<Utc>>,
@@ -182,7 +157,7 @@ impl From<CommentRead> for Comment {
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct EditTask {
-    pub id: i32,
+    pub id: i64,
     pub title: String,
     pub description: String,
     pub status: Status,
@@ -190,15 +165,12 @@ pub struct EditTask {
     pub scheduled_complete_date: Option<DateTime<Utc>>,
     pub actual_start_date: Option<DateTime<Utc>>,
     pub actual_complete_date: Option<DateTime<Utc>>,
-    pub estimated_duration: Option<i32>,
-    pub elapsed_duration: Option<i32>,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: Option<i64>,
 }
 
 /// Model for the database which requires NaiveDateTime
-#[derive(Debug, Clone, Default, Deserialize, Serialize, Insertable)]
-#[diesel(table_name = crate::schema::tasks)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(treat_none_as_null = true)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NewTask {
     pub title: String,
@@ -206,8 +178,8 @@ pub struct NewTask {
     pub status: Status,
     pub scheduled_start_date: Option<NaiveDateTime>,
     pub scheduled_complete_date: Option<NaiveDateTime>,
-    pub estimated_duration: Option<i32>,
-    pub elapsed_duration: i32,
+    pub estimated_duration: Option<i64>,
+    pub elapsed_duration: i64,
 }
 
 /// Required to serialize the datetime as Local
@@ -219,7 +191,7 @@ pub struct CreateTask {
     pub status: Status,
     pub scheduled_start_date: Option<DateTime<Utc>>,
     pub scheduled_complete_date: Option<DateTime<Utc>>,
-    pub estimated_duration: Option<i32>,
+    pub estimated_duration: Option<i64>,
     pub tags: Option<Vec<Tag>>,
 }
 
@@ -257,22 +229,12 @@ pub struct DateFilter {
 }
 
 #[derive(
-    Associations,
-    Identifiable,
-    Insertable,
-    Selectable,
-    Queryable,
     Debug,
     Clone,
     Serialize,
     Deserialize,
 )]
-#[diesel(belongs_to(Task))]
-#[diesel(belongs_to(Tag))]
-#[diesel(table_name = crate::schema::task_tags)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
-#[diesel(primary_key(task_id, tag_id))]
 pub struct TaskTag {
-    pub task_id: i32,
-    pub tag_id: i32,
+    pub task_id: i64,
+    pub tag_id: i64,
 }

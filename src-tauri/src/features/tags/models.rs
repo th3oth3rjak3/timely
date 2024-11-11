@@ -1,23 +1,18 @@
-use diesel::prelude::*;
 use serde::{Deserialize, Serialize};
+use sqlx::prelude::FromRow;
 
 use crate::Ordering;
 
 #[derive(
     Debug,
     Clone,
-    Queryable,
-    Selectable,
-    AsChangeset,
-    Identifiable,
     Serialize,
     Deserialize,
     PartialEq,
+    FromRow
 )]
-#[diesel(table_name = crate::schema::tags)]
-#[diesel(check_for_backend(diesel::sqlite::Sqlite))]
 pub struct Tag {
-    pub id: i32,
+    pub id: i64,
     pub value: String,
 }
 

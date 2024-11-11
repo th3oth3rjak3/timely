@@ -1,0 +1,26 @@
+id,title,description,status,scheduled_start_date,scheduled_complete_date,actual_start_date,actual_complete_date,last_resumed_date,estimated_duration,elapsed_duration
+31,Create Kanban Board,Create a task board with different drag and drop columns as an alternate way to manage tasks.,Todo,NULL,NULL,NULL,NULL,NULL,108000,0
+71,Calendar Feature,Consider adding a calendar page.,Todo,NULL,NULL,NULL,NULL,NULL,54000,0
+75,Quick Filters,"It might be nice to add some quick filters to a dropdown list. This might include things like ""Unplanned"", ""Not Started"", ""Not Finished"", ""Overdue Start"", ""Overdue Complete"", etc.",Todo,NULL,NULL,NULL,NULL,NULL,14400,0
+76,Allow users to specify a database location,Having the option to change databases would allow users to have different data sources. It might also be good for debugging purposes.,Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+77,Import/Export as CSV,Allow users to import and export data as CSV. This would allow users to replace the contents of some given data from a CSV or spreadsheet. It would also allow them to save some of their data outside of the tool or generate their own reports.,Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+79,Add Getting Started Tasks to Migration,New users won't know how to use the application. Create a few getting started tasks to explain how to use Timely.,Todo,NULL,NULL,NULL,NULL,NULL,7200,0
+81,Help Feature,"- Find a way to add a help feature to the application.
+- Alternatively, publish ""about"" documentation to the github pages site describing features of the application.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+82,Feature: Delete Tasks,"- Allow a user to delete tasks in bulk based on some condition.
+- Example: Delete tasks that are completed and actual complete date is less than some date/time.
+- Ideally, once the user has selected all of their options, we could retrieve the list of records that would be deleted so they can be sure it's what they want.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+83,Feature: Reports,"- Provide users with a way to get a report between a date range to show tasks that were completed during that time.
+- Might need to refactor time tracking in order to allow graphs showing time expended per day.
+- Might want to also allow a report that just shows a summary of all activity during a date range. 
+- This might be like # of tasks started, # of tasks finished, total hours expended. Maybe this report only includes certain tags.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+118,Feature: Time Tracking By Day,"- As a user, I want to be able to track how much time I worked on each task for a given day.
+- This would support reporting hours spent each week on work.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+120,Feature: Add Pending Alarms,"- As a user I want to create a list of multiple alarms in a row with various messages.
+- These alarms should be visible and configurable on the timer page.
+- As a user, I may want to persist pending alarms to the database so that I can use them when I open the application the next time.
+- When the alarm has expired, it should be deleted from the database.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+122,Feature: Persist timer between page refreshes,"- During development I want to use the timer, but it resets on a page refresh.
+- Use local storage to update the timer state in case the app resets.",Todo,NULL,NULL,NULL,NULL,NULL,3600,0
+123,Fix date input background button colors,The selected date in a DateInput component doesn't have the same background as the other components.,Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
+124,Settings Color Picker Update,"The settings color picker dropdown doesn't have any color swatches, which might be nice. The style is also inconsistent between the primary and secondary color which is confusing.",Todo,NULL,NULL,NULL,NULL,NULL,7200,0

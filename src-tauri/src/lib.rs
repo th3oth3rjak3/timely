@@ -1,20 +1,20 @@
 pub mod data_access;
 pub mod features;
 pub mod models;
-pub mod schema;
 
 use data_access::*;
 use models::*;
-use std::{env, sync::Arc};
+use tauri::async_runtime::block_on;
+use std::env;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let pool = establish_connection_pool();
+    let pool = block_on(establish_connection_pool());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
-        .manage(Diesel {
-            pool: Arc::new(pool),
+        .manage(Data {
+            pool,
         })
         .invoke_handler(tauri::generate_handler![
             features::tasks::get_tasks,
