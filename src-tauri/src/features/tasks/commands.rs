@@ -30,7 +30,7 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> Result<()
 
 
     if let Some(tags) = tags {
-        let mut builder = QueryBuilder::new("INSERT INTO task_tags (tag_id, task_id) VALUES ");
+        let mut builder = QueryBuilder::new("INSERT INTO task_tags (tag_id, task_id) ");
         builder.push_values(tags, |mut b, tag| {
             b.push_bind(tag.id).push_bind(result.last_insert_rowid());
         });
@@ -42,21 +42,15 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> Result<()
 }
 
 
-fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params: &'a TaskSearchParams, task_ids: &'a Vec<i64>) -> QueryBuilder<'a, sqlx::Sqlite> {
+fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params: &'a TaskSearchParams) -> QueryBuilder<'a, sqlx::Sqlite> {
     builder.push(r#"
-        SELECT DISTINCT tasks.* FROM tasks
+        SELECT DISTINCT tasks.* 
+        FROM tasks
         LEFT JOIN task_tags on tasks.id = task_tags.task_id
         LEFT JOIN tags on tags.id = task_tags.tag_id
     "#);
 
-    builder.push(" WHERE tasks.id IN (");
-    for (i, id) in task_ids.iter().enumerate() {
-        builder.push_bind(id);
-        if i < task_ids.len() - 1 {
-            builder.push(",");
-        }
-    }
-    builder.push(")");
+    builder.push(" WHERE 1=1 ");
 
     builder.push(" AND tasks.status IN (");
     for (i, status) in params.statuses.iter().enumerate() {
@@ -90,7 +84,20 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             .push_bind(end.naive_utc());
     }
 
-    
+    if let Some(ref tags) = &params.tags {
+        if tags.is_empty() {
+            builder.push(" AND task_tags.task_id IS NULL ");
+        } else {
+            builder.push(" AND tags.value IN (");
+            for (i, tag) in tags.iter().enumerate() {
+                builder.push_bind(tag);
+                if i < tags.len() - 1 {
+                    builder.push(",");
+                }
+            }
+            builder.push(")");
+        }
+    }
 
     match params.ordering.sort_direction {
         SortDirection::Ascending => match params.ordering.order_by.as_str() {
@@ -114,60 +121,6 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
     builder
 }
 
-async fn fetch_tasks_with_tag_ids(params: &TaskSearchParams, db: &State<'_, Data>) -> Result<Vec<i64>, String> {
-    match params.tags {
-        Some(ref tags) if tags.is_empty() => 
-            sqlx::query!(r#"
-                SELECT DISTINCT tasks.id as id
-                FROM tasks
-                LEFT JOIN task_tags on task_tags.task_id = tasks.id
-                WHERE task_tags.task_id IS NULL
-            "#)
-            .fetch_all(&db.pool)
-            .await
-            .map(|rows| rows.iter().map(|row| row.id).collect::<Vec<i64>>())
-            .map_err(|err| err.to_string()),
-        Some(ref tags) => {
-            let count = tags.len() as i64;
-            let mut query = QueryBuilder::<sqlx::Sqlite>::new(r#"
-                SELECT task_tags.task_id as id
-                FROM task_tags
-                INNER JOIN tags ON task_tags.tag_id = tags.id
-                WHERE tags.value IN ("#);
-
-            for (i, value) in tags.iter().enumerate() {
-                query.push_bind(value);
-                if (i as i64) < count - 1 {
-                    query.push(",");
-                }
-            }
-
-            query.push(")");
-            query.push(r#"
-                GROUP BY task_tags.task_id
-                HAVING COUNT(DISTINCT tags.id) >= 
-            "#);
-
-            query.push_bind(count);
-
-            
-            let query = query.build();
-
-
-        query
-            .fetch_all(&db.pool)
-            .await
-            .map(|rows| rows.iter().map(|row| row.get("id")).collect::<Vec<i64>>())
-            .map_err(|err| err.to_string())
-        },
-        None => sqlx::query!("SELECT id from tasks")
-            .fetch_all(&db.pool)
-            .await
-            .map(|rows| rows.iter().map(|row| row.id).collect::<Vec<i64>>())
-            .map_err(|err| err.to_string())
-    }
-}
-
 /// Search for all tasks which match the search parameters.
 ///
 /// ### Args
@@ -178,18 +131,15 @@ pub async fn get_tasks(
     params: TaskSearchParams,
     db: State<'_, Data>,
 ) -> Result<PagedData<TaskRead>, String> {
-    
-    let tasks_with_tags_ids: Vec<i64> = fetch_tasks_with_tag_ids(&params, &db).await?;
-
     let mut count_builder = QueryBuilder::<sqlx::Sqlite>::new("SELECT COUNT(DISTINCT id) FROM (");
 
-    count_builder = generate_search_query(count_builder, &params, &tasks_with_tags_ids);
+    count_builder = generate_search_query(count_builder, &params);
     count_builder.push(")");
 
     let count_query = count_builder.build_query_scalar::<i64>();
     let count = count_query.fetch_one(&db.pool).await.map_err(|err| err.to_string())?;
 
-    let mut task_query = generate_search_query(QueryBuilder::new(""), &params, &tasks_with_tags_ids);
+    let mut task_query = generate_search_query(QueryBuilder::new(""), &params);
 
     task_query.push(format!(" LIMIT {} OFFSET {}", params.page_size, (params.page - 1) * params.page_size));
 

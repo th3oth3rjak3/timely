@@ -12,7 +12,7 @@ id,title,description,status,scheduled_start_date,scheduled_complete_date,actual_
 - Ideally, once the user has selected all of their options, we could retrieve the list of records that would be deleted so they can be sure it's what they want.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
 83,Feature: Reports,"- Provide users with a way to get a report between a date range to show tasks that were completed during that time.
 - Might need to refactor time tracking in order to allow graphs showing time expended per day.
-- Might want to also allow a report that just shows a summary of all activity during a date range. 
+- Might want to also allow a report that just shows a summary of all activity during a date range.
 - This might be like # of tasks started, # of tasks finished, total hours expended. Maybe this report only includes certain tags.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0
 118,Feature: Time Tracking By Day,"- As a user, I want to be able to track how much time I worked on each task for a given day.
 - This would support reporting hours spent each week on work.",Todo,NULL,NULL,NULL,NULL,NULL,NULL,0

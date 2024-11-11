@@ -84,10 +84,12 @@ pub async fn update_user_settings(
             SET name = ?,
             enabled = ?
             WHERE user_setting_id = ?
+            AND id = ?
             "#,
             notification_setting.name,
             notification_setting.enabled,
-            found.id
+            found.id,
+            notification_setting.id
         )
         .execute(&db.pool)
         .await
