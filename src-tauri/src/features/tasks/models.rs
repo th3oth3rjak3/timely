@@ -46,11 +46,16 @@ pub struct Task {
     pub status: Status,
     pub scheduled_start_date: Option<NaiveDateTime>,
     pub scheduled_complete_date: Option<NaiveDateTime>,
-    pub actual_start_date: Option<NaiveDateTime>,
-    pub actual_complete_date: Option<NaiveDateTime>,
     pub last_resumed_date: Option<NaiveDateTime>,
     pub estimated_duration: Option<i64>,
-    pub elapsed_duration: i64,
+}
+
+#[derive(Debug, Clone, FromRow, PartialEq)]
+pub struct TaskWorkHistory {
+    pub id: i64,
+    pub task_id: i64,
+    pub start_date: NaiveDateTime,
+    pub end_date: NaiveDateTime,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -163,10 +168,7 @@ pub struct EditTask {
     pub status: Status,
     pub scheduled_start_date: Option<DateTime<Utc>>,
     pub scheduled_complete_date: Option<DateTime<Utc>>,
-    pub actual_start_date: Option<DateTime<Utc>>,
-    pub actual_complete_date: Option<DateTime<Utc>>,
     pub estimated_duration: Option<i64>,
-    pub elapsed_duration: Option<i64>,
 }
 
 /// Model for the database which requires NaiveDateTime
@@ -179,7 +181,6 @@ pub struct NewTask {
     pub scheduled_start_date: Option<NaiveDateTime>,
     pub scheduled_complete_date: Option<NaiveDateTime>,
     pub estimated_duration: Option<i64>,
-    pub elapsed_duration: i64,
 }
 
 /// Required to serialize the datetime as Local
@@ -204,7 +205,6 @@ impl From<CreateTask> for NewTask {
             scheduled_start_date: value.scheduled_start_date.map(|dt| dt.naive_utc()),
             scheduled_complete_date: value.scheduled_complete_date.map(|dt| dt.naive_utc()),
             estimated_duration: value.estimated_duration,
-            elapsed_duration: 0,
         }
     }
 }

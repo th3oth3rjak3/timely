@@ -1,6 +1,6 @@
 use super::models::Task;
 use anyhow_tauri::{IntoTAResult, TAResult};
-use chrono::Utc;
+use chrono::{NaiveDateTime, Utc};
 use sqlx::QueryBuilder;
 use tauri::State;
 
@@ -16,15 +16,14 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<
     let new_task = NewTask::from(new_task);
     
     let result = sqlx::query!(r#"
-        INSERT INTO tasks (title, description, status, scheduled_start_date, scheduled_complete_date, estimated_duration, elapsed_duration) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)"#,
+        INSERT INTO tasks (title, description, status, scheduled_start_date, scheduled_complete_date, estimated_duration) 
+        VALUES (?, ?, ?, ?, ?, ?)"#,
         new_task.title,
         new_task.description,
         new_task.status,
         new_task.scheduled_start_date,
         new_task.scheduled_complete_date,
         new_task.estimated_duration,
-        new_task.elapsed_duration
     ).execute(&db.pool)
     .await
     .into_ta_result()?;
@@ -127,6 +126,35 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
     builder
 }
 
+fn elapsed_duration(history: &Vec<TaskWorkHistory>) -> i64 {
+    history
+        .iter()
+        .fold(0, |acc, el| acc + (el.end_date - el.start_date).num_seconds())
+}
+
+fn get_actual_start(task: &Task, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
+    if task.status == Status::Doing {
+        return task.last_resumed_date;
+    }
+    
+    history
+        .iter()
+        .map(|hist| hist.start_date)
+        .min()
+}
+
+fn get_actual_complete(status: &Status, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
+    if status != &Status::Done {
+        return None;
+    }
+
+    history
+        .iter()
+        .map(|hist| hist.end_date)
+        .max()
+}
+
+
 /// Search for all tasks which match the search parameters.
 ///
 /// ### Args
@@ -154,6 +182,8 @@ pub async fn get_tasks(
 
     let mut comments: Vec<Vec<Comment>> = Vec::new();
     let mut tags: Vec<Vec<Tag>> = Vec::new();
+    let mut work_history: Vec<Vec<TaskWorkHistory>> = Vec::new();
+
     for task in all_tasks.iter() {
         let task_comments = sqlx::query_as!(Comment, r#"
             SELECT *
@@ -179,14 +209,29 @@ pub async fn get_tasks(
         .into_ta_result()?;
 
         tags.push(task_tags);
+
+        let task_work_history = sqlx::query_as!(TaskWorkHistory, r#"
+            SELECT task_work_history.*
+            FROM task_work_history
+            WHERE task_work_history.task_id = ?
+        "#, 
+        task.id)
+        .fetch_all(&db.pool)
+        .await
+        .into_ta_result()?;
+
+        work_history.push(task_work_history);
     }
 
     let task_read = all_tasks
         .into_iter()
         .zip(comments)
         .zip(tags)
-        .map(|((task, comments), tags)| {
-            let mut elapsed_duration: i64 = task.elapsed_duration;
+        .zip(work_history)
+        .map(|(((task, comments), tags), history)| {
+            let mut elapsed_duration: i64 = elapsed_duration(&history);
+            let actual_start = get_actual_start(&task, &history);
+            let actual_complete = get_actual_complete(&task.status, &history);
         
             if let Some(last_resumed) = task.last_resumed_date {
                 let diff = Utc::now().naive_utc() - last_resumed;
@@ -200,8 +245,8 @@ pub async fn get_tasks(
                     status: task.status,
                     scheduled_start_date: task.scheduled_start_date.map(|dt| dt.and_utc()),
                     scheduled_complete_date: task.scheduled_complete_date.map(|dt| dt.and_utc()),
-                    actual_start_date: task.actual_start_date.map(|dt| dt.and_utc()),
-                    actual_complete_date: task.actual_complete_date.map(|dt| dt.and_utc()),
+                    actual_start_date: actual_start.map(|dt| dt.and_utc()),
+                    actual_complete_date: actual_complete.map(|dt| dt.and_utc()),
                     last_resumed_date: task.last_resumed_date.map(|dt| dt.and_utc()),
                     estimated_duration: task.estimated_duration,
                     elapsed_duration,
@@ -225,11 +270,7 @@ pub async fn get_tasks(
 #[tauri::command]
 pub async fn start_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let mut task = set_task_model_active(model, Status::Doing);
-            task.actual_start_date = Some(Utc::now().naive_utc());
-            save_task(task, &db).await
-        }
+        Some(model) => set_task_model_active(model, Status::Doing, &db).await,
         None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
@@ -237,70 +278,51 @@ pub async fn start_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
 #[tauri::command]
 pub async fn pause_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let task = set_task_model_inactive(model, Status::Paused);
-            save_task(task, &db).await
-        }
+        Some(model) => set_task_model_inactive(model, Status::Paused, &db).await,
         None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
 
 #[tauri::command]
 pub async fn resume_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let task = set_task_model_active(model, Status::Doing);
-            save_task(task, &db).await
-        }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        Some(model) => set_task_model_active(model, Status::Doing, &db).await,
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+    }
 }
 
 #[tauri::command]
 pub async fn finish_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let mut task = set_task_model_inactive(model, Status::Done);
-            task.actual_complete_date = Some(Utc::now().naive_utc());
-            save_task(task, &db).await
-        }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        Some(model) => set_task_model_inactive(model, Status::Done, &db).await,
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+    }
 }
 
 #[tauri::command]
 pub async fn cancel_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
-            let task = set_task_model_inactive(model, Status::Cancelled);
-            save_task(task, &db).await
+            delete_work_history(&model.id, &db).await?;
+            set_task_model_inactive(model, Status::Cancelled, &db).await
         }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+    }
 }
 
 #[tauri::command]
 pub async fn reopen_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let mut task = set_task_model_active(model, Status::Doing);
-            task.actual_complete_date = None;
-            save_task(task, &db).await
-        }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        Some(model) => set_task_model_active(model, Status::Doing, &db).await,
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
+    }
 }
 
 #[tauri::command]
 pub async fn restore_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
-        Some(model) => {
-            let mut task: Task;
-            if model.elapsed_duration > 0 && model.actual_start_date.is_some() {
-                task = set_task_model_inactive(model, Status::Paused);
-            } else {
-                task = set_task_model_inactive(model, Status::Todo);
-                task.actual_start_date = None;
-                task.elapsed_duration = 0;
-            }
-            save_task(task, &db).await
-        }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        Some(model) => set_task_model_inactive(model, Status::Todo, &db).await,
+        None => anyhow_tauri::bail!(not_found_message(task_id)),   
+    }
 }
 
 #[tauri::command]
@@ -311,7 +333,9 @@ pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
                 .execute(&db.pool)
                 .await
                 .map(|_|())
-                .into_ta_result()
+                .into_ta_result()?;
+
+            delete_work_history(&task_id, &db).await
         }
         None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
@@ -328,40 +352,7 @@ pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> TAResult<()> {
             existing_task.scheduled_complete_date =
                 task.scheduled_complete_date.map(|dt| dt.naive_utc());
             existing_task.estimated_duration = task.estimated_duration;
-            existing_task.actual_start_date = task.actual_start_date.map(|dt| dt.naive_utc());
-            existing_task.actual_complete_date = task.actual_complete_date.map(|dt| dt.naive_utc());
 
-            match model.status {
-                Status::Cancelled => {
-                    existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
-                }
-                Status::Doing => {
-                    if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
-                    }
-                    existing_task.actual_complete_date = None;
-                    existing_task = update_active_elapsed(existing_task, task.elapsed_duration);
-                }
-                Status::Done => {
-                    if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
-                    }
-                    existing_task.actual_complete_date = Some(Utc::now().naive_utc());
-                    existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
-                }
-                Status::Paused => {
-                    if let None = task.actual_start_date {
-                        existing_task.actual_start_date = Some(Utc::now().naive_utc());
-                    }
-                    existing_task.actual_complete_date = None;
-                    existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
-                }
-                Status::Todo => {
-                    existing_task.actual_start_date = None;
-                    existing_task.actual_complete_date = None;
-                    existing_task = update_inactive_elapsed(existing_task, task.elapsed_duration);
-                }
-            }
 
             save_task(existing_task, &db).await
         }
@@ -433,26 +424,20 @@ pub async fn delete_comment(id: i64, db: State<'_, Data>) -> TAResult<()> {
         .into_ta_result()
 }
 
-fn update_inactive_elapsed(mut task: Task, maybe_elapsed: Option<i64>) -> Task {
-    if let Some(elapsed) = maybe_elapsed {
-        task.elapsed_duration = elapsed;
-        task.last_resumed_date = None;
-    }
-
-    task
-}
-
-fn update_active_elapsed(mut task: Task, maybe_elapsed: Option<i64>) -> Task {
-    if let Some(elapsed) = maybe_elapsed {
-        task.elapsed_duration = elapsed;
-        task.last_resumed_date = Some(Utc::now().naive_utc());
-    }
-
-    task
-}
-
 fn not_found_message(task_id: i64) -> String {
     format!("Task with id '{}' not found.", task_id)
+}
+
+async fn delete_work_history(task_id: &i64, db: &State<'_, Data>) ->  TAResult<()> {
+    sqlx::query!(r#"
+        DELETE FROM task_work_history
+        WHERE task_work_history.task_id = ?
+    "#,
+    task_id)
+    .execute(&db.pool)
+    .await
+    .map(|_|())
+    .into_ta_result()
 }
 
 async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
@@ -463,11 +448,8 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
         status = ?,
         scheduled_start_date = ?,
         scheduled_complete_date = ?,
-        actual_start_date = ?,
-        actual_complete_date = ?,
         last_resumed_date = ?,
-        estimated_duration = ?,
-        elapsed_duration = ?
+        estimated_duration = ?
         WHERE tasks.id = ?
         "#,
         task.title,
@@ -475,11 +457,8 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
         task.status,
         task.scheduled_start_date,
         task.scheduled_complete_date,
-        task.actual_start_date,
-        task.actual_complete_date,
         task.last_resumed_date,
         task.estimated_duration,
-        task.elapsed_duration,
         task.id)
     .execute(&db.pool)
     .await
@@ -496,25 +475,37 @@ async fn find_task(task_id: i64, db: &State<'_, Data>) -> TAResult<Option<Task>>
 }
 
 /// Update the status when transitioning to an active state.
-fn set_task_model_active(model: Task, status: Status) -> Task {
-    let mut task = model.clone();
+async fn set_task_model_active(mut task: Task, status: Status, db: &State<'_, Data>) -> TAResult<()> {
     task.status = status;
     task.last_resumed_date = Some(Utc::now().naive_utc());
-    task
+    save_task(task, db).await
 }
 
 /// Update the status when transition to a paused or finished state.
-fn set_task_model_inactive(model: Task, status: Status) -> Task {
-    let mut task = model.clone();
+async fn set_task_model_inactive(mut task: Task, status: Status, db: &State<'_, Data>) -> TAResult<()> {
     task.status = status;
 
-    if let Some(last_resumed) = model.last_resumed_date {
-        let diff = Utc::now().naive_utc() - last_resumed;
-        task.elapsed_duration = model.elapsed_duration + diff.num_seconds();
+    if let Some(last_resumed) = task.last_resumed_date {
+        // Add an entry into the work history table.
+        
+        let now = Utc::now().naive_utc();
+        
+        sqlx::query!(r#"
+            INSERT INTO task_work_history (task_id, start_date, end_date) 
+            VALUES (?, ?, ?);
+        "#,
+        task.id,
+        last_resumed,
+        now)
+        .execute(&db.pool)
+        .await
+        .map(|_|())
+        .into_ta_result()?;
+
         task.last_resumed_date = None;
     }
 
-    task
+    save_task(task, db).await
 }
 
 #[tauri::command]
