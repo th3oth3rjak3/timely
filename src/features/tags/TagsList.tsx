@@ -226,6 +226,8 @@ function TagsList() {
               ? "white"
               : colorPalette.color
           }
+          minHeight={tags.length === 0 ? 200 : undefined}
+          noRecordsText="No Tags"
         />
       )}
       <Modal

@@ -1,6 +1,6 @@
 use super::models::Task;
 use anyhow_tauri::{IntoTAResult, TAResult};
-use chrono::{NaiveDateTime, Utc};
+use chrono::{NaiveDateTime, SubsecRound, Utc};
 use sqlx::QueryBuilder;
 use tauri::State;
 
@@ -214,6 +214,7 @@ pub async fn get_tasks(
             SELECT task_work_history.*
             FROM task_work_history
             WHERE task_work_history.task_id = ?
+            ORDER BY task_work_history.start_date DESC
         "#, 
         task.id)
         .fetch_all(&db.pool)
@@ -255,6 +256,7 @@ pub async fn get_tasks(
                         .map(|c| c.into())
                         .collect::<Vec<CommentRead>>(),
                     tags,
+                    work_history: history.into_iter().map(|hist| hist.into()).collect::<Vec<_>>(),
                 }
         })
         .collect();
@@ -302,7 +304,7 @@ pub async fn finish_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
 pub async fn cancel_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => {
-            delete_work_history(&model.id, &db).await?;
+            delete_work_history_by_task_id(&model.id, &db).await?;
             set_task_model_inactive(model, Status::Cancelled, &db).await
         }
         None => anyhow_tauri::bail!(not_found_message(task_id)),    
@@ -335,7 +337,7 @@ pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
                 .map(|_|())
                 .into_ta_result()?;
 
-            delete_work_history(&task_id, &db).await
+            delete_work_history_by_task_id(&task_id, &db).await
         }
         None => anyhow_tauri::bail!(not_found_message(task_id)),    }
 }
@@ -428,7 +430,7 @@ fn not_found_message(task_id: i64) -> String {
     format!("Task with id '{}' not found.", task_id)
 }
 
-async fn delete_work_history(task_id: &i64, db: &State<'_, Data>) ->  TAResult<()> {
+async fn delete_work_history_by_task_id(task_id: &i64, db: &State<'_, Data>) ->  TAResult<()> {
     sqlx::query!(r#"
         DELETE FROM task_work_history
         WHERE task_work_history.task_id = ?
@@ -487,8 +489,8 @@ async fn set_task_model_inactive(mut task: Task, status: Status, db: &State<'_, 
 
     if let Some(last_resumed) = task.last_resumed_date {
         // Add an entry into the work history table.
-        
-        let now = Utc::now().naive_utc();
+        let last_resumed = last_resumed.round_subsecs(0);
+        let now = Utc::now().naive_utc().round_subsecs(0);
         
         sqlx::query!(r#"
             INSERT INTO task_work_history (task_id, start_date, end_date) 
@@ -611,4 +613,54 @@ pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> TAResult<Tag> 
             .into_ta_result()
         }
     }
+}
+
+#[tauri::command]
+pub async fn add_task_work_history(new_task_work_history: NewTaskWorkHistory, db: State<'_, Data>) -> TAResult<()> {
+    let start_date = new_task_work_history.start_date.naive_utc().round_subsecs(0);
+    let end_date = new_task_work_history.end_date.naive_utc().round_subsecs(0);
+    sqlx::query!(r#"
+            INSERT INTO task_work_history (task_id, start_date, end_date)
+            VALUES (?, ?, ?)
+        "#,
+        new_task_work_history.task_id,
+        start_date,
+        end_date
+    )
+        .execute(&db.pool)
+        .await
+        .map(|_|())
+        .into_ta_result()
+}
+
+#[tauri::command]
+pub async fn delete_task_work_history(history_id: i64, db: State<'_, Data>) -> TAResult<()> {
+    sqlx::query!(r#"
+            DELETE FROM task_work_history
+            WHERE task_work_history.id = ?
+        "#,
+        history_id)
+        .execute(&db.pool)
+        .await
+        .map(|_|())
+        .into_ta_result()
+}
+
+#[tauri::command]
+pub async fn edit_task_work_history(edit_task_work_history: EditTaskWorkHistory, db: State<'_, Data>) -> TAResult<()> {
+    let start_date = edit_task_work_history.start_date.naive_utc().round_subsecs(0);
+    let end_date = edit_task_work_history.end_date.naive_utc().round_subsecs(0);
+    sqlx::query!(r#"
+        UPDATE task_work_history
+        SET start_date = ?,
+        end_date = ?
+        WHERE task_work_history.id = ?
+    "#,
+    start_date,
+    end_date,
+    edit_task_work_history.id)
+    .execute(&db.pool)
+    .await
+    .map(|_|())
+    .into_ta_result()
 }

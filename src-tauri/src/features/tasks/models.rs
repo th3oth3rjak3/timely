@@ -51,11 +51,53 @@ pub struct Task {
 }
 
 #[derive(Debug, Clone, FromRow, PartialEq)]
+
 pub struct TaskWorkHistory {
     pub id: i64,
     pub task_id: i64,
     pub start_date: NaiveDateTime,
     pub end_date: NaiveDateTime,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TaskWorkHistoryRead {
+    pub id: i64,
+    pub task_id: i64,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+    pub elapsed_duration: i64,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NewTaskWorkHistory {
+    pub task_id: i64,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+}
+
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EditTaskWorkHistory {
+    pub id: i64,
+    pub task_id: i64,
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+}
+
+impl From<TaskWorkHistory> for TaskWorkHistoryRead {
+    fn from(value: TaskWorkHistory) -> Self {
+        let delta = value.end_date - value.start_date;
+        
+        Self {
+            id: value.id,
+            task_id: value.task_id,
+            start_date: value.start_date.and_utc(),
+            end_date: value.end_date.and_utc(),
+            elapsed_duration: delta.num_seconds()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -74,6 +116,7 @@ pub struct TaskRead {
     pub elapsed_duration: i64,
     pub comments: Vec<CommentRead>,
     pub tags: Vec<Tag>,
+    pub work_history: Vec<TaskWorkHistoryRead>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

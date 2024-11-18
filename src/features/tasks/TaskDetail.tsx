@@ -1,5 +1,13 @@
 import { Grid, Group, Textarea, TextInput } from "@mantine/core";
-import { IconArrowBackUp, IconCancel, IconCheck, IconEdit, IconPlayerPauseFilled, IconPlayerPlayFilled, IconTrash } from "@tabler/icons-react";
+import {
+  IconArrowBackUp,
+  IconCancel,
+  IconCheck,
+  IconEdit,
+  IconPlayerPauseFilled,
+  IconPlayerPlayFilled,
+  IconTrash,
+} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
@@ -7,6 +15,7 @@ import { UserSettings } from "../settings/UserSettings";
 import { Tag } from "../tags/types/Tag";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
+import TaskWorkHistoryDetails from "./TaskWorkHistoryDetails";
 import { Task } from "./types/Task";
 
 export type TaskDetailParams = {
@@ -24,6 +33,7 @@ export type TaskDetailParams = {
   onDeleted: (task: Task) => void;
   onCommentChanged: () => void;
   onTagsChanged: () => void;
+  onHistoryChanged: () => void;
 };
 
 /**
@@ -279,6 +289,12 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         <CommentDetails
           task={props.task}
           onCommentChanged={props.onCommentChanged}
+        />
+      </Grid.Col>
+      <Grid.Col span={12}>
+        <TaskWorkHistoryDetails
+          task={props.task}
+          onHistoryChanged={props.onHistoryChanged}
         />
       </Grid.Col>
       <Grid.Col span={12}>

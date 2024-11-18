@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+
 export interface TimeSpanLike {
   seconds: number;
 }
@@ -11,6 +13,7 @@ export class TimeSpan extends Object {
   private _minutes: number = 0;
   private _seconds: number = 0;
   private _totalSeconds: number = 0;
+  private _isNegative: boolean = false;
 
   private static minute = 60;
   private static hour = TimeSpan.minute * 60;
@@ -18,8 +21,9 @@ export class TimeSpan extends Object {
 
   private constructor(seconds: number) {
     super();
-    this._seconds = seconds;
-    this._totalSeconds = seconds;
+    this._isNegative = seconds < 0;
+    this._seconds = Math.abs(seconds);
+    this._totalSeconds = Math.abs(seconds);
     this.initialize();
   }
 
@@ -59,6 +63,10 @@ export class TimeSpan extends Object {
   static fromMinutes(minutes: number): TimeSpan {
     const seconds = Math.round(minutes * TimeSpan.minute);
     return new TimeSpan(seconds);
+  }
+
+  static fromDates(start: Date, end: Date): TimeSpan {
+    return TimeSpan.fromSeconds(dayjs(end).diff(start, "second"));
   }
 
   private initialize() {
@@ -110,6 +118,7 @@ export class TimeSpan extends Object {
 
   override toString(): string {
     let displayValue: string;
+    const sign = this._isNegative ? "-" : "";
 
     /** Pad the number with leading zeroes for a width of 2. e.g.: 1 becomes '01' */
     const padded = (value: number): string => value.toString().padStart(2, "0");
@@ -128,7 +137,7 @@ export class TimeSpan extends Object {
       displayValue = `${padded(this.seconds)}s`;
     }
 
-    return displayValue;
+    return sign + displayValue;
   }
 
   toJSON(): TimeSpanLike {

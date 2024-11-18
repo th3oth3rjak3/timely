@@ -11,6 +11,10 @@ import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
 import { Task } from "./types/Task";
 
+// TODO: this comment details component has issues with the errors being displayed
+// for the user input values on the new and edit forms.
+// See the TaskWorkHistoryDetails component for proper implementation.
+
 type Props = {
   task: Task;
   onCommentChanged: () => void;

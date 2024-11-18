@@ -20,4 +20,7 @@ export enum TimelyAction {
   EditSettings = "Edit Settings",
   EditTask = "Edit Task",
   TimerElapsed = "Timer Elapsed",
+  AddNewWorkHistory = "Add New Work History",
+  EditWorkHistory = "Edit Work History",
+  DeleteWorkHistory = "Delete Work History",
 }

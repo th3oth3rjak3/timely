@@ -146,6 +146,7 @@ function TaskList() {
       estimatedDuration: null,
       tags: [],
       comments: [],
+      workHistory: [],
       elapsedDuration: 0,
     },
   });
@@ -605,10 +606,13 @@ function TaskList() {
                   onDeleted={deleteTask}
                   onCommentChanged={fetchAllData}
                   onTagsChanged={fetchAllData}
+                  onHistoryChanged={fetchAllData}
                 />
               );
             },
           }}
+          minHeight={tasks.length === 0 ? 200 : undefined}
+          noRecordsText="No Tasks"
           paginationSize="xs"
         />
       )}
@@ -760,6 +764,7 @@ function TaskList() {
               label="Started On"
               key={editForm.key("actualStartDate")}
               {...editForm.getInputProps("actualStartDate")}
+              readOnly={true}
             />
             <DateInput
               valueFormat="MM/DD/YYYY"
@@ -773,6 +778,7 @@ function TaskList() {
               label="Finished On"
               key={editForm.key("actualCompleteDate")}
               {...editForm.getInputProps("actualCompleteDate")}
+              readOnly={true}
             />
             <NumberInput
               label="Estimated Duration"
@@ -787,6 +793,7 @@ function TaskList() {
               {...editForm.getInputProps("elapsedDuration")}
               suffix=" hour(s)"
               decimalScale={1}
+              readOnly={true}
             />
             <TagsInput
               label="Tags"
