@@ -18,7 +18,7 @@ import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { TimeSpan } from "../../models/TimeSpan";
 import { useAppSelector } from "../../redux/hooks";
-import { getDayProps } from "../../utilities/dateUtilities";
+import { getDayOnlyProps } from "../../utilities/dateUtilities";
 import useWorkHistoryService from "./hooks/useWorkHistoryService";
 import {
   EditTaskWorkHistory,
@@ -271,7 +271,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="Start Date"
               {...newWorkHistoryForm.getInputProps("startDate")}
               key={newWorkHistoryForm.key("startDate")}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 newWorkHistoryForm.getValues().startDate,
                 colorPalette
               )}
@@ -282,7 +282,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="End Date"
               {...newWorkHistoryForm.getInputProps("endDate")}
               key={newWorkHistoryForm.key("endDate")}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 newWorkHistoryForm.getValues().endDate,
                 colorPalette
               )}
@@ -320,7 +320,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="Start Date"
               {...editWorkHistoryForm.getInputProps("startDate")}
               key={editWorkHistoryForm.key("startDate")}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editWorkHistoryForm.getValues().startDate,
                 colorPalette
               )}
@@ -331,7 +331,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="End Date"
               {...editWorkHistoryForm.getInputProps("endDate")}
               key={editWorkHistoryForm.key("endDate")}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editWorkHistoryForm.getValues().endDate,
                 colorPalette
               )}

@@ -37,16 +37,16 @@ export const getDayRangeProps =
     return {};
   };
 
-export const getDayProps =
-  (existing: Date | null, colorPalette: ColorPalette) => (day?: Date) => {
-    if (dayjs(existing).isSame(day)) {
-      return {
-        style: {
-          background: colorPalette?.background,
-          color: colorPalette?.color,
-        },
-      };
-    }
+  export const getDayOnlyProps =
+    (existing: Date | null, colorPalette: ColorPalette) => (day?: Date) => {
+      if (dayjs(existing).isSame(day, "day")) {
+        return {
+          style: {
+            background: colorPalette?.background,
+            color: colorPalette?.color,
+          },
+        };
+      }
 
-    return {};
-  };
+      return {};
+    };

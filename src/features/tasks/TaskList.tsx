@@ -45,7 +45,7 @@ import {
   setTaskSortStatus,
 } from "../../redux/reducers/settingsSlice.ts";
 import {
-  getDayProps,
+  getDayOnlyProps,
   maybeDate,
   maybeFormattedDate,
 } from "../../utilities/dateUtilities.ts";
@@ -649,7 +649,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={dayjs()}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 newForm.getValues().scheduledStartDate,
                 colorPalette
               )}
@@ -662,7 +662,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={dayjs()}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 newForm.getValues().scheduledCompleteDate,
                 colorPalette
               )}
@@ -731,7 +731,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().scheduledStartDate}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editForm.getValues().scheduledStartDate,
                 colorPalette
               )}
@@ -744,7 +744,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().scheduledCompleteDate}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editForm.getValues().scheduledCompleteDate,
                 colorPalette
               )}
@@ -757,7 +757,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualStartDate}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editForm.getValues().actualStartDate,
                 colorPalette
               )}
@@ -771,7 +771,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualCompleteDate}
-              getDayProps={getDayProps(
+              getDayProps={getDayOnlyProps(
                 editForm.getValues().actualCompleteDate,
                 colorPalette
               )}
