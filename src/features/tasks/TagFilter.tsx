@@ -1,15 +1,29 @@
-import { Group, Modal, Select, Stack, TagsInput } from "@mantine/core";
+import {
+  Group,
+  Modal,
+  Radio,
+  Select,
+  Stack,
+  TagsInput,
+  Tooltip,
+} from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconFilter, IconFilterFilled } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
+import useColorPalette from "../../hooks/useColorPalette";
 import { useAppSelector } from "../../redux/hooks";
 import { Tag } from "../tags/types/Tag";
 
 export type TagFilterProps = {
   tagOptions: Tag[];
-  onFilter: (tags: Tag[] | null) => void;
+  onFilter: (selections: TagFilterSelection) => void;
+};
+
+export type TagFilterSelection = {
+  tags: Tag[] | null;
+  tagOperation: string | null;
 };
 
 function TagFilter(props: TagFilterProps) {
@@ -20,10 +34,14 @@ function TagFilter(props: TagFilterProps) {
     (state) => state.settings.taskListSettings.params.tags
   );
 
+  const colorPalette = useColorPalette();
+
   const [errors, setErrors] = useState({
     tags: "",
     options: "",
   });
+
+  const [tagOperation, setTagOperation] = useState<string>("All");
 
   const isFiltered = useMemo(() => {
     return globalTags !== null;
@@ -47,7 +65,7 @@ function TagFilter(props: TagFilterProps) {
     tagFilter.close();
     setSelectedTags(null);
     setFilterOption("Untagged");
-    props.onFilter(null);
+    props.onFilter({ tags: null, tagOperation: null });
   }
 
   const isValid = useMemo(() => {
@@ -73,7 +91,7 @@ function TagFilter(props: TagFilterProps) {
         ? props.tagOptions.filter((t) => selectedTags?.includes(t.value))
         : [];
     tagFilter.close();
-    props.onFilter(tags);
+    props.onFilter({ tags, tagOperation });
   }
 
   return (
@@ -106,13 +124,31 @@ function TagFilter(props: TagFilterProps) {
             error={errors["options"]}
           />
           {filterOption === "Tagged" ? (
-            <TagsInput
-              label="Selected Tags"
-              data={props.tagOptions?.map((opt) => opt.value)}
-              value={selectedTags ?? undefined}
-              onChange={(tags) => setSelectedTags(tags)}
-              error={errors["tags"]}
-            />
+            <>
+              <TagsInput
+                label="Selected Tags"
+                data={props.tagOptions?.map((opt) => opt.value)}
+                value={selectedTags ?? undefined}
+                onChange={(tags) => setSelectedTags(tags)}
+                error={errors["tags"]}
+              />
+              <Radio.Group value={tagOperation} onChange={setTagOperation}>
+                <Group>
+                  <Tooltip
+                    label="Tasks with any of the selected tags"
+                    color={colorPalette.colorName}
+                  >
+                    <Radio label="Any" value="Any"></Radio>
+                  </Tooltip>
+                  <Tooltip
+                    label="Tasks with all of the selected tags"
+                    color={colorPalette.colorName}
+                  >
+                    <Radio label="All" value="All"></Radio>
+                  </Tooltip>
+                </Group>
+              </Radio.Group>
+            </>
           ) : null}
           <Group justify="center">
             <StyledButton

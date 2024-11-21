@@ -1,5 +1,6 @@
 import { AppShell, Group, ScrollArea, Text } from "@mantine/core";
 import {
+  IconChevronsLeft,
   IconMaximize,
   IconMenu3,
   IconMinimize,
@@ -67,7 +68,7 @@ function MainLayout() {
             tooltipLabel={navOpened ? "Close Menu" : "Open Menu"}
             tooltipPosition="right"
           >
-            {navOpened ? <IconX /> : <IconMenu3 />}
+            {navOpened ? <IconChevronsLeft /> : <IconMenu3 />}
           </StyledActionIcon>
           <Group
             justify="space-between"

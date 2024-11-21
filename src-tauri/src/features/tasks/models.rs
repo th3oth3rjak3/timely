@@ -260,9 +260,16 @@ pub struct TaskSearchParams {
     pub query_string: Option<String>,
     pub statuses: Vec<String>,
     pub tags: Option<Vec<String>>,
+    pub tag_operation: Option<TagOperation>,
     pub ordering: Ordering,
     pub start_by_filter: Option<DateFilter>,
     pub due_by_filter: Option<DateFilter>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum TagOperation {
+    Any,
+    All,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

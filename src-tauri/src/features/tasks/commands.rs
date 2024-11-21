@@ -1,3 +1,5 @@
+use std::convert;
+
 use super::models::Task;
 use anyhow_tauri::{IntoTAResult, TAResult};
 use chrono::{NaiveDateTime, SubsecRound, Utc};
@@ -101,6 +103,17 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
                 }
             }
             builder.push(")");
+        }
+
+        if let Some(TagOperation::All) = &params.tag_operation {
+            let tag_count: i32 = tags
+                .len()
+                .try_into()
+                .expect("The list of filtered tags should never be greater than i32::MAX");
+
+            builder
+            .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
+            .push_bind(tag_count);
         }
     }
 

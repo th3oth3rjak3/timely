@@ -524,12 +524,13 @@ function TaskList() {
         <Group>
           <TagFilter
             tagOptions={tagOptions}
-            onFilter={(tags) =>
+            onFilter={(selection) =>
               dispatch(
                 setTaskSearchParams({
                   ...taskSearchParams,
                   page: 1,
-                  tags: tags?.map((t) => t.value) ?? null,
+                  tags: selection.tags?.map((t) => t.value) ?? null,
+                  tagOperation: selection.tagOperation,
                 })
               )
             }
