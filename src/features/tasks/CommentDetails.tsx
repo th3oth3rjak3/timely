@@ -1,5 +1,6 @@
-import { Group, Stack, Text, Textarea } from "@mantine/core";
+import { Group, Modal, Stack, Text, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
+import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -10,10 +11,6 @@ import { useAppSelector } from "../../redux/hooks";
 import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
 import { Task } from "./types/Task";
-
-// TODO: this comment details component has issues with the errors being displayed
-// for the user input values on the new and edit forms.
-// See the TaskWorkHistoryDetails component for proper implementation.
 
 type Props = {
   task: Task;
@@ -27,11 +24,16 @@ function CommentDetails(props: Props) {
   const { addComment, editComment, deleteComment } =
     useCommentService(userSettings);
 
+  const [editModalOpened, editModalActions] = useDisclosure(false);
+  const [newModalOpened, newModalActions] = useDisclosure(false);
+
   const newCommentForm = useForm({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       comment: "",
     },
+    validateInputOnBlur: true,
+    validateInputOnChange: true,
     validate: {
       comment: (comment) =>
         !!comment && comment !== null && comment.trim().length > 0
@@ -41,11 +43,13 @@ function CommentDetails(props: Props) {
   });
 
   const editCommentForm = useForm({
-    mode: "uncontrolled",
+    mode: "controlled",
     initialValues: {
       comment: "",
       id: -1,
     },
+    validateInputOnBlur: true,
+    validateInputOnChange: true,
     validate: {
       comment: (comment) =>
         !!comment && comment !== null && comment.trim().length > 0
@@ -54,62 +58,9 @@ function CommentDetails(props: Props) {
     },
   });
 
-  const openNewCommentModal = () =>
-    modals.open({
-      title: "Add New Comment",
-      onClose: () => newCommentForm.reset(),
-      closeOnClickOutside: false,
-      closeOnEscape: false,
-      children: (
-        <form onSubmit={newCommentForm.onSubmit(addNewComment)}>
-          <Stack>
-            <Textarea
-              label="Comment"
-              {...newCommentForm.getInputProps("comment")}
-              key={newCommentForm.key("comment")}
-              autosize
-              maxRows={10}
-            />
-            <Group>
-              <StyledButton
-                type="submit"
-                label="Save"
-                tooltipLabel="Save Comment"
-              />
-            </Group>
-          </Stack>
-        </form>
-      ),
-    });
-
   const openEditCommentModal = (comment: Comment) => {
     editCommentForm.setValues({ comment: comment.message, id: comment.id });
-    modals.open({
-      title: "Edit Comment",
-      onClose: () => editCommentForm.reset(),
-      closeOnClickOutside: false,
-      closeOnEscape: false,
-      children: (
-        <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
-          <Stack>
-            <Textarea
-              label="Comment"
-              {...editCommentForm.getInputProps("comment")}
-              key={editCommentForm.key("comment")}
-              autosize
-              maxRows={10}
-            />
-            <Group>
-              <StyledButton
-                type="submit"
-                label="Save"
-                tooltipLabel="Save Comment"
-              />
-            </Group>
-          </Stack>
-        </form>
-      ),
-    });
+    editModalActions.open();
   };
 
   const openDeleteModal = (comment: Comment) =>
@@ -131,15 +82,15 @@ function CommentDetails(props: Props) {
     });
 
   async function addNewComment(values: typeof newCommentForm.values) {
-    modals.closeAll();
     newCommentForm.reset();
+    newModalActions.close();
     await addComment(props.task.id, values.comment);
     props.onCommentChanged();
   }
 
   async function editExistingComment(comment: typeof editCommentForm.values) {
-    modals.closeAll();
     editCommentForm.reset();
+    editModalActions.close();
     await editComment(comment.id, comment.comment);
     props.onCommentChanged();
   }
@@ -190,7 +141,7 @@ function CommentDetails(props: Props) {
         <Text size="sm">Comments</Text>
         <StyledActionIcon
           size="xs"
-          onClick={() => openNewCommentModal()}
+          onClick={newModalActions.open}
           tooltipLabel="Add Comment"
           tooltipPosition="right"
         >
@@ -202,6 +153,58 @@ function CommentDetails(props: Props) {
       ) : (
         props.task.comments.map((comment) => commentRow(comment))
       )}
+      <Modal
+        opened={newModalOpened}
+        onClose={newModalActions.close}
+        title="Add New Comment"
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+      >
+        <form onSubmit={newCommentForm.onSubmit(addNewComment)}>
+          <Stack>
+            <Textarea
+              label="Comment"
+              {...newCommentForm.getInputProps("comment")}
+              key={newCommentForm.key("comment")}
+              autosize
+              maxRows={10}
+            />
+            <Group>
+              <StyledButton
+                type="submit"
+                label="Save"
+                tooltipLabel="Save Comment"
+              />
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
+      <Modal
+        opened={editModalOpened}
+        onClose={editModalActions.close}
+        title="Edit Comment"
+        closeOnClickOutside={false}
+        closeOnEscape={false}
+      >
+        <form onSubmit={editCommentForm.onSubmit(editExistingComment)}>
+          <Stack>
+            <Textarea
+              label="Comment"
+              {...editCommentForm.getInputProps("comment")}
+              key={editCommentForm.key("comment")}
+              autosize
+              maxRows={10}
+            />
+            <Group>
+              <StyledButton
+                type="submit"
+                label="Save"
+                tooltipLabel="Save Comment"
+              />
+            </Group>
+          </Stack>
+        </form>
+      </Modal>
     </Stack>
   );
 }
