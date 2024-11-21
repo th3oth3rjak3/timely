@@ -89,3 +89,9 @@ pub struct Ordering {
     pub order_by: String,
     pub sort_direction: SortDirection,
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub enum FilterOption {
+    Any,
+    All,
+}

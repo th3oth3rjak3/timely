@@ -23,11 +23,11 @@ export type TagFilterProps = {
 
 export type TagFilterSelection = {
   tags: Tag[] | null;
-  tagOperation: string | null;
+  tagFilter: string | null;
 };
 
 function TagFilter(props: TagFilterProps) {
-  const [isOpen, tagFilter] = useDisclosure(false);
+  const [isOpen, tagFilterActions] = useDisclosure(false);
   const [selectedTags, setSelectedTags] = useState<string[] | null>(null);
   const [filterOption, setFilterOption] = useState<string | null>("Untagged");
   const globalTags = useAppSelector(
@@ -41,7 +41,7 @@ function TagFilter(props: TagFilterProps) {
     options: "",
   });
 
-  const [tagOperation, setTagOperation] = useState<string>("All");
+  const [tagFilter, setTagFilter] = useState<string>("All");
 
   const isFiltered = useMemo(() => {
     return globalTags !== null;
@@ -62,10 +62,10 @@ function TagFilter(props: TagFilterProps) {
   };
 
   function handleClearFilters() {
-    tagFilter.close();
+    tagFilterActions.close();
     setSelectedTags(null);
     setFilterOption("Untagged");
-    props.onFilter({ tags: null, tagOperation: null });
+    props.onFilter({ tags: null, tagFilter: null });
   }
 
   const isValid = useMemo(() => {
@@ -90,14 +90,14 @@ function TagFilter(props: TagFilterProps) {
       filterOption === "Tagged"
         ? props.tagOptions.filter((t) => selectedTags?.includes(t.value))
         : [];
-    tagFilter.close();
-    props.onFilter({ tags, tagOperation });
+    tagFilterActions.close();
+    props.onFilter({ tags, tagFilter });
   }
 
   return (
     <Stack>
       <StyledActionIcon
-        onClick={() => tagFilter.open()}
+        onClick={() => tagFilterActions.open()}
         tooltipLabel="Filter By Tags"
         tooltipPosition="left"
       >
@@ -106,7 +106,7 @@ function TagFilter(props: TagFilterProps) {
       <Modal
         title="Filter By Tags"
         opened={isOpen}
-        onClose={() => tagFilter.close()}
+        onClose={() => tagFilterActions.close()}
         closeOnClickOutside={false}
         closeOnEscape={false}
       >
@@ -132,7 +132,7 @@ function TagFilter(props: TagFilterProps) {
                 onChange={(tags) => setSelectedTags(tags)}
                 error={errors["tags"]}
               />
-              <Radio.Group value={tagOperation} onChange={setTagOperation}>
+              <Radio.Group value={tagFilter} onChange={setTagFilter}>
                 <Group>
                   <Tooltip
                     label="Tasks with any of the selected tags"

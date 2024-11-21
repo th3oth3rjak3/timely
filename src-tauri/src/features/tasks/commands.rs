@@ -1,5 +1,3 @@
-use std::convert;
-
 use super::models::Task;
 use anyhow_tauri::{IntoTAResult, TAResult};
 use chrono::{NaiveDateTime, SubsecRound, Utc};
@@ -7,7 +5,7 @@ use sqlx::QueryBuilder;
 use tauri::State;
 
 use crate::{
-    features::tags::Tag, Data, PagedData, SortDirection
+    features::tags::Tag, Data, FilterOption, PagedData, SortDirection
 };
 
 use super::*;
@@ -105,7 +103,7 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             builder.push(")");
         }
 
-        if let Some(TagOperation::All) = &params.tag_operation {
+        if let Some(FilterOption::All) = &params.tag_filter {
             let tag_count: i32 = tags
                 .len()
                 .try_into()

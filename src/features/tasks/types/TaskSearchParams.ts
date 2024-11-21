@@ -10,7 +10,7 @@ export type TaskSearchParams = {
   ordering: { orderBy: string; sortDirection: SortDirection } | null;
   statuses: TaskStatus[];
   tags: string[] | null;
-  tagOperation: string | null;
+  tagFilter: string | null;
   startByFilter: DateRangeFilter | null;
   dueByFilter: DateRangeFilter | null;
 };
@@ -25,7 +25,7 @@ export function taskSearchParams(
   sortDirection?: string,
   startByFilter?: DateRangeFilter,
   dueByFilter?: DateRangeFilter,
-  tagOperation?: string
+  tagFilter?: string
 ): TaskSearchParams {
   return {
     page,
@@ -36,7 +36,7 @@ export function taskSearchParams(
       sortDirection ?? "asc"
     ).serialize(),
     tags: tags ?? null,
-    tagOperation: tagOperation ?? null,
+    tagFilter: tagFilter ?? null,
     queryString: !!queryString && queryString.length > 0 ? queryString : null,
     startByFilter: startByFilter ?? null,
     dueByFilter: dueByFilter ?? null,

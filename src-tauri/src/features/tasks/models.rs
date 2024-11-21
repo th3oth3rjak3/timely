@@ -2,7 +2,7 @@ use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use timely_macros::EnumFromString;
-use crate::{features::tags::Tag, Ordering};
+use crate::{features::tags::Tag, FilterOption, Ordering};
 
 /// The status of a task.
 #[derive(
@@ -260,16 +260,10 @@ pub struct TaskSearchParams {
     pub query_string: Option<String>,
     pub statuses: Vec<String>,
     pub tags: Option<Vec<String>>,
-    pub tag_operation: Option<TagOperation>,
+    pub tag_filter: Option<FilterOption>,
     pub ordering: Ordering,
     pub start_by_filter: Option<DateFilter>,
     pub due_by_filter: Option<DateFilter>,
-}
-
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub enum TagOperation {
-    Any,
-    All,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -530,7 +530,7 @@ function TaskList() {
                   ...taskSearchParams,
                   page: 1,
                   tags: selection.tags?.map((t) => t.value) ?? null,
-                  tagOperation: selection.tagOperation,
+                  tagFilter: selection.tagFilter,
                 })
               )
             }
