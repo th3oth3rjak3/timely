@@ -11,7 +11,11 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import {
+  useDebouncedValue,
+  useDisclosure,
+  useMediaQuery,
+} from "@mantine/hooks";
 import {
   IconArrowBackUp,
   IconCancel,
@@ -89,6 +93,19 @@ function TaskList() {
   const editTags = useMemo(() => {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
+
+  const [searchQuery, setSearchQuery] = useState(taskSearchParams.queryString);
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 400);
+
+  useEffect(() => {
+    dispatch(
+      setTaskSearchParams({
+        ...taskSearchParams,
+        page: 1,
+        queryString: debouncedSearchQuery,
+      })
+    );
+  }, [debouncedSearchQuery]);
 
   /** An app store dispatch function to update store values. */
   const dispatch = useAppDispatch();
@@ -183,13 +200,14 @@ function TaskList() {
   }
 
   function updateDescriptionQuery(value: string | null) {
-    dispatch(
-      setTaskSearchParams({
-        ...taskSearchParams,
-        page: 1,
-        queryString: value ?? null,
-      })
-    );
+    setSearchQuery(value);
+    // dispatch(
+    //   setTaskSearchParams({
+    //     ...taskSearchParams,
+    //     page: 1,
+    //     queryString: value ?? null,
+    //   })
+    // );
   }
 
   function updateSelectedStatuses(statuses: string[]) {
@@ -432,7 +450,7 @@ function TaskList() {
               <IconX size={14} />
             </StyledActionIcon>
           }
-          value={taskSearchParams.queryString || ""}
+          value={searchQuery || ""}
           onChange={(e) => updateDescriptionQuery(e.currentTarget.value)}
         />
       ),

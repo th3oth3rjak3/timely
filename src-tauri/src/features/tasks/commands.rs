@@ -68,8 +68,8 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 
     if let Some(query) = &params.query_string {
         builder
-            .push(" AND (tasks.title LIKE ").push_bind(format!("'%{}%'", query))
-            .push(" OR tasks.description LIKE ").push_bind(format!("'%{}%'", query))
+            .push(" AND (tasks.title LIKE ").push(format!("'%{}%'", query))
+            .push(" OR tasks.description LIKE ").push(format!("'%{}%'", query))
             .push(") ");
     }
 
@@ -101,18 +101,20 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
                 }
             }
             builder.push(")");
+
+            if let Some(FilterOption::All) = &params.tag_filter {
+                let tag_count: i32 = tags
+                    .len()
+                    .try_into()
+                    .expect("The list of filtered tags should never be greater than i32::MAX");
+    
+                builder
+                .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
+                .push_bind(tag_count);
+            }
         }
 
-        if let Some(FilterOption::All) = &params.tag_filter {
-            let tag_count: i32 = tags
-                .len()
-                .try_into()
-                .expect("The list of filtered tags should never be greater than i32::MAX");
 
-            builder
-            .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
-            .push_bind(tag_count);
-        }
     }
 
     match params.ordering.sort_direction {
@@ -133,6 +135,8 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             _ => &mut builder
         },
     };
+
+    // println!("{}", &builder.sql());
 
     builder
 }
