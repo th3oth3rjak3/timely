@@ -44,6 +44,33 @@ const useTaskService = (
     return findLastPage(recordCount - 1, taskSearchParams.pageSize);
   }, [recordCount, taskSearchParams]);
 
+  const pageShouldChangeAfterDeleteMany = (
+    tasks: TaskLike[],
+    recordCount: number,
+    taskSearchParams: TaskSearchParams
+  ): boolean => {
+    const remainder = recordCount % taskSearchParams.pageSize;
+    return remainder < tasks.length && taskSearchParams.page > 1;
+  };
+
+  const handleDeleteManyDataFetch =
+    (tasks: TaskLike[], callback: () => void): (() => Promise<void>) =>
+    async () => {
+      if (
+        pageShouldChangeAfterDeleteMany(tasks, recordCount, taskSearchParams)
+      ) {
+        const lastPage = findLastPage(
+          recordCount - tasks.length,
+          taskSearchParams.pageSize
+        );
+        dispatch(setCurrentTaskPage(lastPage));
+      } else {
+        await fetchAllData?.();
+      }
+
+      callback();
+    };
+
   const handleDataFetch =
     (task: TaskLike, action: TimelyAction): (() => Promise<void>) =>
     async () => {
@@ -279,6 +306,42 @@ const useTaskService = (
     });
   };
 
+  /** Delete many tasks.
+   * @param tasks - The tasks to be deleted.
+   * @param callback - a callback function to be called after deletion.
+   */
+  const deleteManyTasks = async (tasks: Task[], callback: () => void) => {
+    modals.openConfirmModal({
+      title: "Delete Tasks",
+      children: (
+        <Text>{`Are you sure you want to delete ${tasks.length} task${
+          tasks.length == 1 ? "" : "s"
+        }?`}</Text>
+      ),
+      confirmProps: {
+        variant: colorPalette.variant,
+        color: "red",
+        gradient: { ...colorPalette.gradient, from: "red" },
+      },
+      cancelProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
+      onConfirm: async () =>
+        await invoke<void>({
+          command: "delete_many_tasks",
+          params: { taskIds: tasks.map((t) => t.id) },
+          successMessage: "Task deleted successfully.",
+          notificationType: TimelyAction.DeleteTask,
+          userSettings,
+          callback: handleDeleteManyDataFetch(tasks, callback),
+        }),
+    });
+  };
+
   /** Edit a task.
    * @param previousTask - The previous version of the same task before it was edited to make data comparisons.
    * @param task - The updated task to save.
@@ -320,6 +383,7 @@ const useTaskService = (
     restoreTask,
     reopenTask,
     deleteTask,
+    deleteManyTasks,
   };
 };
 

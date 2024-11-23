@@ -6,11 +6,13 @@ import {
   IconPlus,
   IconSearch,
   IconTrash,
+  IconTrashX,
   IconX,
 } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useState } from "react";
+
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
@@ -39,6 +41,9 @@ function TagsList() {
   const sortStatus = useAppSelector(
     (state) => state.settings.tagListSettings.sortStatus
   );
+  const page = useAppSelector(
+    (state) => state.settings.tagListSettings.params.page
+  );
   const [loading, setLoading] = useState(true);
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
@@ -49,9 +54,11 @@ function TagsList() {
   const [newFormOpened, newFormActions] = useDisclosure(false);
   const [editFormOpened, editFormActions] = useDisclosure(false);
 
+  const [selectedRecords, setSelectedRecords] = useState<Tag[]>([]);
+
   const { showContextMenu, hideContextMenu } = useContextMenu();
   const dispatch = useAppDispatch();
-  const { deleteTag, createNewTag, editTag } = useTagService(
+  const { deleteTag, deleteManyTags, createNewTag, editTag } = useTagService(
     userSettings,
     colorPalette,
     recordCount,
@@ -61,6 +68,13 @@ function TagsList() {
   useEffect(() => {
     fetchTags().then(() => setLoading(false));
   }, [tagSearchParams]);
+
+  // Clear the selected records when the page changes
+  // so that the user doesn't have hidden records on another page that they
+  // don't know about or can't clear easily.
+  useEffect(() => {
+    setSelectedRecords([]);
+  }, [page, pageSize]);
 
   const validators = {
     value: (value?: string | null) =>
@@ -149,6 +163,10 @@ function TagsList() {
     await editTag(updatedItem);
   };
 
+  async function deleteSelectedTags() {
+    await deleteManyTags(selectedRecords, () => setSelectedRecords([]));
+  }
+
   const columns = [
     {
       accessor: "value",
@@ -186,6 +204,15 @@ function TagsList() {
       <Group justify="space-between">
         <Text size="xl">Tags</Text>
         <Group>
+          {selectedRecords.length > 0 ? (
+            <StyledActionIcon
+              onClick={deleteSelectedTags}
+              tooltipLabel="Delete Selected Tags"
+              tooltipPosition="left"
+            >
+              <IconTrashX />
+            </StyledActionIcon>
+          ) : null}
           <StyledActionIcon
             onClick={() => newFormActions.open()}
             tooltipLabel="Create New Tag"
@@ -228,6 +255,8 @@ function TagsList() {
           }
           minHeight={tags.length === 0 ? 200 : undefined}
           noRecordsText="No Tags"
+          selectedRecords={selectedRecords}
+          onSelectedRecordsChange={setSelectedRecords}
         />
       )}
       <Modal

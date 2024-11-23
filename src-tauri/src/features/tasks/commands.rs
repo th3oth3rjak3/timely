@@ -5,7 +5,7 @@ use sqlx::QueryBuilder;
 use tauri::State;
 
 use crate::{
-    features::tags::Tag, Data, FilterOption, PagedData, SortDirection
+    features::tags::Tag, query_utils::add_in_expression, Data, FilterOption, PagedData, SortDirection
 };
 
 use super::*;
@@ -57,14 +57,8 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 
     builder.push(" WHERE 1=1 ");
 
-    builder.push(" AND tasks.status IN (");
-    for (i, status) in params.statuses.iter().enumerate() {
-        builder.push_bind(status);
-        if i < params.statuses.len() - 1 {
-            builder.push(",");
-        }
-    }
-    builder.push(")");
+    builder.push(" AND tasks.status ");
+    add_in_expression(&mut builder, &params.statuses);
 
     if let Some(query) = &params.query_string {
         builder
@@ -93,14 +87,9 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
         if tags.is_empty() {
             builder.push(" AND task_tags.task_id IS NULL ");
         } else {
-            builder.push(" AND tags.value IN (");
-            for (i, tag) in tags.iter().enumerate() {
-                builder.push_bind(tag);
-                if i < tags.len() - 1 {
-                    builder.push(",");
-                }
-            }
-            builder.push(")");
+            builder.push(" AND tags.value ");
+
+            add_in_expression(&mut builder, tags);
 
             if let Some(FilterOption::All) = &params.tag_filter {
                 let tag_count: i32 = tags
@@ -353,6 +342,19 @@ pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
             delete_work_history_by_task_id(&task_id, &db).await
         }
         None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+}
+
+#[tauri::command]
+pub async fn delete_many_tasks(task_ids: Vec<i64>, db: State<'_, Data>) -> TAResult<()> {
+    let mut builder = QueryBuilder::new("DELETE FROM tasks WHERE tasks.id");
+    add_in_expression(&mut builder, &task_ids);
+
+    builder
+        .build()
+        .execute(&db.pool)
+        .await
+        .map(|_|())
+        .into_ta_result()
 }
 
 #[tauri::command]

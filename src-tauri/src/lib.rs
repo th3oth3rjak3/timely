@@ -1,6 +1,7 @@
 pub mod data_access;
 pub mod features;
 pub mod models;
+pub mod query_utils;
 
 use data_access::*;
 use models::*;
@@ -25,6 +26,7 @@ pub fn run() {
             features::tasks::reopen_task,
             features::tasks::restore_task,
             features::tasks::delete_task,
+            features::tasks::delete_many_tasks,
             features::tasks::edit_task,
             features::tasks::add_comment,
             features::tasks::update_comment,
@@ -39,6 +41,7 @@ pub fn run() {
             features::tags::get_tags,
             features::tags::edit_tag,
             features::tags::delete_tag,
+            features::tags::delete_many_tags,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
         ])

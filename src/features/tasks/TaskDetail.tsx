@@ -144,7 +144,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
       />
     );
 
-    if (status === "todo") {
+    if (status === "to do") {
       return (
         <>
           {startButton}

@@ -56,6 +56,30 @@ const useTagService = (
     }
   };
 
+  const pageShouldChangeAfterDeleteMany = (
+    tags: TagLike[],
+    recordCount: number,
+    tagSearchParams: TagSearchParams
+  ): boolean => {
+    const remainder = recordCount % tagSearchParams.pageSize;
+    return remainder < tags.length && tagSearchParams.page > 1;
+  };
+
+  const handleDeleteManyDataFetch =
+    (tags: TagLike[], callback: () => void): (() => void) =>
+    async () => {
+      if (pageShouldChangeAfterDeleteMany(tags, recordCount, tagSearchParams)) {
+        const lastPage = findLastPage(
+          recordCount - tags.length,
+          tagSearchParams.pageSize
+        );
+        dispatch(setCurrentTagPage(lastPage));
+      } else {
+        await fetchAllTags?.();
+      }
+      callback();
+    };
+
   const handleDataFetch =
     (tag: TagLike, action: TimelyAction): (() => void) =>
     async () => {
@@ -141,6 +165,40 @@ const useTagService = (
     });
   };
 
+  const deleteManyTags = async (tags: Tag[], callback: () => void) => {
+    modals.openConfirmModal({
+      title: "Delete Tags",
+      children: (
+        <Text>{`Are you sure you want to delete ${tags.length} tag${
+          tags.length === 1 ? "" : "s"
+        }?`}</Text>
+      ),
+      confirmProps: {
+        variant: colorPalette.variant,
+        color: "red",
+        gradient: { ...colorPalette.gradient, from: "red" },
+      },
+      cancelProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
+      onConfirm: async () =>
+        await invoke<void>({
+          command: "delete_many_tags",
+          params: { tagIds: tags.map((t) => t.id) },
+          successMessage: `Successfully deleted ${tags.length} tag${
+            tags.length === 1 ? "" : "s"
+          }.`,
+          notificationType: TimelyAction.DeleteTag,
+          userSettings,
+          callback: handleDeleteManyDataFetch(tags, callback),
+        }),
+    });
+  };
+
   const searchForTags = async (params: TagSearchParams) => {
     return await invoke<PagedData<Tag>>({
       command: "get_tags",
@@ -167,6 +225,7 @@ const useTagService = (
     addTagToTask,
     removeTagFromTask,
     deleteTag,
+    deleteManyTags,
     editTag,
   };
 };

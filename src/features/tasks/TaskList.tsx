@@ -27,6 +27,7 @@ import {
   IconRefresh,
   IconSearch,
   IconTrash,
+  IconTrashX,
   IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
@@ -75,6 +76,10 @@ function TaskList() {
     (state) => state.settings.taskListSettings.params.pageSize
   );
 
+  const page = useAppSelector(
+    (state) => state.settings.taskListSettings.params.page
+  );
+
   /** The globally set choices for how many items per page can be chosen. */
   const pageSizeOptions = useAppSelector(
     (state) => state.settings.taskListSettings.pageSizeOptions
@@ -93,6 +98,12 @@ function TaskList() {
   const editTags = useMemo(() => {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
+
+  const [selectedRecords, setSelectedRecords] = useState<Task[]>([]);
+
+  useEffect(() => {
+    setSelectedRecords([]);
+  }, [page, pageSize]);
 
   const [searchQuery, setSearchQuery] = useState(taskSearchParams.queryString);
   const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 400);
@@ -128,6 +139,7 @@ function TaskList() {
     resumeTask,
     restoreTask,
     deleteTask,
+    deleteManyTasks,
     finishTask,
     reopenTask,
   } = useTaskService(colorPalette, userSettings, recordCount, fetchAllData);
@@ -157,7 +169,7 @@ function TaskList() {
       actualCompleteDate: null,
       title: "",
       description: "",
-      status: "Todo",
+      status: "To Do",
       scheduledStartDate: null,
       scheduledCompleteDate: null,
       estimatedDuration: null,
@@ -176,7 +188,7 @@ function TaskList() {
     initialValues: {
       title: "",
       description: "",
-      status: "Todo",
+      status: "To Do",
       scheduledStartDate: null,
       scheduledCompleteDate: null,
       estimatedDuration: null,
@@ -295,7 +307,7 @@ function TaskList() {
 
     let status = task.status.toLowerCase();
 
-    if (status === "todo") {
+    if (status === "to do") {
       return [startTaskItem, editTaskItem, cancelTaskItem, deleteTaskItem];
     }
 
@@ -424,6 +436,10 @@ function TaskList() {
     }
   }
 
+  async function deleteSelectedTasks() {
+    await deleteManyTasks(selectedRecords, () => setSelectedRecords([]));
+  }
+
   //#endregion
 
   //#region Configuration
@@ -539,6 +555,15 @@ function TaskList() {
       <Group justify="space-between">
         <Text size="xl">Tasks</Text>
         <Group>
+          {selectedRecords.length > 0 ? (
+            <StyledActionIcon
+              tooltipLabel="Delete Selected Tasks"
+              tooltipPosition="left"
+              onClick={deleteSelectedTasks}
+            >
+              <IconTrashX />
+            </StyledActionIcon>
+          ) : null}
           <TagFilter
             tagOptions={tagOptions}
             onFilter={(selection) =>
@@ -606,6 +631,8 @@ function TaskList() {
               ? "white"
               : colorPalette.color
           }
+          selectedRecords={selectedRecords}
+          onSelectedRecordsChange={setSelectedRecords}
           rowExpansion={{
             content: ({ record }) => {
               return (

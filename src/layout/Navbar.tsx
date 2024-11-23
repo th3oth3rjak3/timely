@@ -1,6 +1,12 @@
 import { Stack } from "@mantine/core";
 import { useMediaQuery } from "@mantine/hooks";
-import { Icon, IconAlarm, IconListDetails, IconSettings, IconTags } from "@tabler/icons-react";
+import {
+  Icon,
+  IconAlarm,
+  IconListDetails,
+  IconSettings,
+  IconTags,
+} from "@tabler/icons-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import StyledButton from "../components/StyledButton";
 

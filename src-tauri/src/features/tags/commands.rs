@@ -2,7 +2,7 @@ use anyhow_tauri::{IntoTAResult, TAResult};
 use sqlx::QueryBuilder;
 use tauri::State;
 
-use crate::{features::tags::Tag, Data, PagedData, SortDirection};
+use crate::{features::tags::Tag, query_utils::add_in_expression, Data, PagedData, SortDirection};
 
 use super::TagSearchParams;
 
@@ -78,4 +78,19 @@ pub async fn delete_tag(tag_id: i64, db: State<'_, Data>) -> TAResult<()> {
     .await
     .map(|_|())
     .into_ta_result()
+}
+
+#[tauri::command]
+pub async fn delete_many_tags(tag_ids: Vec<i64>, db: State<'_, Data>) -> TAResult<()> {
+    let mut builder = QueryBuilder::new("DELETE FROM tags WHERE tags.id");
+    add_in_expression(&mut builder, &tag_ids);
+
+    println!("{}", builder.sql());
+
+    builder
+        .build()
+        .execute(&db.pool)
+        .await
+        .map(|_|())
+        .into_ta_result()
 }
