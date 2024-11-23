@@ -57,7 +57,7 @@ const initialState: SettingsState = {
     params: taskSearchParams(
       1,
       5,
-      ["Todo", "Doing", "Paused"],
+      ["To Do", "Doing", "Paused"],
       undefined,
       undefined,
       "scheduledCompleteDate",

@@ -136,8 +136,6 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
         },
     };
 
-    // println!("{}", &builder.sql());
-
     builder
 }
 

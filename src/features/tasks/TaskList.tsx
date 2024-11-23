@@ -199,15 +199,14 @@ function TaskList() {
     setTaskToEdit(null);
   }
 
-  function updateDescriptionQuery(value: string | null) {
-    setSearchQuery(value);
-    // dispatch(
-    //   setTaskSearchParams({
-    //     ...taskSearchParams,
-    //     page: 1,
-    //     queryString: value ?? null,
-    //   })
-    // );
+  function updateDescriptionQuery(value: string) {
+    let updated: string | null = value;
+
+    if (value?.trim().length === 0) {
+      updated = null;
+    }
+
+    setSearchQuery(updated);
   }
 
   function updateSelectedStatuses(statuses: string[]) {
