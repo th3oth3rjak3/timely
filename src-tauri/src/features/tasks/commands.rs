@@ -46,7 +46,6 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<
     Ok(())
 }
 
-
 fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params: &'a TaskSearchParams) -> QueryBuilder<'a, sqlx::Sqlite> {
     builder.push(r#"
         SELECT DISTINCT tasks.* 
@@ -523,111 +522,6 @@ async fn set_task_model_inactive(mut task: Task, status: Status, db: &State<'_, 
     }
 
     save_task(task, db).await
-}
-
-#[tauri::command]
-pub async fn remove_tag_from_task(
-    task_id: i64,
-    tag_id: i64,
-    db: State<'_, Data>,
-) -> TAResult<()> {
-
-    sqlx::query!(r#"
-            DELETE FROM task_tags
-            WHERE task_tags.task_id = ?
-            AND task_tags.tag_id = ?
-        "#,
-        task_id,
-        tag_id
-    )
-    .execute(&db.pool)
-    .await
-    .map(|_| ())
-    .into_ta_result()
-}
-
-#[tauri::command]
-pub async fn get_all_tags(db: State<'_, Data>) -> TAResult<Vec<Tag>> {
-    sqlx::query_as!(Tag, r#"
-        SELECT *
-        FROM tags
-        ORDER BY tags.value ASC
-    "#)
-    .fetch_all(&db.pool)
-    .await
-    .into_ta_result()
-}
-
-#[tauri::command]
-pub async fn add_tag_to_task(
-    tag_id: i64,
-    task_id: i64,
-    db: State<'_, Data>,
-) -> TAResult<()> {
-    let maybe_exists = sqlx::query_as!(
-        TaskTag, 
-        r#"
-            SELECT * 
-            FROM task_tags 
-            WHERE task_tags.task_id = ? 
-            AND task_tags.tag_id = ?"#,
-        task_id,
-        tag_id,    
-    )
-    .fetch_optional(&db.pool)
-    .await
-    .into_ta_result()?;
-
-    match maybe_exists {
-        Some(_) => Ok(()),
-        None => {
-            sqlx::query!(
-                "INSERT INTO task_tags (task_id, tag_id) VALUES (?, ?)", 
-                task_id, 
-                tag_id
-            )
-            .execute(&db.pool)
-            .await
-            .map(|_|())
-            .into_ta_result()
-        }
-    }
-}
-
-#[tauri::command]
-pub async fn add_new_tag(new_tag: String, db: State<'_, Data>) -> TAResult<Tag> {
-    // If a tag already exists, no need to add it again.
-    let maybe_tag: Option<Tag> = sqlx::query_as!(Tag, r#"
-            SELECT *
-            FROM tags
-            WHERE tags.value = ?
-            LIMIT 1
-        "#,
-        new_tag    
-    )
-    .fetch_optional(&db.pool)
-    .await
-    .into_ta_result()?;
-
-    match maybe_tag {
-        Some(existing) => Ok(existing),
-        None => {
-            let result = sqlx::query!("INSERT INTO tags (value) VALUES (?)", new_tag)
-                .execute(&db.pool)
-                .await
-                .into_ta_result()?;
-
-            let inserted_id = result.last_insert_rowid();
-
-            sqlx::query_as!(
-                Tag, 
-                "SELECT * FROM tags WHERE id = ?", 
-                inserted_id)
-            .fetch_one(&db.pool)
-            .await
-            .into_ta_result()
-        }
-    }
 }
 
 #[tauri::command]

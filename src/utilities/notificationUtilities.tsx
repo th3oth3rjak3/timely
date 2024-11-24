@@ -49,14 +49,11 @@ export function shouldShowSuccessNotification(
   return notificationSetting === undefined || notificationSetting.enabled;
 }
 
-export function showErrorNotification<T extends Stringer>(
-  error: T,
-  duration: number = 8000
-) {
+export function showErrorNotification<T extends Stringer>(error: T) {
   notifications.show({
     title: "Failure",
     message: `Error: '${error.toString()}'`,
-    autoClose: duration,
+    autoClose: false,
     color: "red",
     withBorder: true,
   });

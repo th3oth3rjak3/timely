@@ -334,7 +334,7 @@ const useTaskService = (
         await invoke<void>({
           command: "delete_many_tasks",
           params: { taskIds: tasks.map((t) => t.id) },
-          successMessage: "Task deleted successfully.",
+          successMessage: "Selected tasks deleted successfully.",
           notificationType: TimelyAction.DeleteTask,
           userSettings,
           callback: handleDeleteManyDataFetch(tasks, callback),

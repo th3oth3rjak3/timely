@@ -451,8 +451,8 @@ function TaskList() {
       sortable: true,
       filter: (
         <TextInput
-          label="Title"
-          description="Search for tasks which contain the specified text"
+          label="Title/Description"
+          description="Search the title and description"
           placeholder="Search..."
           leftSection={<IconSearch size={16} />}
           rightSection={
