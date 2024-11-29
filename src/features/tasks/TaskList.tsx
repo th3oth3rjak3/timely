@@ -1,7 +1,6 @@
 import {
   Group,
   Modal,
-  MultiSelect,
   NumberInput,
   Stack,
   TagsInput,
@@ -11,11 +10,7 @@ import {
 } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
-import {
-  useDebouncedValue,
-  useDisclosure,
-  useMediaQuery,
-} from "@mantine/hooks";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
 import {
   IconArrowBackUp,
   IconCancel,
@@ -25,18 +20,18 @@ import {
   IconPlayerPlay,
   IconPlus,
   IconRefresh,
-  IconSearch,
   IconTrash,
   IconTrashX,
-  IconX,
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useState } from "react";
 import DateFilter from "../../components/DateFilter.tsx";
+import MultiSelectFilter from "../../components/MultiSelectFilter.tsx";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
 import StyledButton from "../../components/StyledButton.tsx";
+import TextFilter from "../../components/TextFilter.tsx";
 import useColorPalette from "../../hooks/useColorPalette.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TaskStatus } from "../../models/TaskStatus.ts";
@@ -54,7 +49,11 @@ import {
   maybeDate,
   maybeFormattedDate,
 } from "../../utilities/dateUtilities.ts";
-import { validateLength } from "../../utilities/formUtilities.ts";
+import {
+  SelectOption,
+  toSelectOptions,
+  validateLength,
+} from "../../utilities/formUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities";
 import useTagService from "../tags/hooks/useTagService.tsx";
 import { Tag } from "../tags/types/Tag.ts";
@@ -91,6 +90,7 @@ function TaskList() {
   const taskSearchParams = useAppSelector(
     (state) => state.settings.taskListSettings.params
   );
+
   const [newFormOpened, newFormActions] = useDisclosure(false);
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -106,17 +106,16 @@ function TaskList() {
   }, [page, pageSize]);
 
   const [searchQuery, setSearchQuery] = useState(taskSearchParams.queryString);
-  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 400);
 
   useEffect(() => {
     dispatch(
       setTaskSearchParams({
         ...taskSearchParams,
         page: 1,
-        queryString: debouncedSearchQuery,
+        queryString: searchQuery,
       })
     );
-  }, [debouncedSearchQuery]);
+  }, [searchQuery]);
 
   /** An app store dispatch function to update store values. */
   const dispatch = useAppDispatch();
@@ -211,7 +210,7 @@ function TaskList() {
     setTaskToEdit(null);
   }
 
-  function updateDescriptionQuery(value: string) {
+  function updateDescriptionQuery(value: string | null) {
     let updated: string | null = value;
 
     if (value?.trim().length === 0) {
@@ -221,12 +220,12 @@ function TaskList() {
     setSearchQuery(updated);
   }
 
-  function updateSelectedStatuses(statuses: string[]) {
+  function updateSelectedStatuses(statuses: SelectOption[]) {
     dispatch(
       setTaskSearchParams({
         ...taskSearchParams,
         page: 1,
-        statuses: statuses.map((st) => st as TaskStatus),
+        statuses: statuses.map((st) => st.value as TaskStatus),
       })
     );
   }
@@ -450,23 +449,12 @@ function TaskList() {
       accessor: "title",
       sortable: true,
       filter: (
-        <TextInput
+        <TextFilter
           label="Title/Description"
           description="Search the title and description"
           placeholder="Search..."
-          leftSection={<IconSearch size={16} />}
-          rightSection={
-            <StyledActionIcon
-              size="sm"
-              variant="transparent"
-              color="dimmed"
-              onClick={() => updateDescriptionQuery("")}
-            >
-              <IconX size={14} />
-            </StyledActionIcon>
-          }
-          value={searchQuery || ""}
-          onChange={(e) => updateDescriptionQuery(e.currentTarget.value)}
+          initialValue={searchQuery}
+          onFiltered={updateDescriptionQuery}
         />
       ),
       filtering:
@@ -479,18 +467,16 @@ function TaskList() {
       width: windowWidth < 800 ? "100px" : "15vw",
       sortable: true,
       filter: (
-        <MultiSelect
+        <MultiSelectFilter<SelectOption>
           label="Status"
           description="Show all tasks with any of the selected statuses"
-          data={statusOptions}
-          value={taskSearchParams.statuses}
           placeholder="Search statuses..."
-          onChange={(statuses) => updateSelectedStatuses(statuses)}
-          leftSection={<IconSearch size={16} />}
-          searchable
-          maw={300}
-          hidePickedOptions
-          nothingFoundMessage="Such empty..."
+          options={toSelectOptions(statusOptions, statusOptions)}
+          initialSelections={toSelectOptions(
+            taskSearchParams.statuses,
+            taskSearchParams.statuses
+          )}
+          onFiltered={updateSelectedStatuses}
         />
       ),
       filtering:
