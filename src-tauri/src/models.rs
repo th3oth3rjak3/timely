@@ -90,7 +90,8 @@ pub struct Ordering {
     pub sort_direction: SortDirection,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
 pub enum FilterOption {
     Any,
     All,

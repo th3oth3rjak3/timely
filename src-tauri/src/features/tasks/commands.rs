@@ -82,27 +82,64 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             .push_bind(end.naive_utc());
     }
 
-    if let Some(ref tags) = &params.tags {
-        if tags.is_empty() {
-            builder.push(" AND task_tags.task_id IS NULL ");
-        } else {
-            builder.push(" AND tags.value ");
-
-            add_in_expression(&mut builder, tags);
-
-            if let Some(FilterOption::All) = &params.tag_filter {
-                let tag_count: i32 = tags
-                    .len()
-                    .try_into()
-                    .expect("The list of filtered tags should never be greater than i32::MAX");
+    if let Some(ref quick_filter) = &params.quick_filter {
+        match quick_filter {
+            QuickFilter::Untagged => {
+                builder.push(" AND task_tags.task_id IS NULL ");
+            }
+            QuickFilter::Tagged(tag_filter) => {
+                builder.push(" AND tags.value ");
     
-                builder
-                .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
-                .push_bind(tag_count);
+                add_in_expression(&mut builder, &tag_filter.tags);
+        
+                if &tag_filter.tag_filter == &FilterOption::All {
+                    let tag_count: i32 = tag_filter.tags
+                        .len()
+                        .try_into()
+                        .expect("The list of filtered tags should never be greater than i32::MAX");
+        
+                    builder
+                    .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
+                    .push_bind(tag_count);
+                }
+            }
+            QuickFilter::Planned => {
+                builder.push(r#" 
+                    AND tasks.estimated_duration IS NOT NULL 
+                    AND tasks.scheduled_start_date IS NOT NULL 
+                    AND tasks.scheduled_complete_date IS NOT NULL 
+                "#);
+            }
+            QuickFilter::Unplanned => {
+                builder.push(r#"
+                    AND (
+                        tasks.estimated_duration IS NULL
+                        OR tasks.scheduled_start_date IS NULL
+                        OR tasks.scheduled_complete_date IS NULL) 
+                "#);
+            }
+            QuickFilter::LateStart => {
+                builder.push(r#" 
+                    AND tasks.scheduled_start_date IS NOT NULL
+                    AND tasks.last_resumed_date IS NULL
+                    AND (tasks.scheduled_start_date < 
+                "#);
+                builder.push_bind(Utc::now().naive_utc());
+                builder.push(r#" AND tasks.id NOT IN (
+                    SELECT DISTINCT t.id
+                    FROM tasks t
+                    INNER JOIN task_work_history twh ON t.id = twh.task_id))
+                "#);
+            }
+            QuickFilter::Overdue => {
+                builder.push(r#"
+                    AND tasks.scheduled_complete_date IS NOT NULL
+                    AND (tasks.scheduled_complete_date < 
+                "#);
+                builder.push_bind(Utc::now().naive_utc());
+                builder.push(" AND tasks.status <> 'Done') ");
             }
         }
-
-
     }
 
     match params.ordering.sort_direction {

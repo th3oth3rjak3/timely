@@ -14,11 +14,17 @@ import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { useAppSelector } from "../../redux/hooks";
+import { SelectOption } from "../../utilities/formUtilities";
+import { splitAtUpperCase } from "../../utilities/stringUtilities";
 import { Tag } from "../tags/types/Tag";
+import { FilterName } from "./types/TaskSearchParams";
 
 export type TagFilterProps = {
   tagOptions: Tag[];
-  onFilter: (selections: TagFilterSelection) => void;
+  onFilter: (
+    filterName: FilterName | null,
+    selections: TagFilterSelection
+  ) => void;
 };
 
 export type TagFilterSelection = {
@@ -26,12 +32,15 @@ export type TagFilterSelection = {
   tagFilter: string | null;
 };
 
-function TagFilter(props: TagFilterProps) {
+function QuickFilterComponent(props: TagFilterProps) {
   const [isOpen, tagFilterActions] = useDisclosure(false);
   const [selectedTags, setSelectedTags] = useState<string[] | null>(null);
-  const [filterOption, setFilterOption] = useState<string | null>("Untagged");
-  const globalTags = useAppSelector(
-    (state) => state.settings.taskListSettings.params.tags
+  const [filterOption, setFilterOption] = useState<FilterName | null>(
+    FilterName.Untagged
+  );
+
+  const isFiltered = useAppSelector(
+    (state) => state.settings.taskListSettings.params.quickFilter !== null
   );
 
   const colorPalette = useColorPalette();
@@ -41,15 +50,15 @@ function TagFilter(props: TagFilterProps) {
     options: "",
   });
 
-  const [tagFilter, setTagFilter] = useState<string>("All");
+  const [tagFilter, setTagFilter] = useState<string>("all");
 
-  const isFiltered = useMemo(() => {
-    return globalTags !== null;
-  }, [globalTags]);
+  const filterOptions: SelectOption[] = Object.entries(FilterName).map(
+    ([key, value]) => ({ label: splitAtUpperCase(key), value } as SelectOption)
+  );
 
   const validators = {
     tags: (value: string[] | null, option: string | null) => {
-      if (option === "Tagged") {
+      if (option === "tagged") {
         return value !== null && value.length > 0
           ? null
           : "Choose at least one tag";
@@ -64,8 +73,8 @@ function TagFilter(props: TagFilterProps) {
   function handleClearFilters() {
     tagFilterActions.close();
     setSelectedTags(null);
-    setFilterOption("Untagged");
-    props.onFilter({ tags: null, tagFilter: null });
+    setFilterOption(FilterName.Untagged);
+    props.onFilter(null, { tags: null, tagFilter: null });
   }
 
   const isValid = useMemo(() => {
@@ -87,24 +96,24 @@ function TagFilter(props: TagFilterProps) {
     }
 
     const tags =
-      filterOption === "Tagged"
+      filterOption === FilterName.Tagged
         ? props.tagOptions.filter((t) => selectedTags?.includes(t.value))
         : [];
     tagFilterActions.close();
-    props.onFilter({ tags, tagFilter });
+    props.onFilter(filterOption, { tags, tagFilter });
   }
 
   return (
     <Stack>
       <StyledActionIcon
         onClick={() => tagFilterActions.open()}
-        tooltipLabel="Filter By Tags"
+        tooltipLabel="Choose Quick Filters"
         tooltipPosition="left"
       >
         {isFiltered ? <IconFilterFilled /> : <IconFilter />}
       </StyledActionIcon>
       <Modal
-        title="Filter By Tags"
+        title="Choose Quick Filters"
         opened={isOpen}
         onClose={() => tagFilterActions.close()}
         closeOnClickOutside={false}
@@ -112,18 +121,18 @@ function TagFilter(props: TagFilterProps) {
       >
         <Stack>
           <Select
-            label="Option"
-            data={["Tagged", "Untagged"]}
+            label="Quick Filter Option"
+            data={filterOptions}
             allowDeselect={false}
             value={filterOption}
             onChange={(option) => {
               if (option !== null) {
-                setFilterOption(option);
+                setFilterOption(option as FilterName);
               }
             }}
             error={errors["options"]}
           />
-          {filterOption === "Tagged" ? (
+          {filterOption === FilterName.Tagged ? (
             <>
               <TagsInput
                 label="Selected Tags"
@@ -138,13 +147,13 @@ function TagFilter(props: TagFilterProps) {
                     label="Tasks with any of the selected tags"
                     color={colorPalette.colorName}
                   >
-                    <Radio label="Any" value="Any"></Radio>
+                    <Radio label="Any" value="any"></Radio>
                   </Tooltip>
                   <Tooltip
                     label="Tasks with all of the selected tags"
                     color={colorPalette.colorName}
                   >
-                    <Radio label="All" value="All"></Radio>
+                    <Radio label="All" value="all"></Radio>
                   </Tooltip>
                 </Group>
               </Radio.Group>
@@ -161,7 +170,7 @@ function TagFilter(props: TagFilterProps) {
               type="button"
               label="Clear"
               onClick={() => handleClearFilters()}
-              disabled={globalTags === null}
+              disabled={!isFiltered}
             />
           </Group>
         </Stack>
@@ -170,4 +179,4 @@ function TagFilter(props: TagFilterProps) {
   );
 }
 
-export default TagFilter;
+export default QuickFilterComponent;

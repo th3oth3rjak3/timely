@@ -59,9 +59,12 @@ import useTagService from "../tags/hooks/useTagService.tsx";
 import { Tag } from "../tags/types/Tag.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
-import TagFilter from "./TagFilter.tsx";
+import QuickFilterComponent, {
+  TagFilterSelection,
+} from "./QuickFilterComponent.tsx";
 import TaskDetail from "./TaskDetail.tsx";
 import { NewTask, Task } from "./types/Task.ts";
+import { FilterName, QuickFilter } from "./types/TaskSearchParams.ts";
 
 function TaskList() {
   //#region State
@@ -439,6 +442,40 @@ function TaskList() {
     await deleteManyTasks(selectedRecords, () => setSelectedRecords([]));
   }
 
+  function updateTagFilter(
+    filterName: FilterName | null,
+    selection: TagFilterSelection
+  ) {
+    if (filterName === FilterName.Tagged) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          page: 1,
+          quickFilter: QuickFilter.tagged(
+            selection.tags?.map((t) => t.value) ?? null,
+            selection.tagFilter
+          ).serialize(),
+        })
+      );
+    } else if (filterName === null) {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          page: 1,
+          quickFilter: null,
+        })
+      );
+    } else {
+      dispatch(
+        setTaskSearchParams({
+          ...taskSearchParams,
+          page: 1,
+          quickFilter: new QuickFilter(filterName).serialize(),
+        })
+      );
+    }
+  }
+
   //#endregion
 
   //#region Configuration
@@ -550,18 +587,9 @@ function TaskList() {
               <IconTrashX />
             </StyledActionIcon>
           ) : null}
-          <TagFilter
+          <QuickFilterComponent
             tagOptions={tagOptions}
-            onFilter={(selection) =>
-              dispatch(
-                setTaskSearchParams({
-                  ...taskSearchParams,
-                  page: 1,
-                  tags: selection.tags?.map((t) => t.value) ?? null,
-                  tagFilter: selection.tagFilter,
-                })
-              )
-            }
+            onFilter={updateTagFilter}
           />
           <StyledActionIcon
             onClick={() => newFormActions.open()}

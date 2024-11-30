@@ -59,7 +59,6 @@ const initialState: SettingsState = {
       5,
       ["To Do", "Doing", "Paused"],
       undefined,
-      undefined,
       "scheduledCompleteDate",
       "asc"
     ),
