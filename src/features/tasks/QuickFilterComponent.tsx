@@ -35,9 +35,7 @@ export type TagFilterSelection = {
 function QuickFilterComponent(props: TagFilterProps) {
   const [isOpen, tagFilterActions] = useDisclosure(false);
   const [selectedTags, setSelectedTags] = useState<string[] | null>(null);
-  const [filterOption, setFilterOption] = useState<FilterName | null>(
-    FilterName.Untagged
-  );
+  const [filterOption, setFilterOption] = useState<FilterName | null>(null);
 
   const isFiltered = useAppSelector(
     (state) => state.settings.taskListSettings.params.quickFilter !== null
@@ -52,9 +50,13 @@ function QuickFilterComponent(props: TagFilterProps) {
 
   const [tagFilter, setTagFilter] = useState<string>("all");
 
-  const filterOptions: SelectOption[] = Object.entries(FilterName).map(
-    ([key, value]) => ({ label: splitAtUpperCase(key), value } as SelectOption)
-  );
+  const filterOptions: SelectOption[] = Object.entries(FilterName)
+    .map(
+      ([key, value]) =>
+        ({ label: splitAtUpperCase(key), value } as SelectOption)
+    )
+    .slice()
+    .sort((a, b) => a.value.localeCompare(b.value));
 
   const validators = {
     tags: (value: string[] | null, option: string | null) => {
@@ -73,7 +75,7 @@ function QuickFilterComponent(props: TagFilterProps) {
   function handleClearFilters() {
     tagFilterActions.close();
     setSelectedTags(null);
-    setFilterOption(FilterName.Untagged);
+    setFilterOption(null);
     props.onFilter(null, { tags: null, tagFilter: null });
   }
 
@@ -170,7 +172,7 @@ function QuickFilterComponent(props: TagFilterProps) {
               type="button"
               label="Clear"
               onClick={() => handleClearFilters()}
-              disabled={!isFiltered}
+              disabled={!isFiltered && filterOption === null}
             />
           </Group>
         </Stack>
