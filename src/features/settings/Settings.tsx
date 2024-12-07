@@ -245,9 +245,6 @@ function Settings() {
 
   return (
     <Stack m={25}>
-      <Group justify="space-between">
-        <Text size="xl">Settings</Text>
-      </Group>
       <form onSubmit={form.onSubmit(setSettingsValues)}>
         <Tabs defaultValue="general">
           {/* orientation="vertical" placement="right" > */}
