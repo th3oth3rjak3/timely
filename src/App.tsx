@@ -18,9 +18,14 @@ import useSettingsService from "./features/settings/hooks/useSettingsService";
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
 import { ContextMenuProvider } from "mantine-contextmenu";
-import * as Pages from "./pages";
+import Reports from "./features/reports/Reports";
+import Settings from "./features/settings/Settings";
+import TagsList from "./features/tags/TagsList";
+import Timer from "./features/timer/Timer";
+import MainLayout from "./layout/MainLayout";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
 import { setNavbar, setUserSettings } from "./redux/reducers/settingsSlice";
+import TaskList from "./features/tasks/TaskList";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -36,7 +41,7 @@ function App() {
         const browserRouter = createBrowserRouter([
           {
             path: "/",
-            element: <Pages.MainLayout />,
+            element: <MainLayout />,
             children: [
               {
                 path: "",
@@ -44,19 +49,23 @@ function App() {
               },
               {
                 path: "/timer",
-                element: <Pages.Timer />,
+                element: <Timer />,
               },
               {
                 path: "/tasks",
-                element: <Pages.TasksList />,
+                element: <TaskList />,
               },
               {
                 path: "/tags",
-                element: <Pages.TagsList />,
+                element: <TagsList />,
+              },
+              {
+                path: "/reports",
+                element: <Reports />,
               },
               {
                 path: "/settings",
-                element: <Pages.Settings />,
+                element: <Settings />,
               },
             ],
           },

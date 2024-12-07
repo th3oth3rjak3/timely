@@ -4,6 +4,7 @@ import {
   Icon,
   IconAlarm,
   IconListDetails,
+  IconReportAnalytics,
   IconSettings,
   IconTags,
 } from "@tabler/icons-react";
@@ -31,6 +32,12 @@ const navLinks: LinkDetail[] = [
     description: "Tasks Page",
   },
   { href: "/tags", icon: IconTags, label: "Tags", description: "Tags Page" },
+  {
+    href: "/reports",
+    icon: IconReportAnalytics,
+    label: "Reports",
+    description: "Task History Reports",
+  },
   {
     href: "/settings",
     icon: IconSettings,
@@ -72,7 +79,7 @@ function Navbar(props: Props) {
           props.closeNavMenu();
         }
       }}
-      leftSection={<item.icon size="1rem" stroke={1.5} />}
+      leftSection={<item.icon size="1.3rem" stroke={1.5} />}
       tooltipLabel={item.description}
       tooltipPosition="right"
     />
