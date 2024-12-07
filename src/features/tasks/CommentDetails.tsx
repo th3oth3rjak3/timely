@@ -102,7 +102,9 @@ function CommentDetails(props: Props) {
   function commentRow(comment: Comment): JSX.Element {
     return (
       <Stack gap={3} key={comment.id}>
-        <Text size="sm">{comment.message}</Text>
+        <Text size="sm" style={{ whiteSpace: "pre-line" }}>
+          {comment.message}
+        </Text>
         <Group>
           <Text size="xs" style={{ fontStyle: "italic" }}>
             {"Created: " +
