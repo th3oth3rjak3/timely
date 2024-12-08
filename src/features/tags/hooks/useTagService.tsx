@@ -143,8 +143,8 @@ const useTagService = (
       ),
       confirmProps: {
         variant: colorPalette.variant,
-        color: "red",
-        gradient: { ...colorPalette.gradient, from: "red" },
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
       },
       cancelProps: {
         variant: colorPalette.variant,
@@ -175,8 +175,8 @@ const useTagService = (
       ),
       confirmProps: {
         variant: colorPalette.variant,
-        color: "red",
-        gradient: { ...colorPalette.gradient, from: "red" },
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
       },
       cancelProps: {
         variant: colorPalette.variant,

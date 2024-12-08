@@ -374,11 +374,9 @@ function Settings() {
           />
           <StyledButton
             type="reset"
-            gradient={{ ...colorPalette.gradient, from: "red" }}
-            color="red"
+            label="Reset"
             disabled={!isDirty}
             onClick={resetForm}
-            label="Reset"
             tooltipLabel="Reset Changes"
             tooltipPosition="right"
           />
