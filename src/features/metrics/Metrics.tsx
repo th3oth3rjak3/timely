@@ -115,7 +115,11 @@ function Metrics() {
           <Group justify="space-between">
             <Text size="xl">Metrics</Text>
             <Group>
-              <StyledActionIcon onClick={filterActions.open}>
+              <StyledActionIcon
+                onClick={filterActions.open}
+                tooltipLabel="Filter Data"
+                tooltipPosition="left"
+              >
                 {isFiltered ? <IconFilterFilled /> : <IconFilter />}
               </StyledActionIcon>
               {isFiltered ? (

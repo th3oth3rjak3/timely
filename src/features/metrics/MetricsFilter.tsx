@@ -83,9 +83,7 @@ function MetricsFilter({
         startDate: values.startDate,
         endDate: values.endDate,
         tags: tagOptions.filter((tagOption) =>
-          values
-            .tags!.map((tagValue) => tagValue.toLowerCase()) // not null because it was checked in the if statement.
-            .includes(tagOption.value)
+          values.tags?.includes(tagOption.value)
         ),
       });
     }
@@ -120,7 +118,7 @@ function MetricsFilter({
           <TagsInput
             w="300"
             label="Selected Tags"
-            data={tagOptions?.map((opt) => opt.value)}
+            data={tagOptions}
             {...filterForm.getInputProps("tags")}
             key={filterForm.key("tags")}
           />
