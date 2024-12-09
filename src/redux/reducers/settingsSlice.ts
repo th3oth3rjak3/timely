@@ -82,7 +82,7 @@ const initialState: SettingsState = {
     { label: "Timer", value: "/timer" },
     { label: "Tasks List", value: "/tasks" },
     { label: "Tags List", value: "/tags" },
-    { label: "Reports", value: "/reports" },
+    { label: "Metrics", value: "/metrics" },
     { label: "Settings", value: "/settings" },
   ],
   userSettings: {

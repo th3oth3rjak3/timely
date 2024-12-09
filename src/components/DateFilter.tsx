@@ -1,7 +1,7 @@
 import { Group, Stack } from "@mantine/core";
 import { DatePicker } from "@mantine/dates";
 import dayjs from "dayjs";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import useColorPalette from "../hooks/useColorPalette";
 import {
   DateRange,
@@ -14,9 +14,10 @@ import StyledButton from "./StyledButton";
 export type DateFilterProps = {
   filter: DateRangeFilter | null;
   onRangeChanged: (value: DateRangeFilter | null) => void;
+  showButtons?: boolean;
 };
 
-function DateFilter({ onRangeChanged, filter }: DateFilterProps) {
+function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
   const colorPalette = useColorPalette();
 
   const startDate = useMemo(() => {
@@ -36,6 +37,10 @@ function DateFilter({ onRangeChanged, filter }: DateFilterProps) {
   }, [filter]);
 
   const [dateRange, setDateRange] = useState<DateRange>([startDate, endDate]);
+
+  useEffect(() => {
+    setDateRange([startDate, endDate]);
+  }, [startDate, endDate]);
 
   function isEmptyRange(range: DateRange): boolean {
     return range[0] === null && range[1] === null;
@@ -66,21 +71,23 @@ function DateFilter({ onRangeChanged, filter }: DateFilterProps) {
         highlightToday
         allowSingleDateInRange
       />
-      <Group justify="center">
-        <StyledButton
-          label="Today"
-          onClick={() =>
-            updateDateRange([
-              dayjs().startOf("day").toDate(),
-              dayjs().endOf("day").toDate(),
-            ])
-          }
-        />
-        <StyledButton
-          label="Clear"
-          onClick={() => updateDateRange([null, null])}
-        />
-      </Group>
+      {showButtons === undefined || showButtons === true ? (
+        <Group justify="center">
+          <StyledButton
+            label="Today"
+            onClick={() =>
+              updateDateRange([
+                dayjs().startOf("day").toDate(),
+                dayjs().endOf("day").toDate(),
+              ])
+            }
+          />
+          <StyledButton
+            label="Clear"
+            onClick={() => updateDateRange([null, null])}
+          />
+        </Group>
+      ) : null}
     </Stack>
   );
 }

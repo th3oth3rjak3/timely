@@ -253,8 +253,16 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
         onRowContextMenu={({ record, event }) =>
           showContextMenu(getContextMenuItems(record))(event)
         }
+        paginationActiveBackgroundColor={colorPalette.background}
+        paginationActiveTextColor={
+          userSettings.buttonVariant === "filled" ||
+          userSettings.buttonVariant === "gradient"
+            ? "white"
+            : colorPalette.color
+        }
         onScroll={hideContextMenu}
         textSelectionDisabled={isTouchScreen}
+        paginationSize="xs"
       />
       <Modal
         opened={newWorkHistoryFormOpened}

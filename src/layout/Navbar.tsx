@@ -33,10 +33,10 @@ const navLinks: LinkDetail[] = [
   },
   { href: "/tags", icon: IconTags, label: "Tags", description: "Tags Page" },
   {
-    href: "/reports",
+    href: "/metrics",
     icon: IconReportAnalytics,
-    label: "Reports",
-    description: "Task History Reports",
+    label: "Metrics",
+    description: "Task History Metrics",
   },
   {
     href: "/settings",

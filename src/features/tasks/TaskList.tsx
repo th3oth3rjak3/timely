@@ -401,7 +401,7 @@ function TaskList() {
   };
 
   const { tryFindTagByName, createNewTag, addTagToTask, removeTagFromTask } =
-    useTagService(userSettings, colorPalette, tagOptions.length);
+    useTagService(tagOptions.length);
 
   async function removeTagByName(tagName: string) {
     const maybeTag = tryFindTagByName(tagName, tagOptions);

@@ -1,25 +1,23 @@
 import { Text } from "@mantine/core";
 import { modals } from "@mantine/modals";
 import { useMemo } from "react";
+import useColorPalette from "../../../hooks/useColorPalette";
 import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
 import { TimelyAction } from "../../../models/TauriAction";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTagPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
-import { ColorPalette } from "../../settings/hooks/useColorService";
-import { UserSettings } from "../../settings/UserSettings";
 import { Tag } from "../types/Tag";
 import { TagSearchParams } from "../types/TagSearchParams";
 
 const useTagService = (
-  userSettings: UserSettings,
-  colorPalette: ColorPalette,
   recordCount: number,
   fetchAllTags?: () => Promise<void> | void
 ) => {
   const { invoke } = useTauri();
-
+  const userSettings = useAppSelector((state) => state.settings.userSettings);
+  const colorPalette = useColorPalette();
   const tagSearchParams = useAppSelector(
     (state) => state.settings.tagListSettings.params
   );

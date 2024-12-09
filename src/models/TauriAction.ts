@@ -23,4 +23,5 @@ export enum TimelyAction {
   AddNewWorkHistory = "Add New Work History",
   EditWorkHistory = "Edit Work History",
   DeleteWorkHistory = "Delete Work History",
+  GetMetrics = "Get Metrics",
 }

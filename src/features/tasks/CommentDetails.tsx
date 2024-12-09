@@ -1,4 +1,4 @@
-import { Group, Modal, Stack, Text, Textarea } from "@mantine/core";
+import { Divider, Group, Modal, Stack, Text, Textarea } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
@@ -99,7 +99,7 @@ function CommentDetails(props: Props) {
     await deleteComment(comment.id, () => props.onCommentChanged());
   }
 
-  function commentRow(comment: Comment): JSX.Element {
+  function commentRow(comment: Comment, withDivider: boolean): JSX.Element {
     return (
       <Stack gap={3} key={comment.id}>
         <Text size="sm" style={{ whiteSpace: "pre-line" }}>
@@ -133,6 +133,7 @@ function CommentDetails(props: Props) {
             <IconTrash />
           </StyledActionIcon>
         </Group>
+        {withDivider ? <Divider mt="sm" /> : null}
       </Stack>
     );
   }
@@ -153,7 +154,9 @@ function CommentDetails(props: Props) {
       {props.task.comments.length == 0 ? (
         <Text size="xs">No Comments</Text>
       ) : (
-        props.task.comments.map((comment) => commentRow(comment))
+        props.task.comments.map((comment, i) =>
+          commentRow(comment, i < props.task.comments.length - 1)
+        )
       )}
       <Modal
         opened={newModalOpened}

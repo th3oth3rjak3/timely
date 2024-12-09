@@ -59,8 +59,6 @@ function TagsList() {
   const { showContextMenu, hideContextMenu } = useContextMenu();
   const dispatch = useAppDispatch();
   const { deleteTag, deleteManyTags, createNewTag, editTag } = useTagService(
-    userSettings,
-    colorPalette,
     recordCount,
     fetchTags
   );
