@@ -40,7 +40,7 @@ const MetricsSummaryComponent = ({ summary }: MetricsSummaryProps) => {
               <br />
               Worked
             </Text>
-            <Text>{summary.countOfTasksWorked}</Text>
+            <Text>{summary.tasksWorked}</Text>
           </Stack>
         </Card>
       </Grid.Col>
@@ -52,7 +52,7 @@ const MetricsSummaryComponent = ({ summary }: MetricsSummaryProps) => {
               <br />
               Worked
             </Text>
-            <Text>{summary.hoursWorked}</Text>
+            <Text>{summary.hoursWorked.toFixed(1)}</Text>
           </Stack>
         </Card>
       </Grid.Col>

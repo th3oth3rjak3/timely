@@ -44,6 +44,7 @@ pub fn run() {
             features::tags::add_new_tag,
             features::settings::get_user_settings,
             features::settings::update_user_settings,
+            features::metrics::get_metrics,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -41,7 +41,7 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
     // Return the data format that Recharts expects
     return labels.map((label, index) => ({
       date: label,
-      hours: data[index],
+      hours: data[index].toFixed(1),
     }));
   };
 

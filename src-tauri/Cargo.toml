@@ -32,3 +32,4 @@ dotenvy = "0.15.7"
 sqlx = { version = "0.8.2", features = ["chrono", "sqlite", "runtime-tokio"] }
 anyhow = "1.0.93"
 anyhow-tauri = { version = "1.0.0", features = ["show_errs_in_release"] }
+tap = "1.0.1"

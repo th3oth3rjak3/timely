@@ -1,7 +1,7 @@
 import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
 import { useAppSelector } from "../../../redux/hooks";
-import { MetricsFilterCriteria, MetricsSummary } from "../types";
+import { MetricsFilterCriteria, MetricsSummaryRead } from "../types";
 
 const useMetricsService = () => {
   const { invoke } = useTauri();
@@ -9,7 +9,7 @@ const useMetricsService = () => {
 
   const getMetrics = async (
     searchCriteria: MetricsFilterCriteria
-  ): Promise<MetricsSummary | undefined> => {
+  ): Promise<MetricsSummaryRead | undefined> => {
     return await invoke({
       command: "get_metrics",
       params: { searchCriteria },

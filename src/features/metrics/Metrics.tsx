@@ -8,6 +8,7 @@ import {
 import { useEffect, useState } from "react";
 import { Tag } from "../tags/types/Tag";
 
+import dayjs from "dayjs";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import useTagService from "../tags/hooks/useTagService";
 import useMetricsService from "./hooks/useMetricsService";
@@ -18,6 +19,7 @@ import {
   FilterFormInputs,
   MetricsFilterCriteria,
   MetricsSummary,
+  toMetricsSummary,
 } from "./types";
 
 function Metrics() {
@@ -37,23 +39,23 @@ function Metrics() {
     summary: {
       tasksStarted: 2,
       tasksCompleted: 3,
-      countOfTasksWorked: 10,
+      tasksWorked: 10,
       hoursWorked: 14.2,
     },
     workHistory: [
       {
         taskId: 1,
-        dayWorked: new Date("2024-01-01"),
+        dayWorked: dayjs("2024-01-01").toDate(),
         hoursWorked: 5,
       },
       {
         taskId: 2,
-        dayWorked: new Date("2024-01-02"),
+        dayWorked: dayjs("2024-01-02").toDate(),
         hoursWorked: 6,
       },
       {
         taskId: 3,
-        dayWorked: new Date("2024-01-03"),
+        dayWorked: dayjs("2024-01-03").toDate(),
         hoursWorked: 7,
       },
     ],
@@ -72,7 +74,7 @@ function Metrics() {
     filterActions.close();
     const result = await getMetrics(inputs);
     if (result !== undefined) {
-      setMetricsSummary(result);
+      setMetricsSummary(toMetricsSummary(result));
     }
   };
   const clearFilter = () => {
