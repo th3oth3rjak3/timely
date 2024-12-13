@@ -191,8 +191,8 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
       children: <Text>Are you sure you want to delete this history?</Text>,
       confirmProps: {
         variant: colorPalette.variant,
-        color: "red",
-        gradient: { ...colorPalette.gradient, from: "red" },
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
       },
       cancelProps: {
         variant: colorPalette.variant,

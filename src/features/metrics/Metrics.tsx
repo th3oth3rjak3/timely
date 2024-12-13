@@ -8,7 +8,6 @@ import {
 import { useEffect, useState } from "react";
 import { Tag } from "../tags/types/Tag";
 
-import dayjs from "dayjs";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import useTagService from "../tags/hooks/useTagService";
 import useMetricsService from "./hooks/useMetricsService";
@@ -32,37 +31,21 @@ function Metrics() {
   });
   const { getAllTags } = useTagService(tagOptions.length);
   const { getMetrics } = useMetricsService();
-  const sampleData: MetricsSummary = {
+  const emptyData: MetricsSummary = {
     startDate: new Date(),
     endDate: new Date(),
-    selectedTags: [{ id: 1, value: "Timely" }],
+    selectedTags: [],
     summary: {
-      tasksStarted: 2,
-      tasksCompleted: 3,
-      tasksWorked: 10,
-      hoursWorked: 14.2,
+      tasksStarted: 0,
+      tasksCompleted: 0,
+      tasksWorked: 0,
+      hoursWorked: 0,
     },
-    workHistory: [
-      {
-        taskId: 1,
-        dayWorked: dayjs("2024-01-01").toDate(),
-        hoursWorked: 5,
-      },
-      {
-        taskId: 2,
-        dayWorked: dayjs("2024-01-02").toDate(),
-        hoursWorked: 6,
-      },
-      {
-        taskId: 3,
-        dayWorked: dayjs("2024-01-03").toDate(),
-        hoursWorked: 7,
-      },
-    ],
+    workHistory: [],
   };
 
   const [metricsSummary, setMetricsSummary] =
-    useState<MetricsSummary>(sampleData);
+    useState<MetricsSummary>(emptyData);
 
   useEffect(() => {
     getAllTags().then((tags) => setTagOptions(tags ?? []));
