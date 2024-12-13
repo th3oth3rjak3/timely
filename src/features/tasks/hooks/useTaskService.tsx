@@ -31,11 +31,15 @@ const useTaskService = (
    */
   const searchForTasks = async (
     params: TaskSearchParams
-  ): Promise<PagedData<Task> | undefined> => {
+  ): Promise<PagedData<Task> | null> => {
     const tasks = await invoke<PagedData<Task>>({
       command: "get_tasks",
       params: { params },
     });
+
+    if (tasks !== null) {
+      tasks.data = tasks?.data.map((thing) => Task.parse(thing));
+    }
 
     return tasks;
   };

@@ -1,7 +1,7 @@
-export type DateRangeFilter = {
+export interface DateRangeFilter {
   start: string | null;
   end: string | null;
-};
+}
 
 export function createDateFilter(
   start: Date | null,

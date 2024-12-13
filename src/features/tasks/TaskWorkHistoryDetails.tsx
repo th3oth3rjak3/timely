@@ -27,7 +27,7 @@ import {
   TaskWorkHistory,
 } from "./types/Task";
 
-type TaskWorkHistoryProps = {
+export interface TaskWorkHistoryProps {
   task: Task;
   onHistoryChanged: () => void;
 };

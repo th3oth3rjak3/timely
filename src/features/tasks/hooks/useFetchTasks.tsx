@@ -28,11 +28,7 @@ const useFetchTasks = (searchParams: TaskSearchParams) => {
     userSettings,
     taskRecordCount
   );
-  const { getAllTags } = useTagService(
-    userSettings,
-    colorPalette,
-    tagRecordCount
-  );
+  const { getAllTags } = useTagService(tagRecordCount);
 
   const fetchTags = async () => {
     setIsFetchingTags(false);

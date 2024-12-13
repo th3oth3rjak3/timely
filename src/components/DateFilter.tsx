@@ -11,7 +11,7 @@ import { DateRangeFilter } from "../models/DateRangeFilter";
 import { getDayRangeProps } from "../utilities/dateUtilities";
 import StyledButton from "./StyledButton";
 
-export type DateFilterProps = {
+export interface DateFilterProps {
   filter: DateRangeFilter | null;
   onRangeChanged: (value: DateRangeFilter | null) => void;
   showButtons?: boolean;

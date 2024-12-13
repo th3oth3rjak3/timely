@@ -2,15 +2,15 @@ import { MantineGradient, MantineTheme } from '@mantine/core';
 import { useMemo } from 'react';
 import { UserSettings } from '../UserSettings';
 
-export type ColorPalette = {
-    colorName: string;
-    variant: string;
-    color: string;
-    background: string;
-    hover: string;
-    border: string;
-    hoverColor?: string;
-    gradient: MantineGradient;
+export interface ColorPalette {
+  colorName: string;
+  variant: string;
+  color: string;
+  background: string;
+  hover: string;
+  border: string;
+  hoverColor?: string;
+  gradient: MantineGradient;
 }
 
 const useColorService = (theme: MantineTheme, settings: UserSettings) => {

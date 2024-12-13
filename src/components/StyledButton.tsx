@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import useColorPalette from "../hooks/useColorPalette";
 import MyTooltip from "./MyTooltip";
 
-export type StyledButtonProps = {
+export interface StyledButtonProps {
   type?: "button" | "submit" | "reset";
   size?:
     | "compact-sm"

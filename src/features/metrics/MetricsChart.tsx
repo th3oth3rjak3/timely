@@ -11,7 +11,7 @@ import {
 import useColorPalette from "../../hooks/useColorPalette";
 import { DailyWorkHistory } from "./types";
 
-type MetricsChartProps = {
+export interface MetricsChartProps {
   workHistory: DailyWorkHistory[];
 };
 

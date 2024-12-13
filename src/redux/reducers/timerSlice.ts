@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { TimeSpan, TimeSpanLike } from "../../models/TimeSpan";
 
-type TimerProps = {
+interface TimerProps {
   initialTime: TimeSpanLike;
   time: number;
   isActive: boolean;

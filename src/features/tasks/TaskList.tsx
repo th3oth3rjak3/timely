@@ -46,7 +46,6 @@ import {
 } from "../../redux/reducers/settingsSlice.ts";
 import {
   getDayOnlyProps,
-  maybeDate,
   maybeFormattedDate,
 } from "../../utilities/dateUtilities.ts";
 import {
@@ -387,10 +386,10 @@ function TaskList() {
       title: task.title,
       description: task.description,
       status: task.status,
-      scheduledStartDate: maybeDate(task.scheduledStartDate),
-      scheduledCompleteDate: maybeDate(task.scheduledCompleteDate),
-      actualStartDate: maybeDate(task.actualStartDate),
-      actualCompleteDate: maybeDate(task.actualCompleteDate),
+      scheduledStartDate: task.scheduledStartDate,
+      scheduledCompleteDate: task.scheduledCompleteDate,
+      actualStartDate: task.actualStartDate,
+      actualCompleteDate: task.actualCompleteDate,
       estimatedDuration:
         TimeSpan.tryFromSeconds(task.estimatedDuration)?.totalHours ?? null,
       elapsedDuration: TimeSpan.fromSeconds(task.elapsedDuration).totalHours,

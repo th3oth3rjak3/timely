@@ -2,12 +2,12 @@ import { FloatingPosition, MantineTransition, Tooltip } from "@mantine/core";
 import { ReactNode } from "react";
 import { ColorPalette } from "../features/settings/hooks/useColorService";
 
-type MyTooltipProps = {
-    label: string;
-    children: ReactNode;
-    color?: string;
-    colorPalette: ColorPalette;
-    position?: FloatingPosition;
+export interface MyTooltipProps {
+  label: string;
+  children: ReactNode;
+  color?: string;
+  colorPalette: ColorPalette;
+  position?: FloatingPosition;
 }
 
 function MyTooltip(props: MyTooltipProps) {

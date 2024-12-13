@@ -2,24 +2,25 @@ import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setUserSettings } from "../../../redux/reducers/settingsSlice";
+import { tryMap } from "../../../utilities/nullableUtilities";
 import { UserSettings } from "../UserSettings";
 
-export type Settings = {
+export interface Settings {
   pageSize: string;
   homePage: string;
   colorScheme: string;
-};
+}
 
 function useSettingsService() {
   const { invoke } = useTauri();
   const dispatch = useAppDispatch();
 
-  const getUserSettings = async (): Promise<UserSettings | undefined> => {
+  const getUserSettings = async (): Promise<UserSettings | null> => {
     const settings = await invoke<UserSettings>({
       command: "get_user_settings",
     });
 
-    return settings;
+    return tryMap(settings, UserSettings.parse);
   };
 
   /** Update existing user settings. */

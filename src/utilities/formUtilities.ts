@@ -1,46 +1,62 @@
 
-export type SelectOption = {
-    value: string;
-    label: string;
+export interface SelectOption {
+  value: string;
+  label: string;
 }
 
 export interface Stringer {
-    toString: () => string;
+  toString: () => string;
 }
 
-export function toSelectOptions<T extends Stringer>(values: T[], labels: string[]): SelectOption[] {
-    return values.map((v, i) => {
-        return { label: labels[i], value: v.toString() };
-    });
+export function toSelectOptions<T extends Stringer>(
+  values: T[],
+  labels: string[]
+): SelectOption[] {
+  return values.map((v, i) => {
+    return { label: labels[i], value: v.toString() };
+  });
 }
 
-function lengthLessThanOrEqual(maxValue: number, value?: string | null): boolean {
-    if (!value || value === null) return false;
-    return value.length <= maxValue;
+function lengthLessThanOrEqual(
+  maxValue: number,
+  value?: string | null
+): boolean {
+  if (!value || value === null) return false;
+  return value.length <= maxValue;
 }
 
-function lengthGreaterThanOrEqual(minValue: number, value: string | null | undefined): boolean {
-    if (!value || value === null) return false;
-    return value.length >= minValue;
+function lengthGreaterThanOrEqual(
+  minValue: number,
+  value: string | null | undefined
+): boolean {
+  if (!value || value === null) return false;
+  return value.length >= minValue;
 }
 
-function lengthBetween(value: string | null | undefined, minValue: number, maxValue: number): boolean {
-    return lengthLessThanOrEqual(maxValue, value) && lengthGreaterThanOrEqual(minValue, value);
+function lengthBetween(
+  value: string | null | undefined,
+  minValue: number,
+  maxValue: number
+): boolean {
+  return (
+    lengthLessThanOrEqual(maxValue, value) &&
+    lengthGreaterThanOrEqual(minValue, value)
+  );
 }
 
 function notNullOrUndefined(value: string | null | undefined): boolean {
-    return !!value && value !== null;
+  return !!value && value !== null;
 }
 
-type LengthValidation = {
-    /** The name of the field to validate. */
-    fieldName: string,
-    /** The value to validate. */
-    value?: string | null,
-    /** The minimum length. */
-    minValue?: number,
-    /** The maximum length. */
-    maxValue?: number
+export interface LengthValidation {
+  /** The name of the field to validate. */
+  fieldName: string;
+  /** The value to validate. */
+  value?: string | null;
+  /** The minimum length. */
+  minValue?: number;
+  /** The maximum length. */
+  maxValue?: number;
 }
 
 /** Validate the length of an input string. When valid, this function returns null, otherwise an error string. */

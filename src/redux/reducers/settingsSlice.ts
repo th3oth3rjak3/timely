@@ -10,7 +10,7 @@ import { TaskStatus } from "../../models/TaskStatus";
 import { SelectOption } from "../../utilities/formUtilities";
 
 /** Settings that are applied to the application. */
-export type SettingsState = {
+export interface SettingsState {
   /** Settings to retain the state of the task list for navigation away from the page and back again. */
   taskListSettings: TaskListSettings;
   /** The initial route to be shown when the application launches.
@@ -25,15 +25,15 @@ export type SettingsState = {
   navbarOpen: boolean;
   /** Settings for the tags listing. */
   tagListSettings: TagsListSettings;
-};
+}
 
-export type TagsListSettings = {
+export interface TagsListSettings {
   pageSizeOptions: number[];
   params: TagSearchParams;
   sortStatus: DataTableSortStatus<Tag>;
-};
+}
 
-export type TaskListSettings = {
+export interface TaskListSettings {
   /** The choices that should be shown in a list for number of items per page. */
   pageSizeOptions: number[];
   statusOptions: TaskStatus[];

@@ -12,12 +12,12 @@ import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
 import { Task } from "./types/Task";
 
-type Props = {
+export interface CommentDetailsProps {
   task: Task;
   onCommentChanged: () => void;
-};
+}
 
-function CommentDetails(props: Props) {
+function CommentDetails(props: CommentDetailsProps) {
   const colorPalette = useColorPalette();
   const userSettings = useAppSelector((state) => state.settings.userSettings);
 

@@ -18,7 +18,7 @@ import TagDetails from "./TagDetails";
 import TaskWorkHistoryDetails from "./TaskWorkHistoryDetails";
 import { Task } from "./types/Task";
 
-export type TaskDetailParams = {
+export interface TaskDetailParams {
   task: Task;
   tagOptions: Tag[];
   userSettings: UserSettings;

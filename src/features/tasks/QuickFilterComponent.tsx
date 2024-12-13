@@ -19,15 +19,15 @@ import { splitAtUpperCase } from "../../utilities/stringUtilities";
 import { Tag } from "../tags/types/Tag";
 import { FilterName } from "./types/TaskSearchParams";
 
-export type TagFilterProps = {
+export interface TagFilterProps {
   tagOptions: Tag[];
   onFilter: (
     filterName: FilterName | null,
     selections: TagFilterSelection
   ) => void;
-};
+}
 
-export type TagFilterSelection = {
+export interface TagFilterSelection {
   tags: Tag[] | null;
   tagFilter: string | null;
 };

@@ -3,10 +3,10 @@ import { Ordering } from "../../../models/Ordering";
 import { SortDirection } from "../../../models/SortDirection";
 import { TaskStatus } from "../../../models/TaskStatus";
 
-export type TagFilter = {
+export interface TagFilter {
   tags: string[];
   filterOption: "any" | "all";
-};
+}
 
 export enum FilterName {
   Tagged = "tagged",
@@ -47,7 +47,7 @@ export class QuickFilter {
   }
 }
 
-export type TaskSearchParams = {
+export interface TaskSearchParams {
   page: number;
   pageSize: number;
   queryString: string | null;

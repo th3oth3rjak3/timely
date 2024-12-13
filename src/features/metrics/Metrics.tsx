@@ -18,7 +18,6 @@ import {
   FilterFormInputs,
   MetricsFilterCriteria,
   MetricsSummary,
-  toMetricsSummary,
 } from "./types";
 
 function Metrics() {
@@ -56,8 +55,8 @@ function Metrics() {
     setFilterInputs({ ...inputs, tags: inputs.tags.map((tag) => tag.value) });
     filterActions.close();
     const result = await getMetrics(inputs);
-    if (result !== undefined) {
-      setMetricsSummary(toMetricsSummary(result));
+    if (result !== null) {
+      setMetricsSummary(result);
     }
   };
   const clearFilter = () => {

@@ -7,7 +7,7 @@ import { getDayOnlyProps } from "../../utilities/dateUtilities";
 import { Tag } from "../tags/types/Tag";
 import { FilterFormInputs, MetricsFilterCriteria } from "./types";
 
-type MetricsFilterProps = {
+export interface MetricsFilterProps {
   filterInputs: FilterFormInputs;
   tagOptions: Tag[];
   onFilterCleared: () => void;

@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import useColorPalette from "../hooks/useColorPalette";
 import MyTooltip from "./MyTooltip";
 
-export type StyledActionIconProps = {
+export interface StyledActionIconProps {
   size?: number | MantineSize | (string & {});
   variant?: ActionIconVariant;
   children: ReactNode;

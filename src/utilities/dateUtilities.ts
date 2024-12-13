@@ -2,14 +2,6 @@ import dayjs from "dayjs";
 import { ColorPalette } from "../features/settings/hooks/useColorService";
 import { DateRange } from "../models/DateRange";
 
-export function maybeDate(date: Date | null): Date | null {
-  if (date === null) {
-    return null;
-  }
-
-  return dayjs(date).toDate();
-}
-
 export function maybeFormattedDate(
   date: Date | null,
   format: string
@@ -37,16 +29,24 @@ export const getDayRangeProps =
     return {};
   };
 
-  export const getDayOnlyProps =
-    (existing: Date | null, colorPalette: ColorPalette) => (day?: Date) => {
-      if (dayjs(existing).isSame(day, "day")) {
-        return {
-          style: {
-            background: colorPalette?.background,
-            color: colorPalette?.color,
-          },
-        };
-      }
+export const getDayOnlyProps =
+  (existing: Date | null, colorPalette: ColorPalette) => (day?: Date) => {
+    if (dayjs(existing).isSame(day, "day")) {
+      return {
+        style: {
+          background: colorPalette?.background,
+          color: colorPalette?.color,
+        },
+      };
+    }
 
-      return {};
-    };
+    return {};
+  };
+
+export const maybeDate = (value: string | null): Date | null => {
+  return value === null ? null : new Date(value);
+};
+
+export const toDate = (value: string): Date => {
+  return new Date(value);
+};

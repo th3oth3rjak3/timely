@@ -11,12 +11,12 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import StyledButton from "../components/StyledButton";
 
-type LinkDetail = {
+export interface LinkDetail {
   href: string;
   icon: Icon;
   label: string;
   description?: string;
-};
+}
 
 const navLinks: LinkDetail[] = [
   {
@@ -46,11 +46,11 @@ const navLinks: LinkDetail[] = [
   },
 ];
 
-type Props = {
+export interface NavbarProps {
   closeNavMenu: () => void;
-};
+}
 
-function Navbar(props: Props) {
+function Navbar(props: NavbarProps) {
   const isSmallBreakpoint = useMediaQuery("(max-width: 48em)");
   const navigate = useNavigate();
   const location = useLocation();

@@ -1,7 +1,7 @@
 import { Card, Grid, Stack, Text } from "@mantine/core";
 import { StatisticalSummary } from "./types";
 
-type MetricsSummaryProps = {
+export interface MetricsSummaryProps {
   summary: StatisticalSummary;
 };
 

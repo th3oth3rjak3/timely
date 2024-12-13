@@ -92,14 +92,13 @@ const useTagService = (
     return await invoke<Tag[]>({ command: "get_all_tags" });
   };
 
-  const tryFindTagByName = (
-    tagName: string,
-    options: Tag[]
-  ): Tag | undefined => {
+  const tryFindTagByName = (tagName: string, options: Tag[]): Tag | null => {
     const found = options.filter((tag) => tag.value === tagName);
     if (found.length > 0) {
       return found[0];
     }
+
+    return null;
   };
 
   const createNewTag = async (tagName: string) => {

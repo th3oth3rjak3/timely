@@ -87,7 +87,7 @@ function Settings() {
     setNotificationSettings(userSettings.notificationSettings);
   }, [userSettings]);
 
-  type FormUserSettings = {
+  interface FormUserSettings {
     pageSize: string;
     homePage: string;
     colorScheme: string;

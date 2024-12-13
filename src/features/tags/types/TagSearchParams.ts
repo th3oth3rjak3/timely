@@ -1,11 +1,11 @@
 import { Ordering } from "../../../models/Ordering";
 import { SortDirection } from "../../../models/SortDirection";
 
-export type TagSearchParams = {
-    page: number;
-    pageSize: number;
-    queryString: string | null;
-    ordering: { orderBy: string, sortDirection: SortDirection } | null;
+export interface TagSearchParams {
+  page: number;
+  pageSize: number;
+  queryString: string | null;
+  ordering: { orderBy: string; sortDirection: SortDirection } | null;
 }
 
 export function tagSearchParams(
