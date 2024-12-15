@@ -5,13 +5,13 @@ import useTauri from "../../../hooks/useTauri";
 import { PagedData } from "../../../models/PagedData";
 import { TaskStatus } from "../../../models/TaskStatus";
 import { TimelyAction } from "../../../models/TauriAction";
+import { Task, UserSettings } from "../../../models/ZodModels";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTaskPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
 import { ColorPalette } from "../../settings/hooks/useColorService";
-import { EditTask, NewTask, Task } from "../types/Task";
+import { EditTask, NewTask } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
-import { UserSettings } from "../../../models/ZodModels";
 
 /** Create a task service to interact with tauri data. */
 const useTaskService = (
