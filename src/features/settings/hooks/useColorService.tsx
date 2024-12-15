@@ -1,6 +1,7 @@
 import { MantineGradient, MantineTheme } from '@mantine/core';
 import { useMemo } from 'react';
-import { UserSettings } from '../UserSettings';
+import { UserSettings } from "../../../models/ZodModels";
+
 
 export interface ColorPalette {
   colorName: string;

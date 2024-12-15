@@ -1,9 +1,10 @@
 import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
+import { UserSettings } from "../../../models/ZodModels";
 import { useAppDispatch } from "../../../redux/hooks";
 import { setUserSettings } from "../../../redux/reducers/settingsSlice";
 import { tryMap } from "../../../utilities/nullableUtilities";
-import { UserSettings } from "../UserSettings";
+
 
 export interface Settings {
   pageSize: string;

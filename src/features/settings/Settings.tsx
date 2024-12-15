@@ -17,11 +17,12 @@ import { useEffect, useMemo, useState } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
+import { NotificationSetting } from "../../models/ZodModels";
 import { useAppSelector } from "../../redux/hooks";
 import { toSelectOptions } from "../../utilities/formUtilities";
 import { toProperCase } from "../../utilities/stringUtilities";
 import useSettingsService from "./hooks/useSettingsService";
-import { NotificationSetting } from "./UserSettings";
+
 
 /**
  * Settings page.

@@ -201,6 +201,7 @@ pub struct Comment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct CommentRead {
     pub id: i64,
     pub task_id: i64,
