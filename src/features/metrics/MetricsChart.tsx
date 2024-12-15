@@ -9,7 +9,8 @@ import {
   YAxis,
 } from "recharts";
 import useColorPalette from "../../hooks/useColorPalette";
-import { DailyWorkHistory } from "./types";
+import { DailyWorkHistory } from "../../models/ZodModels";
+
 
 export interface MetricsChartProps {
   workHistory: DailyWorkHistory[];

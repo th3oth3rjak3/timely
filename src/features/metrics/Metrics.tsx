@@ -14,11 +14,8 @@ import useMetricsService from "./hooks/useMetricsService";
 import MetricsChart from "./MetricsChart";
 import MetricsFilter from "./MetricsFilter";
 import MetricsSummaryComponent from "./MetricsSummary";
-import {
-  FilterFormInputs,
-  MetricsFilterCriteria,
-  MetricsSummary,
-} from "./types";
+import { FilterFormInputs, MetricsFilterCriteria } from "./types";
+import { MetricsSummary } from "../../models/ZodModels";
 
 function Metrics() {
   const [tagOptions, setTagOptions] = useState<Tag[]>([]);

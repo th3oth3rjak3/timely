@@ -1,5 +1,6 @@
 import { Card, Grid, Stack, Text } from "@mantine/core";
-import { StatisticalSummary } from "./types";
+import { StatisticalSummary } from "../../models/ZodModels";
+
 
 export interface MetricsSummaryProps {
   summary: StatisticalSummary;

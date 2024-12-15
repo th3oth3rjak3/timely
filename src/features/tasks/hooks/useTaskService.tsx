@@ -9,9 +9,9 @@ import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTaskPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
 import { ColorPalette } from "../../settings/hooks/useColorService";
-import { UserSettings } from "../../settings/UserSettings";
 import { EditTask, NewTask, Task } from "../types/Task";
 import { TaskSearchParams } from "../types/TaskSearchParams";
+import { UserSettings } from "../../../models/ZodModels";
 
 /** Create a task service to interact with tauri data. */
 const useTaskService = (

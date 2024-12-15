@@ -5,7 +5,6 @@ import { useAppDispatch } from "../../../redux/hooks";
 import { setUserSettings } from "../../../redux/reducers/settingsSlice";
 import { tryMap } from "../../../utilities/nullableUtilities";
 
-
 export interface Settings {
   pageSize: string;
   homePage: string;

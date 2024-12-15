@@ -1,6 +1,7 @@
 import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
-import { UserSettings } from "../../settings/UserSettings";
+import { UserSettings } from "../../../models/ZodModels";
+
 
 const useCommentService = (userSettings: UserSettings) => {
   const { invoke } = useTauri();

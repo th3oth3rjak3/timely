@@ -6,8 +6,9 @@ import {
   setTaskPageSize,
 } from "../../../redux/reducers/settingsSlice";
 import useTagService from "../../tags/hooks/useTagService";
-import { Tag } from "../../tags/types/Tag";
-import { Task } from "../types/Task";
+
+
+import { Tag, Task } from "../../../models/ZodModels";
 import { TaskSearchParams } from "../types/TaskSearchParams";
 import useTaskService from "./useTaskService";
 
