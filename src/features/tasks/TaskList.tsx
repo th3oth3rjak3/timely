@@ -55,15 +55,15 @@ import {
 } from "../../utilities/formUtilities.ts";
 import { showSuccessNotification } from "../../utilities/notificationUtilities";
 import useTagService from "../tags/hooks/useTagService.tsx";
-import { Tag } from "../tags/types/Tag.ts";
 import useFetchTasks from "./hooks/useFetchTasks.tsx";
 import useTaskService from "./hooks/useTaskService.tsx";
 import QuickFilterComponent, {
   TagFilterSelection,
 } from "./QuickFilterComponent.tsx";
 import TaskDetail from "./TaskDetail.tsx";
-import { NewTask, Task } from "./types/Task.ts";
+import { NewTask } from "./types/Task.ts";
 import { FilterName, QuickFilter } from "./types/TaskSearchParams.ts";
+import { Task, Tag } from "../../models/ZodModels.ts";
 
 function TaskList() {
   //#region State

@@ -1,6 +1,6 @@
 import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
-import { UserSettings } from "../../settings/UserSettings";
+import { UserSettings } from "../../../models/ZodModels";
 import { EditTaskWorkHistory, NewTaskWorkHistory } from "../types/Task";
 
 const useWorkHistoryService = (userSettings: UserSettings) => {

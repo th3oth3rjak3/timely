@@ -13,10 +13,10 @@ import { useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
+import { Tag } from "../../models/ZodModels";
 import { useAppSelector } from "../../redux/hooks";
 import { SelectOption } from "../../utilities/formUtilities";
 import { splitAtUpperCase } from "../../utilities/stringUtilities";
-import { Tag } from "../tags/types/Tag";
 import { FilterName } from "./types/TaskSearchParams";
 
 export interface TagFilterProps {

@@ -10,7 +10,7 @@ import useColorPalette from "../../hooks/useColorPalette";
 import { useAppSelector } from "../../redux/hooks";
 import useCommentService from "./hooks/useCommentService";
 import { Comment } from "./types/Comment";
-import { Task } from "./types/Task";
+import { Task } from "../../models/ZodModels";
 
 export interface CommentDetailsProps {
   task: Task;

@@ -1,41 +1,4 @@
-import { z } from "zod";
-import { maybeDate, toDate } from "../../../utilities/dateUtilities";
-import { Tag } from "../../tags/types/Tag";
-import { Comment } from "./Comment";
-
-export const TaskWorkHistory = z.object({
-  id: z.number(),
-  taskId: z.number(),
-  startDate: z.string().transform(toDate),
-  endDate: z.string().transform(toDate),
-  elapsedDuration: z.number(),
-});
-
-export type TaskWorkHistory = z.infer<typeof TaskWorkHistory>;
-
-export const Task = z.object({
-  id: z.number(),
-  title: z.string(),
-  description: z.string(),
-  status: z.string(),
-  scheduledStartDate: z.string().nullable().transform(maybeDate),
-  scheduledCompleteDate: z.string().nullable().transform(maybeDate),
-  actualStartDate: z.string().nullable().transform(maybeDate),
-  actualCompleteDate: z.string().nullable().transform(maybeDate),
-  estimatedDuration: z.number().nullable(),
-  elapsedDuration: z.number(),
-  comments: z.array(Comment),
-  tags: z.array(Tag),
-  workHistory: z.array(TaskWorkHistory),
-});
-
-export type Task = z.infer<typeof Task>;
-
-export interface NewTaskWorkHistory {
-  taskId: number;
-  startDate: Date;
-  endDate: Date;
-}
+import { Tag } from "../../../models/ZodModels";
 
 export interface EditTaskWorkHistory {
   id: number;
@@ -74,4 +37,10 @@ export interface EditTask {
   estimatedDuration: number | null;
   /** The amount of time in seconds that has been logged against this task. */
   elapsedDuration: number | null;
+}
+
+export interface NewTaskWorkHistory {
+  taskId: number;
+  startDate: Date;
+  endDate: Date;
 }

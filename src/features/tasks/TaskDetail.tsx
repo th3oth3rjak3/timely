@@ -11,12 +11,10 @@ import {
 import dayjs from "dayjs";
 import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
-import { UserSettings } from "../settings/UserSettings";
-import { Tag } from "../tags/types/Tag";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
 import TaskWorkHistoryDetails from "./TaskWorkHistoryDetails";
-import { Task } from "./types/Task";
+import { Task, Tag, UserSettings } from "../../models/ZodModels";
 
 export interface TaskDetailParams {
   task: Task;

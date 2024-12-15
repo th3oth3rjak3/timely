@@ -17,15 +17,11 @@ import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { TimeSpan } from "../../models/TimeSpan";
+import { Task, TaskWorkHistory } from "../../models/ZodModels";
 import { useAppSelector } from "../../redux/hooks";
 import { getDayOnlyProps } from "../../utilities/dateUtilities";
 import useWorkHistoryService from "./hooks/useWorkHistoryService";
-import {
-  EditTaskWorkHistory,
-  NewTaskWorkHistory,
-  Task,
-  TaskWorkHistory,
-} from "./types/Task";
+import { EditTaskWorkHistory, NewTaskWorkHistory } from "./types/Task";
 
 export interface TaskWorkHistoryProps {
   task: Task;
