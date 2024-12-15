@@ -1,13 +1,17 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { DataTableSortStatus } from "mantine-datatable";
-import { UserSettings } from "../../features/settings/UserSettings";
-import { Tag } from "../../features/tags/types/Tag";
-import { tagSearchParams, TagSearchParams } from "../../features/tags/types/TagSearchParams";
-import { Task } from "../../features/tasks/types/Task";
-import { taskSearchParams, TaskSearchParams } from "../../features/tasks/types/TaskSearchParams";
+import {
+  tagSearchParams,
+  TagSearchParams,
+} from "../../features/tags/types/TagSearchParams";
+import {
+  taskSearchParams,
+  TaskSearchParams,
+} from "../../features/tasks/types/TaskSearchParams";
 import { Ordering } from "../../models/Ordering";
 import { TaskStatus } from "../../models/TaskStatus";
 import { SelectOption } from "../../utilities/formUtilities";
+import { UserSettings, Tag, Task } from "../../models/ZodModels";
 
 /** Settings that are applied to the application. */
 export interface SettingsState {

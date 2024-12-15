@@ -1,6 +1,6 @@
 import { InvokeArgs, invoke as tauriInvoke } from "@tauri-apps/api/core";
-import { UserSettings } from "../features/settings/UserSettings";
 import { TimelyAction } from "../models/TauriAction";
+import { UserSettings } from "../models/ZodModels";
 import {
   showErrorNotification,
   showSuccessNotification,
