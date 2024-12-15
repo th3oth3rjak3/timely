@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Tag } from "../types/Tag";
+import { Tag } from "../../../models/ZodModels";
 import { TagSearchParams } from "../types/TagSearchParams";
 import useTagService from "./useTagService";
 

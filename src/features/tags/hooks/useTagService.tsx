@@ -8,8 +8,8 @@ import { TimelyAction } from "../../../models/TauriAction";
 import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
 import { setCurrentTagPage } from "../../../redux/reducers/settingsSlice";
 import { findLastPage } from "../../../utilities/dataTableUtilities";
-import { Tag } from "../types/Tag";
 import { TagSearchParams } from "../types/TagSearchParams";
+import { Tag } from "../../../models/ZodModels";
 
 const useTagService = (
   recordCount: number,

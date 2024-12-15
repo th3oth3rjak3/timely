@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
+import { Tag } from "../../models/ZodModels";
 import { useAppDispatch, useAppSelector } from "../../redux/hooks";
 import {
   setCurrentTagPage,
@@ -26,7 +27,7 @@ import {
 import { validateLength } from "../../utilities/formUtilities";
 import useFetchTags from "./hooks/useFetchTags";
 import useTagService from "./hooks/useTagService";
-import { NewTag, Tag } from "./types/Tag";
+import { NewTag } from "./types/Tag";
 
 function TagsList() {
   const tagSearchParams = useAppSelector(
