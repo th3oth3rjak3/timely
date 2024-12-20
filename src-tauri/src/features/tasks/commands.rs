@@ -148,17 +148,17 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 
     match params.ordering.sort_direction {
         SortDirection::Ascending => match params.ordering.order_by.as_str() {
-            "title" => builder.push(" ORDER BY tasks.title ASC"),
-            "status" => builder.push(" ORDER BY tasks.status ASC"),
-            "description" => builder.push(" ORDER BY tasks.description ASC"),
+            "title" => builder.push(" ORDER BY LOWER(tasks.title) ASC"),
+            "status" => builder.push(" ORDER BY LOWER(tasks.status) ASC"),
+            "description" => builder.push(" ORDER BY LOWER(tasks.description) ASC"),
             "scheduled_start_date" => builder.push(" ORDER BY tasks.scheduled_start_date IS NULL ASC, tasks.scheduled_start_date ASC"),
             "scheduled_complete_date" => builder.push(" ORDER BY tasks.scheduled_complete_date IS NULL ASC, tasks.scheduled_complete_date ASC"),
             _ => &mut builder
         },
         SortDirection::Descending => match params.ordering.order_by.as_str() {
-            "title" => builder.push(" ORDER BY tasks.title DESC"),
-            "status" => builder.push(" ORDER BY tasks.status DESC"),
-            "description" => builder.push(" ORDER BY tasks.description DESC"),
+            "title" => builder.push(" ORDER BY LOWER(tasks.title) DESC"),
+            "status" => builder.push(" ORDER BY LOWER(tasks.status) DESC"),
+            "description" => builder.push(" ORDER BY LOWER(tasks.description) DESC"),
             "scheduled_start_date" => builder.push(" ORDER BY tasks.scheduled_start_date IS NULL DESC, tasks.scheduled_start_date DESC"),
             "scheduled_complete_date" => builder.push(" ORDER BY tasks.scheduled_complete_date IS NULL DESC, tasks.scheduled_complete_date DESC"),
             _ => &mut builder

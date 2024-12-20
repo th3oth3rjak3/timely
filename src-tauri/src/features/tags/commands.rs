@@ -15,11 +15,11 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 
     match params.ordering.sort_direction {
         SortDirection::Ascending => match params.ordering.order_by.as_str() {
-            "value" => builder.push(" ORDER BY tags.value ASC"),
+            "value" => builder.push(" ORDER BY LOWER(tags.value) ASC"),
             _ => &mut builder
         },
         SortDirection::Descending => match params.ordering.order_by.as_str() {
-            "value" => builder.push(" ORDER BY tags.value DESC"),
+            "value" => builder.push(" ORDER BY LOWER(tags.value) DESC"),
             _ => &mut builder
         },
     };
