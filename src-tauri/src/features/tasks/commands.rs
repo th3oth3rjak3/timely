@@ -5,13 +5,14 @@ use sqlx::QueryBuilder;
 use tauri::State;
 
 use crate::{
-    features::tags::Tag, query_utils::add_in_expression, Data, FilterOption, PagedData, SortDirection
+    features::tags::Tag, option_utils::has_contents, query_utils::add_in_expression, Data, FilterOption, PagedData, SortDirection
 };
 
 use super::*;
 
 #[tauri::command]
 pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<()> {
+    let mut transaction = db.pool.begin().await.into_ta_result()?;
     let tags = new_task.tags.clone();
     let new_task = NewTask::from(new_task);
     
@@ -24,26 +25,29 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<
         new_task.scheduled_start_date,
         new_task.scheduled_complete_date,
         new_task.estimated_duration,
-    ).execute(&db.pool)
+    ).execute(&mut *transaction)
     .await
     .into_ta_result()?;
 
-
-    if let Some(tags) = tags {
+    if has_contents(tags.as_ref()) {
+        let tags = tags.unwrap();
         let mut builder = QueryBuilder::new("INSERT INTO task_tags (tag_id, task_id) ");
         builder.push_values(tags, |mut b, tag| {
             b.push_bind(tag.id).push_bind(result.last_insert_rowid());
         });
         
         builder
-            .build()
-            .execute(&db.pool)
-            .await
-            .map(|_|())
-            .into_ta_result()?;
+        .build()
+        .execute(&mut *transaction)
+        .await
+        .map(|_|())
+        .into_ta_result()?;
     }
 
-    Ok(())
+    transaction
+    .commit()
+    .await
+    .into_ta_result()
 }
 
 fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params: &'a TaskSearchParams) -> QueryBuilder<'a, sqlx::Sqlite> {

@@ -2,6 +2,7 @@ pub mod data_access;
 pub mod features;
 pub mod models;
 pub mod query_utils;
+pub mod option_utils;
 
 use data_access::*;
 use models::*;
