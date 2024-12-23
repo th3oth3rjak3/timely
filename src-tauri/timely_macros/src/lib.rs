@@ -5,7 +5,7 @@ use syn::{parse_macro_input, Data, DeriveInput};
 #[proc_macro_derive(EnumFromString)]
 pub fn enum_from_string(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    let enum_name  = &input.ident;
+    let enum_name = &input.ident;
     let data = match &input.data {
         Data::Enum(data) => data,
         _ => panic!("This macro only works for enums!"),

@@ -15,9 +15,7 @@ pub struct UpdateUserSettings {
     pub notification_settings: Vec<NotificationSetting>,
 }
 
-#[derive(
-    Debug, Clone, Serialize, Deserialize,
-)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSetting {
     pub id: i64,
@@ -95,13 +93,7 @@ pub struct UserSettingRead {
     pub notification_settings: Vec<NotificationSetting>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-    FromRow
-)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct NotificationSetting {
     pub id: i64,

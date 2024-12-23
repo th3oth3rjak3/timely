@@ -3,14 +3,7 @@ use sqlx::prelude::FromRow;
 
 use crate::Ordering;
 
-#[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-    PartialEq,
-    FromRow
-)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, FromRow)]
 pub struct Tag {
     pub id: i64,
     pub value: String,

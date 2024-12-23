@@ -1,13 +1,13 @@
 pub mod data_access;
 pub mod features;
 pub mod models;
-pub mod query_utils;
 pub mod option_utils;
+pub mod query_utils;
 
 use data_access::*;
 use models::*;
-use tauri::async_runtime::block_on;
 use std::env;
+use tauri::async_runtime::block_on;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {

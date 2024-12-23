@@ -1,4 +1,7 @@
-use std::{collections::HashMap, ops::{Add, AddAssign}};
+use std::{
+    collections::HashMap,
+    ops::{Add, AddAssign},
+};
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -16,16 +19,16 @@ pub struct StatisticalSummary {
 
 impl StatisticalSummary {
     pub fn new(
-        tasks_started: i64, 
-        tasks_completed: i64, 
-        tasks_worked: i64, 
-        hours_worked: f64
+        tasks_started: i64,
+        tasks_completed: i64,
+        tasks_worked: i64,
+        hours_worked: f64,
     ) -> Self {
         Self {
             tasks_started,
             tasks_completed,
             tasks_worked,
-            hours_worked
+            hours_worked,
         }
     }
 }
@@ -62,33 +65,37 @@ impl MetricsSummary {
         end_date: DateTime<Utc>,
         selected_tags: Vec<Tag>,
         summary: StatisticalSummary,
-        work_history: Vec<DailyWorkHistory>
-
+        work_history: Vec<DailyWorkHistory>,
     ) -> Self {
         Self {
             start_date,
             end_date,
             selected_tags,
             summary,
-            work_history
+            work_history,
         }
     }
 }
 
-pub trait Upsertable<K, V> where K: Eq + std::hash::Hash {
+pub trait Upsertable<K, V>
+where
+    K: Eq + std::hash::Hash,
+{
     fn upsert(&mut self, key: K, value: V);
 }
 
-pub trait UpsertAddable<K, V> 
-where 
+pub trait UpsertAddable<K, V>
+where
     K: Eq + std::hash::Hash,
-    V: Add + AddAssign + Default
+    V: Add + AddAssign + Default,
 {
-        fn upsert_add(&mut self, key: K, value: V);
+    fn upsert_add(&mut self, key: K, value: V);
 }
 
-impl<K, V> Upsertable<K, V> for HashMap<K, V> 
-where K: Eq + std::hash::Hash {
+impl<K, V> Upsertable<K, V> for HashMap<K, V>
+where
+    K: Eq + std::hash::Hash,
+{
     fn upsert(&mut self, key: K, value: V) {
         if self.contains_key(&key) {
             let existing = self.get_mut(&key).unwrap();
@@ -100,9 +107,9 @@ where K: Eq + std::hash::Hash {
 }
 
 impl<K, V> UpsertAddable<K, V> for HashMap<K, V>
-where 
+where
     K: Eq + std::hash::Hash,
-    V: Add + AddAssign + Default
+    V: Add + AddAssign + Default,
 {
     fn upsert_add(&mut self, key: K, value: V) {
         let existing = self.entry(key).or_default();

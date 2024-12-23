@@ -1,19 +1,11 @@
+use crate::{features::tags::Tag, FilterOption, Ordering};
 use chrono::{DateTime, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 use timely_macros::EnumFromString;
-use crate::{features::tags::Tag, FilterOption, Ordering};
 
 /// The status of a task.
-#[derive(
-    Default,
-    Debug,
-    PartialEq,
-    Eq,
-    Clone,
-    sqlx::Type,
-    EnumFromString,
-)]
+#[derive(Default, Debug, PartialEq, Eq, Clone, sqlx::Type, EnumFromString)]
 #[sqlx(type_name = "TEXT")]
 pub enum Status {
     /// When a task has been cancelled and will not be worked.
@@ -32,7 +24,8 @@ pub enum Status {
 impl Serialize for Status {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
-        S: serde::Serializer {
+        S: serde::Serializer,
+    {
         let value = match *self {
             Status::Todo => "To Do",
             Status::Doing => "Doing",
@@ -48,7 +41,8 @@ impl Serialize for Status {
 impl<'de> Deserialize<'de> for Status {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
-        D: serde::Deserializer<'de> {
+        D: serde::Deserializer<'de>,
+    {
         let s = String::deserialize(deserializer)?;
 
         match s.as_str() {
@@ -57,19 +51,15 @@ impl<'de> Deserialize<'de> for Status {
             "Done" => Ok(Status::Done),
             "Paused" => Ok(Status::Paused),
             "Cancelled" => Ok(Status::Cancelled),
-            _  => Err(serde::de::Error::unknown_variant(&s, &["To Do", "Doing", "Done", "Paused", "Cancelled"]))
+            _ => Err(serde::de::Error::unknown_variant(
+                &s,
+                &["To Do", "Doing", "Done", "Paused", "Cancelled"],
+            )),
         }
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Deserialize,
-    Serialize,
-    PartialEq,
-    FromRow
-)]
+#[derive(Debug, Clone, Deserialize, Serialize, PartialEq, FromRow)]
 pub struct Task {
     pub id: i64,
     pub title: String,
@@ -120,13 +110,13 @@ pub struct EditTaskWorkHistory {
 impl From<TaskWorkHistory> for TaskWorkHistoryRead {
     fn from(value: TaskWorkHistory) -> Self {
         let delta = value.end_date - value.start_date;
-        
+
         Self {
             id: value.id,
             task_id: value.task_id,
             start_date: value.start_date.and_utc(),
             end_date: value.end_date.and_utc(),
-            elapsed_duration: delta.num_seconds()
+            elapsed_duration: delta.num_seconds(),
         }
     }
 }
@@ -185,12 +175,7 @@ impl From<CreateComment> for NewComment {
     }
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Comment {
     pub id: i64,
@@ -300,15 +285,10 @@ pub struct TaskSearchParams {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DateFilter {
     pub start: Option<DateTime<Utc>>,
-    pub end: Option<DateTime<Utc>>
+    pub end: Option<DateTime<Utc>>,
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Serialize,
-    Deserialize,
-)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TaskTag {
     pub task_id: i64,
     pub tag_id: i64,
@@ -329,5 +309,5 @@ pub enum QuickFilter {
     Planned,
     Unplanned,
     Overdue,
-    LateStart
+    LateStart,
 }
