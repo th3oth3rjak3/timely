@@ -68,7 +68,7 @@ function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
         highlightToday
         allowSingleDateInRange
       />
-      {showButtons === undefined || showButtons === true ? (
+      {showButtons ? (
         <Group justify="center">
           <StyledButton
             label="Today"
