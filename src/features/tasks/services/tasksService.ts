@@ -1,6 +1,10 @@
 import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { invoke } from "@tauri-apps/api/core";
+import { DataTableSortStatus } from "mantine-datatable";
+import { create } from "zustand";
+import { DateRangeFilter } from "../../../models/DateRangeFilter";
 import { PagedData } from "../../../models/PagedData";
+import { TaskStatus } from "../../../models/TaskStatus";
 import { TimelyAction } from "../../../models/TauriAction";
 import { Task, UserSettings } from "../../../models/ZodModels";
 import {
@@ -8,7 +12,48 @@ import {
   showSuccessNotification,
 } from "../../../utilities/notificationUtilities";
 import { EditTask, NewTask } from "../types/Task";
-import { TaskSearchParams } from "../types/TaskSearchParams";
+import { QuickFilter, TaskSearchParams } from "../types/TaskSearchParams";
+
+export interface TaskStore {
+  page: number;
+  setPage: (page: number) => void;
+  pageSize: number;
+  setPageSize: (pageSize: number) => void;
+  sortStatus: DataTableSortStatus<Task>;
+  setSortStatus: (status: DataTableSortStatus<Task>) => void;
+  query: string | null;
+  setQuery: (query: string | null) => void;
+  selectedStatuses: TaskStatus[];
+  setSelectedStatuses: (statuses: TaskStatus[]) => void;
+  startByFilter: DateRangeFilter | null;
+  setStartByFilter: (filter: DateRangeFilter | null) => void;
+  dueByFilter: DateRangeFilter | null;
+  setDueByFilter: (filter: DateRangeFilter | null) => void;
+  quickFilter: QuickFilter | null;
+  setQuickFilter: (filter: QuickFilter | null) => void;
+  selectedTasks: Task[];
+  setSelectedTasks: (tasks: Task[]) => void;
+}
+export const useTaskStore = create<TaskStore>((set) => ({
+  page: 1,
+  setPage: (page) => set({ page }),
+  pageSize: 5,
+  setPageSize: (pageSize) => set({ pageSize }),
+  sortStatus: { columnAccessor: "scheduledCompleteDate", direction: "asc" },
+  setSortStatus: (sortStatus) => set({ sortStatus }),
+  query: null,
+  setQuery: (query) => set({ query }),
+  selectedStatuses: [TaskStatus.Todo, TaskStatus.Doing, TaskStatus.Paused],
+  setSelectedStatuses: (selectedStatuses) => set({ selectedStatuses }),
+  startByFilter: null,
+  setStartByFilter: (startByFilter) => set({ startByFilter }),
+  dueByFilter: null,
+  setDueByFilter: (dueByFilter) => set({ dueByFilter }),
+  quickFilter: null,
+  setQuickFilter: (quickFilter) => set({ quickFilter }),
+  selectedTasks: [],
+  setSelectedTasks: (selectedTasks) => set({ selectedTasks }),
+}));
 
 export interface TaskLike {
   elapsedDuration: number | null;

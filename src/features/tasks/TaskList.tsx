@@ -26,7 +26,6 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import { useAtom } from "jotai";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -81,19 +80,9 @@ import {
   useResumeTask,
   useSearchTasks,
   useStartTask,
+  useTaskStore,
 } from "./services/tasksService.ts";
 import TaskDetail from "./TaskDetail.tsx";
-import {
-  taskListDueByFilterAtom,
-  taskListPageAtom,
-  taskListPageSizeAtom,
-  taskListQueryAtom,
-  taskListQuickFilterAtom,
-  taskListSelectedRecordsAtom,
-  taskListSelectedStatusAtom,
-  taskListSortStatusAtom,
-  taskListStartByFilterAtom,
-} from "./taskListState.ts";
 import { NewTask } from "./types/Task.ts";
 import {
   FilterName,
@@ -112,19 +101,26 @@ function TaskList() {
 
   const colorPalette = useColorPalette();
 
-  const [pageSize, setPageSize] = useAtom(taskListPageSizeAtom);
-  const [page, setPage] = useAtom(taskListPageAtom);
-  const [query, setQuery] = useAtom(taskListQueryAtom);
-  const [selectedStatuses, setSelectedStatuses] = useAtom(
-    taskListSelectedStatusAtom
+  const page = useTaskStore((store) => store.page);
+  const setPage = useTaskStore((store) => store.setPage);
+  const pageSize = useTaskStore((store) => store.pageSize);
+  const setPageSize = useTaskStore((store) => store.setPageSize);
+  const query = useTaskStore((store) => store.query);
+  const setQuery = useTaskStore((store) => store.setQuery);
+  const selectedStatuses = useTaskStore((store) => store.selectedStatuses);
+  const setSelectedStatuses = useTaskStore(
+    (store) => store.setSelectedStatuses
   );
-  const [sortStatus, setSortStatus] = useAtom(taskListSortStatusAtom);
-  const [startByFilter, setStartByFilter] = useAtom(taskListStartByFilterAtom);
-  const [dueByFilter, setDueByFilter] = useAtom(taskListDueByFilterAtom);
-  const [quickFilter, setQuickFilter] = useAtom(taskListQuickFilterAtom);
-  const [selectedRecords, setSelectedRecords] = useAtom(
-    taskListSelectedRecordsAtom
-  );
+  const sortStatus = useTaskStore((store) => store.sortStatus);
+  const setSortStatus = useTaskStore((store) => store.setSortStatus);
+  const startByFilter = useTaskStore((store) => store.startByFilter);
+  const setStartByFilter = useTaskStore((store) => store.setStartByFilter);
+  const dueByFilter = useTaskStore((store) => store.dueByFilter);
+  const setDueByFilter = useTaskStore((store) => store.setDueByFilter);
+  const quickFilter = useTaskStore((store) => store.quickFilter);
+  const setQuickFilter = useTaskStore((store) => store.setQuickFilter);
+  const selectedTasks = useTaskStore((store) => store.selectedTasks);
+  const setSelectedTasks = useTaskStore((store) => store.setSelectedTasks);
 
   const prevPageRef = useRef(page);
   const prevPageSizeRef = useRef(pageSize);
@@ -132,13 +128,13 @@ function TaskList() {
   useEffect(() => {
     if (prevPageRef.current !== page || prevPageSizeRef.current !== pageSize) {
       // Reset selected records only if page or pageSize has changed
-      setSelectedRecords([]);
+      setSelectedTasks([]);
     }
 
     // Update the refs with the current values
     prevPageRef.current = page;
     prevPageSizeRef.current = pageSize;
-  }, [page, pageSize, setSelectedRecords]);
+  }, [page, pageSize, setSelectedTasks]);
 
   const params = useMemo(() => {
     return taskSearchParams(
@@ -481,7 +477,7 @@ function TaskList() {
       onCancel: () => {},
       onConfirm: async () => {
         await deleteManyTasks.mutateAsync(tasks);
-        setSelectedRecords([]);
+        setSelectedTasks([]);
       },
     });
   }
@@ -772,11 +768,11 @@ function TaskList() {
       <Group justify="space-between">
         <Text size="xl">Tasks</Text>
         <Group>
-          {selectedRecords.length > 0 ? (
+          {selectedTasks.length > 0 ? (
             <StyledActionIcon
               tooltipLabel="Delete Selected Tasks"
               tooltipPosition="left"
-              onClick={() => handleDeleteManyRequested(selectedRecords)}
+              onClick={() => handleDeleteManyRequested(selectedTasks)}
             >
               <IconTrashX />
             </StyledActionIcon>
@@ -832,8 +828,8 @@ function TaskList() {
               ? "white"
               : colorPalette.color
           }
-          selectedRecords={selectedRecords}
-          onSelectedRecordsChange={setSelectedRecords}
+          selectedRecords={selectedTasks}
+          onSelectedRecordsChange={setSelectedTasks}
           rowExpansion={{
             content: ({ record }) => {
               return (
