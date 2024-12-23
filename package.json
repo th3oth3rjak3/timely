@@ -26,7 +26,6 @@
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
     "dayjs-plugin-utc": "^0.1.2",
-    "jotai": "^2.10.4",
     "lodash": "^4.17.21",
     "mantine-contextmenu": "^7.12.2",
     "mantine-datatable": "^7.12.4",

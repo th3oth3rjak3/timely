@@ -15,25 +15,24 @@ import "./App.css";
 
 import { ModalsProvider } from "@mantine/modals";
 import { Notifications } from "@mantine/notifications";
-import { useSetAtom } from "jotai";
 import { ContextMenuProvider } from "mantine-contextmenu";
 import Metrics from "./features/metrics/Metrics";
 import Settings from "./features/settings/Settings";
 import { useUserSettings } from "./features/settings/settingsService";
+import { useTagStore } from "./features/tags/services/tagService";
 import TagsList from "./features/tags/TagsList";
+import { useTaskStore } from "./features/tasks/services/tasksService";
 import TaskList from "./features/tasks/TaskList";
-import { taskListPageSizeAtom } from "./features/tasks/taskListState";
 import Timer from "./features/timer/Timer";
 import MainLayout from "./layout/MainLayout";
 import { showErrorNotification } from "./utilities/notificationUtilities";
 
 function App() {
   const { isPending, error, data: userSettings } = useUserSettings();
-
-  const setTaskPageSize = useSetAtom(taskListPageSizeAtom);
+  const setTaskPageSize = useTaskStore((store) => store.setPageSize);
+  const setTagPageSize = useTagStore((store) => store.setPageSize);
   setTaskPageSize(userSettings.pageSize);
-
-  // TODO: set tag params here
+  setTagPageSize(userSettings.pageSize);
 
   const router = useMemo(() => {
     if (!isPending && userSettings) {
