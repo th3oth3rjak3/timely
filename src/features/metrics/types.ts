@@ -1,4 +1,4 @@
-import { Tag } from "../tags/types/Tag";
+import { Tag } from "../../models/ZodModels";
 
 export interface FilterFormInputs {
   startDate?: Date;

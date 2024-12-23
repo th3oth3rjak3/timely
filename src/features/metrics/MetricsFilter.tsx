@@ -3,8 +3,8 @@ import { DatePickerInput } from "@mantine/dates";
 import { FormErrors, useForm } from "@mantine/form";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
+import { Tag } from "../../models/ZodModels";
 import { getDayOnlyProps } from "../../utilities/dateUtilities";
-import { Tag } from "../tags/types/Tag";
 import { FilterFormInputs, MetricsFilterCriteria } from "./types";
 
 export interface MetricsFilterProps {

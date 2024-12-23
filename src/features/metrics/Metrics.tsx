@@ -5,62 +5,77 @@ import {
   IconFilter,
   IconFilterFilled,
 } from "@tabler/icons-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import StyledActionIcon from "../../components/StyledActionIcon";
-import { MetricsSummary } from "../../models/ZodModels";
 import { useGetAllTags } from "../tags/services/tagService";
-import useMetricsService from "./hooks/useMetricsService";
 import MetricsChart from "./MetricsChart";
 import MetricsFilter from "./MetricsFilter";
 import MetricsSummaryComponent from "./MetricsSummary";
+import { useGetMetrics, useMetricsStore } from "./services/metricsService";
 import { FilterFormInputs, MetricsFilterCriteria } from "./types";
 
 function Metrics() {
   const [filterOpened, filterActions] = useDisclosure(false);
+
+  const startDate = useMetricsStore((store) => store.startDate);
+  const setStartDate = useMetricsStore((store) => store.setStartDate);
+  const endDate = useMetricsStore((store) => store.endDate);
+  const setEndDate = useMetricsStore((store) => store.setEndDate);
+  const selectedTags = useMetricsStore((store) => store.selectedTags);
+  const setSelectedTags = useMetricsStore((store) => store.setSelectedTags);
+
   const [filterInputs, setFilterInputs] = useState<FilterFormInputs>({
     startDate: undefined,
     endDate: undefined,
     tags: undefined,
   });
-  const { data: tagOptions } = useGetAllTags();
-  const { getMetrics } = useMetricsService();
-  const emptyData: MetricsSummary = {
-    startDate: new Date(),
-    endDate: new Date(),
-    selectedTags: [],
-    summary: {
-      tasksStarted: 0,
-      tasksCompleted: 0,
-      tasksWorked: 0,
-      hoursWorked: 0,
-    },
-    workHistory: [],
-  };
 
-  const [metricsSummary, setMetricsSummary] =
-    useState<MetricsSummary>(emptyData);
+  const isFiltered = useMemo(() => {
+    return (
+      filterInputs.startDate !== undefined &&
+      filterInputs.endDate !== undefined &&
+      filterInputs.tags !== undefined
+    );
+  }, [filterInputs]);
+
+  useEffect(() => {
+    setFilterInputs({
+      startDate,
+      endDate,
+      tags: selectedTags?.map((t) => t.value),
+    });
+  }, [startDate, endDate, selectedTags]);
+
+  const metricsFilterCriteria = useMemo(() => {
+    return {
+      startDate: startDate ?? new Date(),
+      endDate: endDate ?? new Date(),
+      tags: selectedTags ?? [],
+    };
+  }, [startDate, endDate, selectedTags]);
+
+  const { data: tagOptions } = useGetAllTags();
+
+  const { data: metricsSummary } = useGetMetrics(metricsFilterCriteria);
 
   const applyFilter = async (inputs: MetricsFilterCriteria) => {
-    setIsFiltered(true);
-    setFilterInputs({ ...inputs, tags: inputs.tags.map((tag) => tag.value) });
+    setStartDate(inputs.startDate);
+    setEndDate(inputs.endDate);
+    setSelectedTags(inputs.tags);
     filterActions.close();
-    const result = await getMetrics(inputs);
-    if (result !== null) {
-      setMetricsSummary(result);
-    }
   };
   const clearFilter = () => {
-    setIsFiltered(false);
     setFilterInputs({
       startDate: undefined,
       endDate: undefined,
       tags: undefined,
     });
+    setStartDate(undefined);
+    setEndDate(undefined);
+    setSelectedTags(undefined);
     filterActions.close();
   };
-
-  const [isFiltered, setIsFiltered] = useState(false);
 
   const exportMetrics = () => {
     // TODO: figure out how we want to export the metrics.
