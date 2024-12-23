@@ -18,7 +18,10 @@ import { Notifications } from "@mantine/notifications";
 import { ContextMenuProvider } from "mantine-contextmenu";
 import Metrics from "./features/metrics/Metrics";
 import Settings from "./features/settings/Settings";
-import { useUserSettings } from "./features/settings/settingsService";
+import {
+  isDefaultSettings,
+  useUserSettings,
+} from "./features/settings/settingsService";
 import { useTagStore } from "./features/tags/services/tagService";
 import TagsList from "./features/tags/TagsList";
 import { useTaskStore } from "./features/tasks/services/tasksService";
@@ -28,14 +31,12 @@ import MainLayout from "./layout/MainLayout";
 import { showErrorNotification } from "./utilities/notificationUtilities";
 
 function App() {
-  const { isPending, error, data: userSettings } = useUserSettings();
+  const { error, data: userSettings } = useUserSettings();
   const setTaskPageSize = useTaskStore((store) => store.setPageSize);
   const setTagPageSize = useTagStore((store) => store.setPageSize);
-  setTaskPageSize(userSettings.pageSize);
-  setTagPageSize(userSettings.pageSize);
 
   const router = useMemo(() => {
-    if (!isPending && userSettings) {
+    if (!isDefaultSettings(userSettings)) {
       return createBrowserRouter([
         {
           path: "/",
@@ -73,7 +74,7 @@ function App() {
   }, [userSettings]);
 
   const customTheme = useMemo(() => {
-    if (!isPending && userSettings) {
+    if (!isDefaultSettings(userSettings)) {
       let customTheme = createTheme({
         primaryColor: userSettings.colorScheme,
         defaultGradient: {
@@ -110,19 +111,26 @@ function App() {
     return undefined;
   }, [userSettings]);
 
-  if (isPending) return;
+  if (isDefaultSettings(userSettings)) return;
   if (error) showErrorNotification(error);
 
-  return (
-    <MantineProvider defaultColorScheme="dark" theme={customTheme}>
-      <ContextMenuProvider>
-        <ModalsProvider>
-          <Notifications />
-          {router && <RouterProvider router={router} />}
-        </ModalsProvider>
-      </ContextMenuProvider>
-    </MantineProvider>
-  );
+  if (router !== undefined) {
+    setTaskPageSize(userSettings.pageSize);
+    setTagPageSize(userSettings.pageSize);
+
+    return (
+      <MantineProvider defaultColorScheme="dark" theme={customTheme}>
+        <ContextMenuProvider>
+          <ModalsProvider>
+            <Notifications />
+            <RouterProvider router={router} />
+          </ModalsProvider>
+        </ContextMenuProvider>
+      </MantineProvider>
+    );
+  }
+
+  return null;
 }
 
 export default App;

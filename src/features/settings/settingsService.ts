@@ -20,6 +20,11 @@ const defaultUserSettings = {
   notificationSettings: [],
 };
 
+/** Determine if the user settings have actually been gotten from the database yet. */
+export function isDefaultSettings(userSettings: UserSettings): boolean {
+  return userSettings.homePage === ""; // All homePage paths are set to a real value, not an empty string.
+}
+
 /** Fetch the user settings from the backend. */
 export function useUserSettings() {
   return useQuery({
