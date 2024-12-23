@@ -1,18 +1,15 @@
-import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
-import { DataTableSortStatus } from "mantine-datatable";
-import { create } from "zustand";
-import { DateRangeFilter } from "../../../models/DateRangeFilter";
-import { PagedData } from "../../../models/PagedData";
-import { TaskStatus } from "../../../models/TaskStatus";
-import { TimelyAction } from "../../../models/TauriAction";
-import { Task, UserSettings } from "../../../models/ZodModels";
-import {
-  showErrorNotification,
-  showSuccessNotification,
-} from "../../../utilities/notificationUtilities";
-import { EditTask, NewTask } from "../types/Task";
-import { QuickFilter, TaskSearchParams } from "../types/TaskSearchParams";
+import {QueryClient, useMutation, useQuery} from "@tanstack/react-query";
+import {invoke} from "@tauri-apps/api/core";
+import {DataTableSortStatus} from "mantine-datatable";
+import {create} from "zustand";
+import {DateRangeFilter} from "../../../models/DateRangeFilter";
+import {PagedData} from "../../../models/PagedData";
+import {TaskStatus} from "../../../models/TaskStatus";
+import {TimelyAction} from "../../../models/TauriAction";
+import {PagedTaskData, Task, UserSettings} from "../../../models/ZodModels";
+import {showErrorNotification, showSuccessNotification,} from "../../../utilities/notificationUtilities";
+import {EditTask, NewTask} from "../types/Task";
+import {QuickFilter, TaskSearchParams} from "../types/TaskSearchParams";
 
 export interface TaskStore {
   page: number;
@@ -34,25 +31,26 @@ export interface TaskStore {
   selectedTasks: Task[];
   setSelectedTasks: (tasks: Task[]) => void;
 }
+
 export const useTaskStore = create<TaskStore>((set) => ({
   page: 1,
-  setPage: (page) => set({ page }),
+  setPage: (page) => set({page}),
   pageSize: 5,
-  setPageSize: (pageSize) => set({ pageSize }),
-  sortStatus: { columnAccessor: "scheduledCompleteDate", direction: "asc" },
-  setSortStatus: (sortStatus) => set({ sortStatus }),
+  setPageSize: (pageSize) => set({pageSize}),
+  sortStatus: {columnAccessor: "scheduledCompleteDate", direction: "asc"},
+  setSortStatus: (sortStatus) => set({sortStatus}),
   query: null,
-  setQuery: (query) => set({ query }),
+  setQuery: (query) => set({query}),
   selectedStatuses: [TaskStatus.Todo, TaskStatus.Doing, TaskStatus.Paused],
-  setSelectedStatuses: (selectedStatuses) => set({ selectedStatuses }),
+  setSelectedStatuses: (selectedStatuses) => set({selectedStatuses}),
   startByFilter: null,
-  setStartByFilter: (startByFilter) => set({ startByFilter }),
+  setStartByFilter: (startByFilter) => set({startByFilter}),
   dueByFilter: null,
-  setDueByFilter: (dueByFilter) => set({ dueByFilter }),
+  setDueByFilter: (dueByFilter) => set({dueByFilter}),
   quickFilter: null,
-  setQuickFilter: (quickFilter) => set({ quickFilter }),
+  setQuickFilter: (quickFilter) => set({quickFilter}),
   selectedTasks: [],
-  setSelectedTasks: (selectedTasks) => set({ selectedTasks }),
+  setSelectedTasks: (selectedTasks) => set({selectedTasks}),
 }));
 
 export interface TaskLike {
@@ -69,10 +67,9 @@ export function useSearchTasks(params: TaskSearchParams) {
   return useQuery({
     queryKey: ["searchTasks", params],
     queryFn: async (): Promise<PagedData<Task>> => {
-      const tasks = await invoke<PagedData<Task>>("get_tasks", { params });
+      const tasks = await invoke<PagedData<Task>>("get_tasks", {params});
       if (tasks !== null) {
-        tasks.data = tasks.data.map((thing) => Task.parse(thing));
-        return tasks;
+        return PagedTaskData.parse(tasks);
       }
 
       return {
@@ -94,15 +91,15 @@ export function useCreateTask(
 ) {
   return useMutation({
     mutationFn: async (task: NewTask) => {
-      await invoke("create_task", { newTask: task });
+      await invoke("create_task", {newTask: task});
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       showSuccessNotification(
         TimelyAction.AddNewTask,
         userSettings,
         "New task added successfully."
       );
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -115,16 +112,16 @@ export function useStartTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("start_task", { taskId: task.id });
+      await invoke("start_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.StartTask,
         userSettings,
         "Task started successfully."
       );
       fetchData(task, TimelyAction.StartTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -139,16 +136,16 @@ export function usePauseTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("pause_task", { taskId: task.id });
+      await invoke("pause_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.PauseTask,
         userSettings,
         "Task paused successfully."
       );
       fetchData(task, TimelyAction.PauseTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -163,16 +160,16 @@ export function useResumeTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("resume_task", { taskId: task.id });
+      await invoke("resume_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.ResumeTask,
         userSettings,
         "Task resumed successfully."
       );
       fetchData(task, TimelyAction.ResumeTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -187,16 +184,16 @@ export function useFinishTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("finish_task", { taskId: task.id });
+      await invoke("finish_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.FinishTask,
         userSettings,
         "Task finished successfully."
       );
       fetchData(task, TimelyAction.FinishTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -211,16 +208,16 @@ export function useCancelTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("cancel_task", { taskId: task.id });
+      await invoke("cancel_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.CancelTask,
         userSettings,
         "Task cancelled successfully."
       );
       fetchData(task, TimelyAction.CancelTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -235,16 +232,16 @@ export function useRestoreTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("restore_task", { taskId: task.id });
+      await invoke("restore_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.RestoreCancelledTask,
         userSettings,
         "Task restored successfully."
       );
       fetchData(task, TimelyAction.RestoreCancelledTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -259,16 +256,16 @@ export function useReopenTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("reopen_task", { taskId: task.id });
+      await invoke("reopen_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.ReopenFinishedTask,
         userSettings,
         "Task reopened successfully."
       );
       fetchData(task, TimelyAction.ReopenFinishedTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -283,16 +280,16 @@ export function useDeleteTask(
 ) {
   return useMutation({
     mutationFn: async (task: Task) => {
-      await invoke("delete_task", { taskId: task.id });
+      await invoke("delete_task", {taskId: task.id});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.DeleteTask,
         userSettings,
         "Task deleted successfully."
       );
       fetchData(task, TimelyAction.DeleteTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -307,16 +304,16 @@ export function useDeleteManyTasks(
 ) {
   return useMutation({
     mutationFn: async (tasks: Task[]) => {
-      await invoke("delete_many_tasks", { taskIds: tasks.map((t) => t.id) });
+      await invoke("delete_many_tasks", {taskIds: tasks.map((t) => t.id)});
     },
-    onSuccess: (_, tasks) => {
+    onSuccess: async (_, tasks) => {
       showSuccessNotification(
         TimelyAction.DeleteTask,
         userSettings,
         "Selected tasks deleted successfully."
       );
       fetchData(tasks);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);
@@ -334,22 +331,21 @@ export function useEditTask(
     mutationFn: async (task: EditTask) => {
       if (
         !!previousTask &&
-        previousTask !== null &&
         previousTask.elapsedDuration === task.elapsedDuration
       ) {
         task.elapsedDuration = null;
       }
 
-      await invoke("edit_task", { task });
+      await invoke("edit_task", {task});
     },
-    onSuccess: (_, task) => {
+    onSuccess: async (_, task) => {
       showSuccessNotification(
         TimelyAction.EditTask,
         userSettings,
         "Task updated successfully."
       );
       fetchData(task, TimelyAction.EditTask);
-      queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
+      await queryClient.invalidateQueries({queryKey: ["searchTasks"]});
     },
     onError: (error) => {
       showErrorNotification(error);

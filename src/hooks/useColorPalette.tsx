@@ -1,7 +1,7 @@
-import { MantineGradient, MantineTheme, useMantineTheme } from "@mantine/core";
-import { useMemo } from "react";
-import { useUserSettings } from "../features/settings/settingsService";
-import { UserSettings } from "../models/ZodModels";
+import {MantineGradient, MantineTheme, useMantineTheme} from "@mantine/core";
+import {useMemo} from "react";
+import {useUserSettings} from "../features/settings/settingsService";
+import {UserSettings} from "../models/ZodModels";
 
 export interface ColorPalette {
   colorName: string;
@@ -16,7 +16,7 @@ export interface ColorPalette {
 
 const useColorPalette = () => {
   const theme = useMantineTheme();
-  const { data: userSettings } = useUserSettings();
+  const {data: userSettings} = useUserSettings();
 
   const withColorVariant = (userSettings: UserSettings): ColorPalette => {
     if (userSettings.colorScheme === undefined) {
@@ -70,11 +70,9 @@ const useColorPalette = () => {
     };
   };
 
-  const colorPalette = useMemo(() => {
+  return useMemo(() => {
     return withColorVariant(userSettings);
   }, [userSettings]);
-
-  return colorPalette;
 };
 
 export default useColorPalette;

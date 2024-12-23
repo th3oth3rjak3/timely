@@ -1,5 +1,5 @@
-import { ActionIcon, ActionIconVariant, FloatingPosition, MantineColor, MantineSize } from "@mantine/core";
-import { ReactNode } from "react";
+import {ActionIcon, ActionIconVariant, FloatingPosition, MantineColor, MantineSize} from "@mantine/core";
+import {ReactNode} from "react";
 import useColorPalette from "../hooks/useColorPalette";
 import MyTooltip from "./MyTooltip";
 
@@ -11,17 +11,17 @@ export interface StyledActionIconProps {
   color?: MantineColor;
   tooltipLabel?: string;
   tooltipPosition?: FloatingPosition;
-};
+}
 
 function StyledActionIcon({
-  children,
-  size,
-  variant,
-  onClick,
-  color,
-  tooltipLabel,
-  tooltipPosition,
-}: StyledActionIconProps) {
+                            children,
+                            size,
+                            variant,
+                            onClick,
+                            color,
+                            tooltipLabel,
+                            tooltipPosition,
+                          }: StyledActionIconProps) {
   const colorPalette = useColorPalette();
   const innerVariant = variant !== undefined ? variant : colorPalette.variant;
   const innerColor = color !== undefined ? color : colorPalette.colorName;

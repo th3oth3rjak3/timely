@@ -1,4 +1,4 @@
-import { Tag } from "../../../models/ZodModels";
+import {Tag} from "../../../models/ZodModels";
 
 export interface EditTaskWorkHistory {
   id: number;

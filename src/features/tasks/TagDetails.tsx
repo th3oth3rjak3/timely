@@ -1,5 +1,5 @@
-import { TagsInput } from "@mantine/core";
-import { Tag, Task } from "../../models/ZodModels";
+import {TagsInput} from "@mantine/core";
+import {Tag, Task} from "../../models/ZodModels";
 
 export interface TagDetailsProps {
   task: Task;

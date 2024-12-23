@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import { ColorPalette } from "../features/settings/hooks/useColorService";
-import { DateRange } from "../models/DateRange";
+import {DateRange} from "../models/DateRange";
+import {ColorPalette} from "../hooks/useColorPalette.tsx";
 
 export function maybeFormattedDate(
   date: Date | null,

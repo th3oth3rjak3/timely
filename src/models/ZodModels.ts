@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { maybeDate, toDate } from "../utilities/dateUtilities";
+import {z} from "zod";
+import {maybeDate, toDate} from "../utilities/dateUtilities";
 
 /* Zod Types */
 export const Tag = z.object({
@@ -45,9 +45,9 @@ export const Comment = z.object({
   message: z.string(),
   created: z.string().transform((isoStr) => new Date(isoStr)),
   modified: z
-    .string()
-    .nullable()
-    .transform((isoStr) => (isoStr === null ? null : new Date(isoStr))),
+  .string()
+  .nullable()
+  .transform((isoStr) => (isoStr === null ? null : new Date(isoStr))),
 });
 
 export type Comment = z.infer<typeof Comment>;

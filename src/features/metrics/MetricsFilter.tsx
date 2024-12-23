@@ -1,18 +1,18 @@
-import { Group, Stack, TagsInput } from "@mantine/core";
-import { DatePickerInput } from "@mantine/dates";
-import { FormErrors, useForm } from "@mantine/form";
+import {Group, Stack, TagsInput} from "@mantine/core";
+import {DatePickerInput} from "@mantine/dates";
+import {FormErrors, useForm} from "@mantine/form";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { Tag } from "../../models/ZodModels";
-import { getDayOnlyProps } from "../../utilities/dateUtilities";
-import { FilterFormInputs, MetricsFilterCriteria } from "./types";
+import {Tag} from "../../models/ZodModels";
+import {getDayOnlyProps} from "../../utilities/dateUtilities";
+import {FilterFormInputs, MetricsFilterCriteria} from "./types";
 
 export interface MetricsFilterProps {
   filterInputs: FilterFormInputs;
   tagOptions: Tag[];
   onFilterCleared: () => void;
   onFilterApplied: (inputs: MetricsFilterCriteria) => void;
-};
+}
 
 function MetricsFilter({
   filterInputs,
@@ -31,7 +31,7 @@ function MetricsFilter({
     validateInputOnChange: true,
     validateInputOnBlur: true,
     validate: (item) => {
-      let errors: FormErrors = {
+      const errors: FormErrors = {
         startDate: null,
         endDate: null,
       };

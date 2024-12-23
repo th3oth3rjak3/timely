@@ -1,17 +1,14 @@
-import { useMutation } from "@tanstack/react-query";
-import { invoke } from "@tauri-apps/api/core";
-import { TimelyAction } from "../../../models/TauriAction";
-import { UserSettings } from "../../../models/ZodModels";
-import {
-  showErrorNotification,
-  showSuccessNotification,
-} from "../../../utilities/notificationUtilities";
+import {useMutation} from "@tanstack/react-query";
+import {invoke} from "@tauri-apps/api/core";
+import {TimelyAction} from "../../../models/TauriAction";
+import {UserSettings} from "../../../models/ZodModels";
+import {showErrorNotification, showSuccessNotification,} from "../../../utilities/notificationUtilities";
 
 export function useAddComment(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (values: { taskId: number; message: string }) => {
-      const { taskId, message } = values;
-      await invoke("add_comment", { comment: { taskId, message } });
+      const {taskId, message} = values;
+      await invoke("add_comment", {comment: {taskId, message}});
     },
     onSuccess: () => {
       showSuccessNotification(
@@ -29,8 +26,8 @@ export function useAddComment(userSettings: UserSettings) {
 export function useEditComment(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (values: { commentId: number; message: string }) => {
-      const { commentId, message } = values;
-      await invoke("update_comment", { comment: { id: commentId, message } });
+      const {commentId, message} = values;
+      await invoke("update_comment", {comment: {id: commentId, message}});
     },
     onSuccess: () => {
       showSuccessNotification(
@@ -48,7 +45,7 @@ export function useEditComment(userSettings: UserSettings) {
 export function useDeleteComment(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (commentId: number) => {
-      await invoke("delete_comment", { id: commentId });
+      await invoke("delete_comment", {id: commentId});
     },
     onSuccess: () => {
       showSuccessNotification(

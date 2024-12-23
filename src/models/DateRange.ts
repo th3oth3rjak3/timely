@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { DateRangeFilter } from "./DateRangeFilter";
+import {DateRangeFilter} from "./DateRangeFilter";
 
 export type DateRange = [Date | null, Date | null];
 

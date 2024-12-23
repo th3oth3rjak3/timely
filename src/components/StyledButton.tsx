@@ -1,5 +1,5 @@
-import { Button, ButtonVariant, FloatingPosition, MantineGradient, MantineSize } from "@mantine/core";
-import { ReactNode } from "react";
+import {Button, ButtonVariant, FloatingPosition, MantineGradient, MantineSize} from "@mantine/core";
+import {ReactNode} from "react";
 import useColorPalette from "../hooks/useColorPalette";
 import MyTooltip from "./MyTooltip";
 
@@ -25,23 +25,23 @@ export interface StyledButtonProps {
   tooltipColor?: string;
   leftSection?: ReactNode;
   rightSection?: ReactNode;
-};
+}
 
 function StyledButton({
-  type,
-  size,
-  label,
-  color,
-  gradient,
-  disabled,
-  onClick,
-  tooltipPosition,
-  tooltipLabel,
-  tooltipColor,
-  leftSection,
-  rightSection,
-  variant,
-}: StyledButtonProps): JSX.Element {
+                        type,
+                        size,
+                        label,
+                        color,
+                        gradient,
+                        disabled,
+                        onClick,
+                        tooltipPosition,
+                        tooltipLabel,
+                        tooltipColor,
+                        leftSection,
+                        rightSection,
+                        variant,
+                      }: StyledButtonProps) {
   const colorPalette = useColorPalette();
 
   const innerGradient =

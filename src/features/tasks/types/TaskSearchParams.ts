@@ -1,11 +1,18 @@
-import { DateRangeFilter } from "../../../models/DateRangeFilter";
-import { Ordering } from "../../../models/Ordering";
-import { SortDirection } from "../../../models/SortDirection";
-import { TaskStatus } from "../../../models/TaskStatus";
+import {DateRangeFilter} from "../../../models/DateRangeFilter";
+import {Ordering} from "../../../models/Ordering";
+import {SortDirection} from "../../../models/SortDirection";
+import {TaskStatus} from "../../../models/TaskStatus";
 
 export interface TagFilter {
   tags: string[];
   filterOption: "any" | "all";
+}
+
+export interface TaggedFilter {
+  tagged: {
+    tags: string[] | null,
+    tagFilter: string | null,
+  }
 }
 
 export enum FilterName {
@@ -27,13 +34,13 @@ export class QuickFilter {
   }
 
   static tagged(tags: string[] | null, tagFilter: string | null): QuickFilter {
-    let filter = new QuickFilter(FilterName.Tagged);
+    const filter = new QuickFilter(FilterName.Tagged);
     filter.tags = tags;
     filter.tagFilter = tagFilter;
     return filter;
   }
 
-  serialize() {
+  serialize() : TaggedFilter | string {
     if (this.kind === FilterName.Tagged) {
       return {
         tagged: {
@@ -55,8 +62,8 @@ export interface TaskSearchParams {
   ordering: { orderBy: string; sortDirection: SortDirection } | null;
   startByFilter: DateRangeFilter | null;
   dueByFilter: DateRangeFilter | null;
-  quickFilter: any | null;
-};
+  quickFilter: TaggedFilter | string | null;
+}
 
 export function taskSearchParams(
   page: number,

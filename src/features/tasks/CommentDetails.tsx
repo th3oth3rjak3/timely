@@ -1,19 +1,15 @@
-import { Divider, Group, Modal, Stack, Text, Textarea } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
-import { modals } from "@mantine/modals";
-import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
+import {Divider, Group, Modal, Stack, Text, Textarea} from "@mantine/core";
+import {useForm} from "@mantine/form";
+import {useDisclosure} from "@mantine/hooks";
+import {modals} from "@mantine/modals";
+import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-react";
 import dayjs from "dayjs";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { Comment, Task } from "../../models/ZodModels";
-import { useUserSettings } from "../settings/settingsService";
-import {
-  useAddComment,
-  useDeleteComment,
-  useEditComment,
-} from "./services/commentService";
+import {Comment, Task} from "../../models/ZodModels";
+import {useUserSettings} from "../settings/settingsService";
+import {useAddComment, useDeleteComment, useEditComment,} from "./services/commentService";
 
 export interface CommentDetailsProps {
   task: Task;
@@ -22,7 +18,7 @@ export interface CommentDetailsProps {
 
 function CommentDetails(props: CommentDetailsProps) {
   const colorPalette = useColorPalette();
-  const { data: userSettings } = useUserSettings();
+  const {data: userSettings} = useUserSettings();
 
   const addComment = useAddComment(userSettings);
   const editComment = useEditComment(userSettings);
@@ -40,7 +36,7 @@ function CommentDetails(props: CommentDetailsProps) {
     validateInputOnChange: true,
     validate: {
       comment: (comment) =>
-        !!comment && comment !== null && comment.trim().length > 0
+        !!comment && comment.trim().length > 0
           ? null
           : "Comment must not be empty",
     },
@@ -56,14 +52,14 @@ function CommentDetails(props: CommentDetailsProps) {
     validateInputOnChange: true,
     validate: {
       comment: (comment) =>
-        !!comment && comment !== null && comment.trim().length > 0
+        !!comment && comment.trim().length > 0
           ? null
           : "Comment must not be empty",
     },
   });
 
   const openEditCommentModal = (comment: Comment) => {
-    editCommentForm.setValues({ comment: comment.message, id: comment.id });
+    editCommentForm.setValues({comment: comment.message, id: comment.id});
     editModalActions.open();
   };
 
@@ -74,14 +70,15 @@ function CommentDetails(props: CommentDetailsProps) {
       confirmProps: {
         variant: colorPalette.variant,
         color: "red",
-        gradient: { ...colorPalette.gradient, from: "red" },
+        gradient: {...colorPalette.gradient, from: "red"},
       },
       cancelProps: {
         variant: colorPalette.variant,
         gradient: colorPalette.gradient,
       },
-      labels: { confirm: "Confirm", cancel: "Deny" },
-      onCancel: () => {},
+      labels: {confirm: "Confirm", cancel: "Deny"},
+      onCancel: () => {
+      },
       onConfirm: () => deleteComment.mutateAsync(comment.id),
     });
 
@@ -108,16 +105,16 @@ function CommentDetails(props: CommentDetailsProps) {
   function commentRow(comment: Comment, withDivider: boolean): JSX.Element {
     return (
       <Stack gap={3} key={comment.id}>
-        <Text size="sm" style={{ whiteSpace: "pre-line" }}>
+        <Text size="sm" style={{whiteSpace: "pre-line"}}>
           {comment.message}
         </Text>
         <Group>
-          <Text size="xs" style={{ fontStyle: "italic" }}>
+          <Text size="xs" style={{fontStyle: "italic"}}>
             {"Created: " +
               dayjs(comment.created).format("MM/DD/YYYY hh:mm:ss A")}
           </Text>
           {comment.modified !== null ? (
-            <Text size="xs" style={{ fontStyle: "italic" }}>
+            <Text size="xs" style={{fontStyle: "italic"}}>
               {"Modified: " +
                 dayjs(comment.modified).format("MM/DD/YYYY hh:mm:ss A")}
             </Text>
@@ -128,7 +125,7 @@ function CommentDetails(props: CommentDetailsProps) {
             tooltipLabel="Edit Comment"
             tooltipPosition="left"
           >
-            <IconEdit />
+            <IconEdit/>
           </StyledActionIcon>
           <StyledActionIcon
             size="xs"
@@ -136,10 +133,10 @@ function CommentDetails(props: CommentDetailsProps) {
             tooltipLabel="Delete Comment"
             tooltipPosition="left"
           >
-            <IconTrash />
+            <IconTrash/>
           </StyledActionIcon>
         </Group>
-        {withDivider ? <Divider mt="sm" /> : null}
+        {withDivider ? <Divider mt="sm"/> : null}
       </Stack>
     );
   }
@@ -154,7 +151,7 @@ function CommentDetails(props: CommentDetailsProps) {
           tooltipLabel="Add Comment"
           tooltipPosition="right"
         >
-          <IconPlus />
+          <IconPlus/>
         </StyledActionIcon>
       </Group>
       {props.task.comments.length == 0 ? (

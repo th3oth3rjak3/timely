@@ -1,22 +1,14 @@
-import {
-  Group,
-  Modal,
-  Radio,
-  Select,
-  Stack,
-  TagsInput,
-  Tooltip,
-} from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import { IconFilter, IconFilterFilled } from "@tabler/icons-react";
-import { useMemo, useState } from "react";
+import {Group, Modal, Radio, Select, Stack, TagsInput, Tooltip,} from "@mantine/core";
+import {useDisclosure} from "@mantine/hooks";
+import {IconFilter, IconFilterFilled} from "@tabler/icons-react";
+import {useMemo, useState} from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { Tag } from "../../models/ZodModels";
-import { SelectOption } from "../../utilities/formUtilities";
-import { splitAtUpperCase } from "../../utilities/stringUtilities";
-import { FilterName, QuickFilter } from "./types/TaskSearchParams";
+import {Tag} from "../../models/ZodModels";
+import {SelectOption} from "../../utilities/formUtilities";
+import {splitAtUpperCase} from "../../utilities/stringUtilities";
+import {FilterName, QuickFilter} from "./types/TaskSearchParams";
 
 export interface TagFilterProps {
   selectedFilter: QuickFilter | null;
@@ -55,12 +47,12 @@ function QuickFilterComponent(props: TagFilterProps) {
   const [tagFilter, setTagFilter] = useState<string>("all");
 
   const filterOptions: SelectOption[] = Object.entries(FilterName)
-    .map(
-      ([key, value]) =>
-        ({ label: splitAtUpperCase(key), value }) as SelectOption
-    )
-    .slice()
-    .sort((a, b) => a.value.localeCompare(b.value));
+  .map(
+    ([key, value]) =>
+      ({label: splitAtUpperCase(key), value}) as SelectOption
+  )
+  .slice()
+  .sort((a, b) => a.value.localeCompare(b.value));
 
   const validators = {
     tags: (value: string[] | null, option: string | null) => {
@@ -80,7 +72,7 @@ function QuickFilterComponent(props: TagFilterProps) {
     tagFilterActions.close();
     setSelectedTags(null);
     setFilterOption(null);
-    props.onFilter(null, { tags: null, tagFilter: null });
+    props.onFilter(null, {tags: null, tagFilter: null});
   }
 
   const isValid = useMemo(() => {
@@ -91,7 +83,7 @@ function QuickFilterComponent(props: TagFilterProps) {
     const tagsValid = validators.tags(selectedTags, filterOption?.kind ?? null);
     const optionsValid = validators.options(filterOption?.kind ?? null);
 
-    setErrors({ tags: tagsValid ?? "", options: optionsValid ?? "" });
+    setErrors({tags: tagsValid ?? "", options: optionsValid ?? ""});
 
     return tagsValid === null && optionsValid === null;
   }
@@ -106,7 +98,7 @@ function QuickFilterComponent(props: TagFilterProps) {
         ? props.tagOptions.filter((t) => selectedTags?.includes(t.value))
         : [];
     tagFilterActions.close();
-    props.onFilter(filterOption?.kind ?? null, { tags, tagFilter });
+    props.onFilter(filterOption?.kind ?? null, {tags, tagFilter});
   }
 
   return (
@@ -116,7 +108,7 @@ function QuickFilterComponent(props: TagFilterProps) {
         tooltipLabel="Choose Quick Filters"
         tooltipPosition="left"
       >
-        {isFiltered ? <IconFilterFilled /> : <IconFilter />}
+        {isFiltered ? <IconFilterFilled/> : <IconFilter/>}
       </StyledActionIcon>
       <Modal
         title="Choose Quick Filters"

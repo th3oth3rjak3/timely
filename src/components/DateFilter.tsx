@@ -1,23 +1,20 @@
-import { Group, Stack } from "@mantine/core";
-import { DatePicker } from "@mantine/dates";
+import {Group, Stack} from "@mantine/core";
+import {DatePicker} from "@mantine/dates";
 import dayjs from "dayjs";
-import { useEffect, useMemo, useState } from "react";
+import {useEffect, useMemo, useState} from "react";
 import useColorPalette from "../hooks/useColorPalette";
-import {
-  DateRange,
-  toDateFilter as toDateRangeFilter,
-} from "../models/DateRange";
-import { DateRangeFilter } from "../models/DateRangeFilter";
-import { getDayRangeProps } from "../utilities/dateUtilities";
+import {DateRange, toDateFilter as toDateRangeFilter,} from "../models/DateRange";
+import {DateRangeFilter} from "../models/DateRangeFilter";
+import {getDayRangeProps} from "../utilities/dateUtilities";
 import StyledButton from "./StyledButton";
 
 export interface DateFilterProps {
   filter: DateRangeFilter | null;
   onRangeChanged: (value: DateRangeFilter | null) => void;
   showButtons?: boolean;
-};
+}
 
-function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
+function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
   const colorPalette = useColorPalette();
 
   const startDate = useMemo(() => {

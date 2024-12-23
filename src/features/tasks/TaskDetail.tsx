@@ -1,4 +1,4 @@
-import { Grid, Group, Textarea, TextInput } from "@mantine/core";
+import {Grid, Group, Textarea, TextInput} from "@mantine/core";
 import {
   IconArrowBackUp,
   IconCancel,
@@ -10,11 +10,12 @@ import {
 } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import StyledButton from "../../components/StyledButton";
-import { TimeSpan } from "../../models/TimeSpan";
-import { Tag, Task } from "../../models/ZodModels";
+import {TimeSpan} from "../../models/TimeSpan";
+import {Tag, Task} from "../../models/ZodModels";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
 import TaskWorkHistoryDetails from "./TaskWorkHistoryDetails";
+import {TaskStatus} from "../../models/TaskStatus.ts";
 
 export interface TaskDetailParams {
   task: Task;
@@ -31,16 +32,11 @@ export interface TaskDetailParams {
   onCommentChanged: () => void;
   onTagsChanged: () => void;
   onHistoryChanged: () => void;
-};
+}
 
-/**
- * Build the task detail section for the expanded list row.
- * @param task - The task to show the details for.
- * @returns A JSX element.
- */
 function TaskDetail(props: TaskDetailParams): JSX.Element {
   const buttons = (statusDescription: string): JSX.Element => {
-    const status = statusDescription.toLowerCase();
+    const status = statusDescription;
 
     const startButton = (
       <StyledButton
@@ -49,7 +45,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onStarted(props.task)}
         tooltipLabel="Start Task"
         tooltipPosition="top"
-        leftSection={<IconPlayerPlayFilled size={14} />}
+        leftSection={<IconPlayerPlayFilled size={14}/>}
       />
     );
 
@@ -60,7 +56,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onPaused(props.task)}
         tooltipLabel="Pause Task"
         tooltipPosition="top"
-        leftSection={<IconPlayerPauseFilled size={14} />}
+        leftSection={<IconPlayerPauseFilled size={14}/>}
       />
     );
 
@@ -71,7 +67,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onResumed(props.task)}
         tooltipLabel="Resume Task"
         tooltipPosition="top"
-        leftSection={<IconPlayerPlayFilled size={14} />}
+        leftSection={<IconPlayerPlayFilled size={14}/>}
       />
     );
 
@@ -82,7 +78,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onCancelled(props.task)}
         tooltipLabel="Cancel Task"
         tooltipPosition="top"
-        leftSection={<IconCancel size={14} />}
+        leftSection={<IconCancel size={14}/>}
       />
     );
 
@@ -93,7 +89,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onFinished(props.task)}
         tooltipLabel="Finish Task"
         tooltipPosition="top"
-        leftSection={<IconCheck size={14} />}
+        leftSection={<IconCheck size={14}/>}
       />
     );
 
@@ -104,7 +100,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onRestored(props.task)}
         tooltipLabel="Restore Cancelled Task"
         tooltipPosition="top"
-        leftSection={<IconArrowBackUp size={14} />}
+        leftSection={<IconArrowBackUp size={14}/>}
       />
     );
 
@@ -115,7 +111,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onFinished(props.task)}
         tooltipLabel="Reopen Finished Task"
         tooltipPosition="top"
-        leftSection={<IconArrowBackUp size={14} />}
+        leftSection={<IconArrowBackUp size={14}/>}
       />
     );
 
@@ -126,7 +122,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onDeleted(props.task)}
         tooltipLabel="Delete Task"
         tooltipPosition="top"
-        leftSection={<IconTrash size={14} />}
+        leftSection={<IconTrash size={14}/>}
       />
     );
 
@@ -137,11 +133,11 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         onClick={() => props.onEdited(props.task)}
         tooltipLabel="Edit Task"
         tooltipPosition="top"
-        leftSection={<IconEdit size={14} />}
+        leftSection={<IconEdit size={14}/>}
       />
     );
 
-    if (status === "to do") {
+    if (status === TaskStatus.Todo) {
       return (
         <>
           {startButton}
@@ -152,7 +148,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
       );
     }
 
-    if (status === "doing") {
+    if (status === TaskStatus.Doing) {
       return (
         <>
           {pauseButton}
@@ -164,7 +160,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
       );
     }
 
-    if (status === "done") {
+    if (status === TaskStatus.Done) {
       return (
         <>
           {reopenButton}
@@ -173,7 +169,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
       );
     }
 
-    if (status === "paused") {
+    if (status === TaskStatus.Paused) {
       return (
         <>
           {resumeButton}
@@ -185,7 +181,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
       );
     }
 
-    if (status === "cancelled") {
+    if (status === TaskStatus.Cancelled) {
       return (
         <>
           {restoreButton}
@@ -208,7 +204,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         />
       </Grid.Col>
       <Grid.Col span={4}>
-        <TextInput value={props.task.status} label="Status" readOnly />
+        <TextInput value={props.task.status} label="Status" readOnly/>
       </Grid.Col>
       <Grid.Col span={4}>
         <TextInput

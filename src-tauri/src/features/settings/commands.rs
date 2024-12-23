@@ -7,26 +7,31 @@ use super::{models::UpdateUserSettings, NotificationSetting, UserSetting, UserSe
 
 #[tauri::command]
 pub async fn get_user_settings(db: State<'_, Data>) -> TAResult<UserSettingRead> {
-    let settings = sqlx::query_as!(UserSetting, r#"
+    let settings = sqlx::query_as!(
+        UserSetting,
+        r#"
             SELECT *
             FROM user_settings
             LIMIT 1
-        "#)
-        .fetch_one(&db.pool)
-        .await
-        .into_ta_result()?;
+        "#
+    )
+    .fetch_one(&db.pool)
+    .await
+    .into_ta_result()?;
 
-    let notification_settings: Vec<NotificationSetting> =
-        sqlx::query_as!(NotificationSetting, r#"
+    let notification_settings: Vec<NotificationSetting> = sqlx::query_as!(
+        NotificationSetting,
+        r#"
             SELECT *
             FROM notification_settings
             WHERE notification_settings.user_setting_id = ?
             ORDER BY notification_settings.name ASC
         "#,
-        settings.id)
-        .fetch_all(&db.pool)
-        .await
-        .into_ta_result()?;
+        settings.id
+    )
+    .fetch_all(&db.pool)
+    .await
+    .into_ta_result()?;
 
     let mut settings_read: UserSettingRead = settings.into();
     settings_read.notification_settings = notification_settings;
@@ -38,13 +43,10 @@ pub async fn update_user_settings(
     settings: UpdateUserSettings,
     db: State<'_, Data>,
 ) -> TAResult<UserSettingRead> {
-
-    let mut found = sqlx::query_as!(
-        UserSetting,
-        "SELECT * FROM user_settings LIMIT 1"
-    ).fetch_one(&db.pool)
-    .await
-    .into_ta_result()?;
+    let mut found = sqlx::query_as!(UserSetting, "SELECT * FROM user_settings LIMIT 1")
+        .fetch_one(&db.pool)
+        .await
+        .into_ta_result()?;
 
     let notification_settings = &settings.notification_settings.clone();
 
@@ -73,11 +75,10 @@ pub async fn update_user_settings(
         found.navbar_opened,
         found.id
     )
-        .execute(&db.pool)
-        .await
-        .map(|_|())
-        .into_ta_result()?;
-    
+    .execute(&db.pool)
+    .await
+    .map(|_| ())
+    .into_ta_result()?;
 
     for notification_setting in notification_settings.into_iter() {
         sqlx::query!(
@@ -94,7 +95,7 @@ pub async fn update_user_settings(
         )
         .execute(&db.pool)
         .await
-        .map(|_|())
+        .map(|_| ())
         .into_ta_result()?;
     }
 

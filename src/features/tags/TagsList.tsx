@@ -1,29 +1,22 @@
-import { Group, Modal, Stack, Text, TextInput } from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconEdit,
-  IconPlus,
-  IconSearch,
-  IconTrash,
-  IconTrashX,
-  IconX,
-} from "@tabler/icons-react";
-import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
-import { DataTable } from "mantine-datatable";
-import { useEffect, useMemo, useRef } from "react";
+import {Group, Modal, Stack, Text, TextInput} from "@mantine/core";
+import {useForm} from "@mantine/form";
+import {useDisclosure, useMediaQuery} from "@mantine/hooks";
+import {IconEdit, IconPlus, IconSearch, IconTrash, IconTrashX, IconX,} from "@tabler/icons-react";
+import {ContextMenuContent, useContextMenu} from "mantine-contextmenu";
+import {DataTable} from "mantine-datatable";
+import {useEffect, useMemo, useRef} from "react";
 
-import { modals } from "@mantine/modals";
-import { useQueryClient } from "@tanstack/react-query";
+import {modals} from "@mantine/modals";
+import {useQueryClient} from "@tanstack/react-query";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { TimelyAction } from "../../models/TauriAction";
-import { Tag } from "../../models/ZodModels";
-import { pageSizeOptions } from "../../state/globalState";
-import { findLastPage } from "../../utilities/dataTableUtilities";
-import { validateLength } from "../../utilities/formUtilities";
-import { useUserSettings } from "../settings/settingsService";
+import {TimelyAction} from "../../models/TauriAction";
+import {Tag} from "../../models/ZodModels";
+import {pageSizeOptions} from "../../state/globalState";
+import {findLastPage} from "../../utilities/dataTableUtilities";
+import {validateLength} from "../../utilities/formUtilities";
+import {useUserSettings} from "../settings/settingsService";
 import {
   TagLike,
   useCreateNewTag,
@@ -33,7 +26,7 @@ import {
   useSearchForTags,
   useTagStore,
 } from "./services/tagService";
-import { TagSearchParams, tagSearchParams } from "./types/TagSearchParams";
+import {TagSearchParams, tagSearchParams} from "./types/TagSearchParams";
 
 interface NewTag {
   value: string;
@@ -65,7 +58,7 @@ function TagsList() {
 
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
-  const { data: userSettings, isPending: settingsPending } = useUserSettings();
+  const {data: userSettings, isPending: settingsPending} = useUserSettings();
   const {
     data: tags,
     isPending: tagsPending,
@@ -81,7 +74,7 @@ function TagsList() {
   const [newFormOpened, newFormActions] = useDisclosure(false);
   const [editFormOpened, editFormActions] = useDisclosure(false);
 
-  const { showContextMenu, hideContextMenu } = useContextMenu();
+  const {showContextMenu, hideContextMenu} = useContextMenu();
 
   const prevPageRef = useRef(page);
   const prevPageSizeRef = useRef(pageSize);
@@ -106,7 +99,7 @@ function TagsList() {
 
   const validators = {
     value: (value?: string | null) =>
-      validateLength({ fieldName: "Tag", value, minValue: 1, maxValue: 25 }),
+      validateLength({fieldName: "Tag", value, minValue: 1, maxValue: 25}),
   };
 
   const editForm = useForm<Tag>({
@@ -176,7 +169,7 @@ function TagsList() {
     return remainder < tags.length && tagSearchParams.page > 1;
   };
 
-  function handleDeleteManyDataFetch(tagList: TagLike[]) {
+  async function handleDeleteManyDataFetch(tagList: TagLike[]) {
     if (pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)) {
       const lastPage = findLastPage(
         tags.totalItemCount - tagList.length,
@@ -184,15 +177,15 @@ function TagsList() {
       );
       setPage(lastPage);
     } else {
-      refetch();
+      await refetch();
     }
   }
 
-  function handleDataFetch(tag: TagLike, action: TimelyAction) {
+  async function handleDataFetch(tag: TagLike, action: TimelyAction) {
     if (pageShouldChange(tag, action, tags.totalItemCount, params)) {
       setPage(lastPage);
     } else {
-      refetch();
+      await refetch();
     }
   }
 
@@ -221,8 +214,9 @@ function TagsList() {
         color: colorPalette.colorName,
         gradient: colorPalette.gradient,
       },
-      labels: { confirm: "Confirm", cancel: "Deny" },
-      onCancel: () => {},
+      labels: {confirm: "Confirm", cancel: "Deny"},
+      onCancel: () => {
+      },
       onConfirm: () => deleteTag.mutateAsync(tag),
     });
   }
@@ -245,8 +239,9 @@ function TagsList() {
         color: colorPalette.colorName,
         gradient: colorPalette.gradient,
       },
-      labels: { confirm: "Confirm", cancel: "Deny" },
-      onCancel: () => {},
+      labels: {confirm: "Confirm", cancel: "Deny"},
+      onCancel: () => {
+      },
       onConfirm: () => deleteManyTags.mutateAsync(tags),
     });
   }
@@ -255,14 +250,14 @@ function TagsList() {
     const deleteTagItem = {
       key: "delete-tag",
       title: "Delete Tag",
-      icon: <IconTrash size={16} />,
+      icon: <IconTrash size={16}/>,
       onClick: () => handleDeleteOneRequested(tag),
     };
 
     const editTagItem = {
       key: "edit-tag",
       title: "Edit Tag",
-      icon: <IconEdit size={16} />,
+      icon: <IconEdit size={16}/>,
       onClick: () => beginEditingTag(tag),
     };
 
@@ -286,7 +281,7 @@ function TagsList() {
   };
 
   const onValidEditTagSubmit = async (editedTag: Tag) => {
-    const updatedItem = { ...editedTag };
+    const updatedItem = {...editedTag};
     editForm.reset();
     editForm.clearErrors();
     editFormActions.close();
@@ -308,7 +303,7 @@ function TagsList() {
           label="Tag"
           description="Search for tags which contain the specified text"
           placeholder="Search..."
-          leftSection={<IconSearch size={16} />}
+          leftSection={<IconSearch size={16}/>}
           rightSection={
             <StyledActionIcon
               size="sm"
@@ -316,7 +311,7 @@ function TagsList() {
               color="dimmed"
               onClick={() => updateTagQuery("")}
             >
-              <IconX size={14} />
+              <IconX size={14}/>
             </StyledActionIcon>
           }
           value={queryString || ""}
@@ -341,7 +336,7 @@ function TagsList() {
               tooltipLabel="Delete Selected Tags"
               tooltipPosition="left"
             >
-              <IconTrashX />
+              <IconTrashX/>
             </StyledActionIcon>
           ) : null}
           <StyledActionIcon
@@ -349,7 +344,7 @@ function TagsList() {
             tooltipLabel="Create New Tag"
             tooltipPosition="left"
           >
-            <IconPlus />
+            <IconPlus/>
           </StyledActionIcon>
         </Group>
       </Group>
@@ -358,7 +353,7 @@ function TagsList() {
       ) : (
         <DataTable
           textSelectionDisabled={isTouchScreen}
-          onRowContextMenu={({ record, event }) =>
+          onRowContextMenu={({record, event}) =>
             showContextMenu(getContextMenuItems(record))(event)
           }
           onScroll={hideContextMenu}

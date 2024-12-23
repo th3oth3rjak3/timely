@@ -1,4 +1,4 @@
 export enum SortDirection {
-    Ascending,
-    Descending
+  Ascending,
+  Descending
 }

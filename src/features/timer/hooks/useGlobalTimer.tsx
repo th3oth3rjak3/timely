@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
+import {useEffect, useRef} from "react";
 import useColorPalette from "../../../hooks/useColorPalette";
-import { showTimerNotification } from "../../../utilities/notificationUtilities";
-import { useUserSettings } from "../../settings/settingsService";
-import { useTimerStore } from "../services/timerService";
+import {showTimerNotification} from "../../../utilities/notificationUtilities";
+import {useUserSettings} from "../../settings/settingsService";
+import {useTimerStore} from "../services/timerService";
 
 const useGlobalTimer = () => {
   const time = useTimerStore((store) => store.time);
@@ -12,7 +12,7 @@ const useGlobalTimer = () => {
   const decrementTime = useTimerStore((store) => store.decrementTime);
   const setIsPlaying = useTimerStore((store) => store.setIsPlaying);
   const resetTimer = useTimerStore((store) => store.resetTimer);
-  const { data: userSettings } = useUserSettings();
+  const {data: userSettings} = useUserSettings();
   const colorPalette = useColorPalette();
 
   // Reference to persist the Audio object across renders

@@ -1,34 +1,22 @@
-import {
-  ActionIcon,
-  Card,
-  Grid,
-  Group,
-  Select,
-  Slider,
-  Stack,
-  Switch,
-  Table,
-  Tabs,
-  Text,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { IconCheck } from "@tabler/icons-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import {ActionIcon, Card, Grid, Group, Select, Slider, Stack, Switch, Table, Tabs, Text,} from "@mantine/core";
+import {useForm} from "@mantine/form";
+import {IconCheck} from "@tabler/icons-react";
+import {useQueryClient} from "@tanstack/react-query";
+import {useEffect, useMemo, useState} from "react";
 import MyTooltip from "../../components/MyTooltip";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { NotificationSetting } from "../../models/ZodModels";
-import { homePageOptions, pageSizeOptions } from "../../state/globalState";
-import { toSelectOptions } from "../../utilities/formUtilities";
-import { toProperCase } from "../../utilities/stringUtilities";
-import { useUpdateUserSettings, useUserSettings } from "./settingsService";
+import {NotificationSetting} from "../../models/ZodModels";
+import {homePageOptions, pageSizeOptions} from "../../state/globalState";
+import {toSelectOptions} from "../../utilities/formUtilities";
+import {toProperCase} from "../../utilities/stringUtilities";
+import {useUpdateUserSettings, useUserSettings} from "./settingsService";
 
 /**
  * Settings page.
  */
 function Settings() {
-  const { data: userSettings } = useUserSettings();
+  const {data: userSettings} = useUserSettings();
   const queryClient = useQueryClient();
   const updateUserSettings = useUpdateUserSettings(queryClient);
 
@@ -54,29 +42,26 @@ function Settings() {
     );
   }, [notificationSettings]);
 
-  const notificationSettingTableRows = notificationSettings.map((setting) => (
-    <Table.Tr key={setting.name}>
-      <Table.Td>{setting.name}</Table.Td>
-      <Table.Td>
-        <Switch
-          checked={setting.enabled}
-          onChange={(event) => {
-            let found = notificationSettings.find((s) => s.id === setting.id);
-            if (found === undefined) return;
-            found = { ...found };
-            if (found === undefined) return;
-            found.enabled = event.currentTarget.checked;
-            let updated = [
-              ...notificationSettings.filter((s) => s.id !== found.id),
-              found,
-            ];
-            updated.sort((a, b) => a.name.localeCompare(b.name));
-            setNotificationSettings(updated);
-          }}
-        />
-      </Table.Td>
-    </Table.Tr>
-  ));
+  const notificationSettingTableRows = notificationSettings.map((setting) => <Table.Tr key={setting.name}>
+    <Table.Td>{setting.name}</Table.Td>
+    <Table.Td>
+      <Switch
+        checked={setting.enabled}
+        onChange={(event) => {
+          let found = notificationSettings.find((s) => s.id === setting.id);
+          if (found === undefined) return;
+          found = {...found};
+          found.enabled = event.currentTarget.checked;
+          const updated = [
+            ...notificationSettings.filter((s) => s.id !== found.id),
+            found,
+          ];
+          updated.sort((a, b) => a.name.localeCompare(b.name));
+          setNotificationSettings(updated);
+        }}
+      />
+    </Table.Td>
+  </Table.Tr>);
 
   useEffect(() => {
     setNotificationSettings(userSettings?.notificationSettings ?? []);
@@ -213,7 +198,7 @@ function Settings() {
                 color={opt}
                 onClick={() => setGradientTo(opt)}
               >
-                {gradientTo === opt ? <IconCheck size={24} /> : null}
+                {gradientTo === opt ? <IconCheck size={24}/> : null}
               </ActionIcon>
             </MyTooltip>
           ))}
@@ -230,9 +215,9 @@ function Settings() {
       value={gradientDegrees}
       label={(value) => `${value}°`}
       marks={[
-        { value: 90, label: "90°" },
-        { value: 180, label: "180°" },
-        { value: 270, label: "270°" },
+        {value: 90, label: "90°"},
+        {value: 180, label: "180°"},
+        {value: 270, label: "270°"},
       ]}
       step={10}
       mb="sm"
@@ -330,7 +315,7 @@ function Settings() {
                         setShowGradientOptions(false);
                       }
                       setControlledVariant(value ?? "");
-                      form.setValues({ buttonVariant: value ?? "" });
+                      form.setValues({buttonVariant: value ?? ""});
                     }}
                     value={controlledVariant}
                   />

@@ -1,5 +1,5 @@
-import { Ordering } from "../../../models/Ordering";
-import { SortDirection } from "../../../models/SortDirection";
+import {Ordering} from "../../../models/Ordering";
+import {SortDirection} from "../../../models/SortDirection";
 
 export interface TagSearchParams {
   page: number;
@@ -9,16 +9,16 @@ export interface TagSearchParams {
 }
 
 export function tagSearchParams(
-    page: number,
-    pageSize: number,
-    queryString?: string,
-    sortField?: string,
-    sortDirection?: string,
+  page: number,
+  pageSize: number,
+  queryString?: string,
+  sortField?: string,
+  sortDirection?: string,
 ): TagSearchParams {
-    return {
-        page,
-        pageSize,
-        ordering: new Ordering(sortField ?? "value", sortDirection ?? "asc").serialize(),
-        queryString: !!queryString && queryString.length > 0 ? queryString : null,
-    };
+  return {
+    page,
+    pageSize,
+    ordering: new Ordering(sortField ?? "value", sortDirection ?? "asc").serialize(),
+    queryString: !!queryString && queryString.length > 0 ? queryString : null,
+  };
 }

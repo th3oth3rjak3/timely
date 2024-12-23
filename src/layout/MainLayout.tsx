@@ -1,22 +1,15 @@
-import { AppShell, Group, ScrollArea, Text } from "@mantine/core";
-import {
-  IconChevronsLeft,
-  IconMaximize,
-  IconMenu3,
-  IconMinimize,
-  IconMinus,
-  IconX,
-} from "@tabler/icons-react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import {AppShell, Group, ScrollArea, Text} from "@mantine/core";
+import {IconChevronsLeft, IconMaximize, IconMenu3, IconMinimize, IconMinus, IconX,} from "@tabler/icons-react";
+import {getCurrentWindow} from "@tauri-apps/api/window";
+import {useEffect, useState} from "react";
+import {Outlet} from "react-router-dom";
 import StyledActionIcon from "../components/StyledActionIcon";
-import { useUserSettings } from "../features/settings/settingsService";
+import {useUserSettings} from "../features/settings/settingsService";
 import useGlobalTimer from "../features/timer/hooks/useGlobalTimer";
 import Navbar from "./Navbar";
 
 function MainLayout() {
-  const { data: userSettings } = useUserSettings();
+  const {data: userSettings} = useUserSettings();
 
   /** An app store dispatch function to update store values. */
 
@@ -26,13 +19,13 @@ function MainLayout() {
   /** Update the currently maximized state. */
   const updateMaximized = () =>
     getCurrentWindow()
-      .isMaximized()
-      .then((max) => setMaximized(max));
+    .isMaximized()
+    .then((max) => setMaximized(max));
 
   useEffect(() => {
     updateMaximized();
     //navHandler.open();
-    const unlisten = getCurrentWindow().onResized((_) => {
+    const unlisten = getCurrentWindow().onResized(() => {
       updateMaximized();
     });
 
@@ -56,11 +49,11 @@ function MainLayout() {
 
   return (
     <AppShell
-      header={{ height: 48 }}
+      header={{height: 48}}
       navbar={{
         width: 200,
         breakpoint: "sm",
-        collapsed: { desktop: !navOpened, mobile: !navOpened },
+        collapsed: {desktop: !navOpened, mobile: !navOpened},
       }}
       padding={0}
     >
@@ -72,12 +65,12 @@ function MainLayout() {
             tooltipLabel={navOpened ? "Close Menu" : "Open Menu"}
             tooltipPosition="right"
           >
-            {navOpened ? <IconChevronsLeft /> : <IconMenu3 />}
+            {navOpened ? <IconChevronsLeft/> : <IconMenu3/>}
           </StyledActionIcon>
           <Group
             justify="space-between"
             align="center"
-            style={{ flex: 1 }}
+            style={{flex: 1}}
             data-tauri-drag-region
           >
             <Text size="xl">Timely</Text>
@@ -88,7 +81,7 @@ function MainLayout() {
                 tooltipLabel="Minimize"
                 tooltipPosition="left"
               >
-                <IconMinus />
+                <IconMinus/>
               </StyledActionIcon>
               <StyledActionIcon
                 onClick={toggleMaximize}
@@ -96,7 +89,7 @@ function MainLayout() {
                 tooltipLabel={maximized ? "Restore" : "Maximize"}
                 tooltipPosition="left"
               >
-                {maximized ? <IconMinimize /> : <IconMaximize />}
+                {maximized ? <IconMinimize/> : <IconMaximize/>}
               </StyledActionIcon>
               <StyledActionIcon
                 onClick={closeWindow}
@@ -104,7 +97,7 @@ function MainLayout() {
                 tooltipLabel="Exit"
                 tooltipPosition="left"
               >
-                <IconX />
+                <IconX/>
               </StyledActionIcon>
             </Group>
           </Group>
@@ -112,7 +105,7 @@ function MainLayout() {
       </AppShell.Header>
       <AppShell.Navbar p="md" maw="200px">
         <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6}>
-          <Navbar closeNavMenu={() => setNavOpened(false)} />
+          <Navbar closeNavMenu={() => setNavOpened(false)}/>
         </ScrollArea>
       </AppShell.Navbar>
       <AppShell.Main>
@@ -122,7 +115,7 @@ function MainLayout() {
           scrollbarSize={6}
           h="calc(100vh - var(--app-shell-header-height, 0px))"
         >
-          <Outlet />
+          <Outlet/>
         </ScrollArea>
       </AppShell.Main>
     </AppShell>

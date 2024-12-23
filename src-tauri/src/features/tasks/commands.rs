@@ -5,7 +5,8 @@ use sqlx::QueryBuilder;
 use tauri::State;
 
 use crate::{
-    features::tags::Tag, option_utils::has_contents, query_utils::add_in_expression, Data, FilterOption, PagedData, SortDirection
+    features::tags::Tag, option_utils::has_contents, query_utils::add_in_expression, Data,
+    FilterOption, PagedData, SortDirection,
 };
 
 use super::*;
@@ -15,7 +16,7 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<
     let mut transaction = db.pool.begin().await.into_ta_result()?;
     let tags = new_task.tags.clone();
     let new_task = NewTask::from(new_task);
-    
+
     let result = sqlx::query!(r#"
         INSERT INTO tasks (title, description, status, scheduled_start_date, scheduled_complete_date, estimated_duration) 
         VALUES (?, ?, ?, ?, ?, ?)"#,
@@ -35,28 +36,30 @@ pub async fn create_task(new_task: CreateTask, db: State<'_, Data>) -> TAResult<
         builder.push_values(tags, |mut b, tag| {
             b.push_bind(tag.id).push_bind(result.last_insert_rowid());
         });
-        
+
         builder
-        .build()
-        .execute(&mut *transaction)
-        .await
-        .map(|_|())
-        .into_ta_result()?;
+            .build()
+            .execute(&mut *transaction)
+            .await
+            .map(|_| ())
+            .into_ta_result()?;
     }
 
-    transaction
-    .commit()
-    .await
-    .into_ta_result()
+    transaction.commit().await.into_ta_result()
 }
 
-fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params: &'a TaskSearchParams) -> QueryBuilder<'a, sqlx::Sqlite> {
-    builder.push(r#"
+fn generate_search_query<'a>(
+    mut builder: QueryBuilder<'a, sqlx::Sqlite>,
+    params: &'a TaskSearchParams,
+) -> QueryBuilder<'a, sqlx::Sqlite> {
+    builder.push(
+        r#"
         SELECT DISTINCT tasks.* 
         FROM tasks
         LEFT JOIN task_tags on tasks.id = task_tags.task_id
         LEFT JOIN tags on tags.id = task_tags.tag_id
-    "#);
+    "#,
+    );
 
     builder.push(" WHERE 1=1 ");
 
@@ -65,12 +68,18 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 
     if let Some(query) = &params.query_string {
         builder
-            .push(" AND (tasks.title LIKE ").push(format!("'%{}%'", query))
-            .push(" OR tasks.description LIKE ").push(format!("'%{}%'", query))
+            .push(" AND (tasks.title LIKE ")
+            .push(format!("'%{}%'", query))
+            .push(" OR tasks.description LIKE ")
+            .push(format!("'%{}%'", query))
             .push(") ");
     }
 
-    if let Some(DateFilter { start: Some(start), end: Some(end) }) = &params.start_by_filter  {
+    if let Some(DateFilter {
+        start: Some(start),
+        end: Some(end),
+    }) = &params.start_by_filter
+    {
         builder
             .push(" AND tasks.scheduled_start_date BETWEEN ")
             .push_bind(start.naive_utc())
@@ -78,7 +87,11 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             .push_bind(end.naive_utc());
     }
 
-    if let Some(DateFilter { start: Some(start), end: Some(end) }) = &params.due_by_filter {
+    if let Some(DateFilter {
+        start: Some(start),
+        end: Some(end),
+    }) = &params.due_by_filter
+    {
         builder
             .push(" AND tasks.scheduled_complete_date BETWEEN ")
             .push_bind(start.naive_utc())
@@ -93,53 +106,63 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
             }
             QuickFilter::Tagged(tag_filter) => {
                 builder.push(" AND tags.value ");
-    
+
                 add_in_expression(&mut builder, &tag_filter.tags);
-        
+
                 if &tag_filter.tag_filter == &FilterOption::All {
-                    let tag_count: i32 = tag_filter.tags
-                        .len()
-                        .try_into()
-                        .expect("The list of filtered tags should never be greater than i32::MAX");
-        
+                    let tag_count: i32 =
+                        tag_filter.tags.len().try_into().expect(
+                            "The list of filtered tags should never be greater than i32::MAX",
+                        );
+
                     builder
-                    .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
-                    .push_bind(tag_count);
+                        .push(" GROUP BY tasks.id HAVING COUNT(DISTINCT tags.value) = ")
+                        .push_bind(tag_count);
                 }
             }
             QuickFilter::Planned => {
-                builder.push(r#" 
+                builder.push(
+                    r#" 
                     AND tasks.estimated_duration IS NOT NULL 
                     AND tasks.scheduled_start_date IS NOT NULL 
                     AND tasks.scheduled_complete_date IS NOT NULL 
-                "#);
+                "#,
+                );
             }
             QuickFilter::Unplanned => {
-                builder.push(r#"
+                builder.push(
+                    r#"
                     AND (
                         tasks.estimated_duration IS NULL
                         OR tasks.scheduled_start_date IS NULL
                         OR tasks.scheduled_complete_date IS NULL) 
-                "#);
+                "#,
+                );
             }
             QuickFilter::LateStart => {
-                builder.push(r#" 
+                builder.push(
+                    r#" 
                     AND tasks.scheduled_start_date IS NOT NULL
                     AND tasks.last_resumed_date IS NULL
                     AND (tasks.scheduled_start_date < 
-                "#);
+                "#,
+                );
                 builder.push_bind(Utc::now().naive_utc());
-                builder.push(r#" AND tasks.id NOT IN (
+                builder.push(
+                    r#" AND tasks.id NOT IN (
                     SELECT DISTINCT t.id
                     FROM tasks t
                     INNER JOIN task_work_history twh ON t.id = twh.task_id))
-                "#);
+                "#,
+                );
             }
             QuickFilter::Overdue => {
-                builder.push(r#"
+                builder.push(
+                    r#"
                     AND tasks.scheduled_complete_date IS NOT NULL
                     AND (tasks.scheduled_complete_date < 
-                "#);
+                "#,
+                );
                 builder.push_bind(Utc::now().naive_utc());
                 builder.push(" AND tasks.status <> 'Done') ");
             }
@@ -169,20 +192,17 @@ fn generate_search_query<'a>(mut builder: QueryBuilder<'a, sqlx::Sqlite>, params
 }
 
 fn elapsed_duration(history: &Vec<TaskWorkHistory>) -> i64 {
-    history
-        .iter()
-        .fold(0, |acc, el| acc + (el.end_date - el.start_date).num_seconds())
+    history.iter().fold(0, |acc, el| {
+        acc + (el.end_date - el.start_date).num_seconds()
+    })
 }
 
 fn get_actual_start(task: &Task, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
     if task.status == Status::Doing {
         return task.last_resumed_date;
     }
-    
-    history
-        .iter()
-        .map(|hist| hist.start_date)
-        .min()
+
+    history.iter().map(|hist| hist.start_date).min()
 }
 
 fn get_actual_complete(status: &Status, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
@@ -190,12 +210,8 @@ fn get_actual_complete(status: &Status, history: &Vec<TaskWorkHistory>) -> Optio
         return None;
     }
 
-    history
-        .iter()
-        .map(|hist| hist.end_date)
-        .max()
+    history.iter().map(|hist| hist.end_date).max()
 }
-
 
 /// Search for all tasks which match the search parameters.
 ///
@@ -215,50 +231,66 @@ pub async fn get_tasks(
     let count_query = count_builder.build_query_scalar::<i64>();
     let count = count_query.fetch_one(&db.pool).await.into_ta_result()?;
 
-
     let mut task_query = generate_search_query(QueryBuilder::new(""), &params);
 
-    task_query.push(format!(" LIMIT {} OFFSET {}", params.page_size, (params.page - 1) * params.page_size));
+    task_query.push(format!(
+        " LIMIT {} OFFSET {}",
+        params.page_size,
+        (params.page - 1) * params.page_size
+    ));
 
-    let all_tasks: Vec<Task> = task_query.build_query_as::<Task>().fetch_all(&db.pool).await.into_ta_result()?;
+    let all_tasks: Vec<Task> = task_query
+        .build_query_as::<Task>()
+        .fetch_all(&db.pool)
+        .await
+        .into_ta_result()?;
 
     let mut comments: Vec<Vec<Comment>> = Vec::new();
     let mut tags: Vec<Vec<Tag>> = Vec::new();
     let mut work_history: Vec<Vec<TaskWorkHistory>> = Vec::new();
 
     for task in all_tasks.iter() {
-        let task_comments = sqlx::query_as!(Comment, r#"
+        let task_comments = sqlx::query_as!(
+            Comment,
+            r#"
             SELECT *
             FROM comments
             WHERE comments.task_id = ?
         "#,
-        task.id)
+            task.id
+        )
         .fetch_all(&db.pool)
         .await
         .into_ta_result()?;
 
         comments.push(task_comments);
 
-        let task_tags = sqlx::query_as!(Tag, r#"
+        let task_tags = sqlx::query_as!(
+            Tag,
+            r#"
             SELECT tags.*
             FROM tags
             INNER JOIN task_tags on task_tags.tag_id = tags.id
             WHERE task_tags.task_id = ?
         "#,
-        task.id)
+            task.id
+        )
         .fetch_all(&db.pool)
         .await
         .into_ta_result()?;
 
         tags.push(task_tags);
 
-        let task_work_history = sqlx::query_as!(TaskWorkHistory, r#"
+        let task_work_history = sqlx::query_as!(
+            TaskWorkHistory,
+            r#"
             SELECT task_work_history.*
             FROM task_work_history
             WHERE task_work_history.task_id = ?
             ORDER BY task_work_history.start_date DESC
-        "#, 
-        task.id)
+        "#,
+            task.id
+        )
         .fetch_all(&db.pool)
         .await
         .into_ta_result()?;
@@ -275,42 +307,45 @@ pub async fn get_tasks(
             let mut elapsed_duration: i64 = elapsed_duration(&history);
             let actual_start = get_actual_start(&task, &history);
             let actual_complete = get_actual_complete(&task.status, &history);
-        
+
             if let Some(last_resumed) = task.last_resumed_date {
                 let diff = Utc::now().naive_utc() - last_resumed;
                 elapsed_duration += diff.num_seconds();
             }
-            
+
             TaskRead {
-                    id: task.id,
-                    title: task.title,
-                    description: task.description,
-                    status: task.status,
-                    scheduled_start_date: task.scheduled_start_date.map(|dt| dt.and_utc()),
-                    scheduled_complete_date: task.scheduled_complete_date.map(|dt| dt.and_utc()),
-                    actual_start_date: actual_start.map(|dt| dt.and_utc()),
-                    actual_complete_date: actual_complete.map(|dt| dt.and_utc()),
-                    last_resumed_date: task.last_resumed_date.map(|dt| dt.and_utc()),
-                    estimated_duration: task.estimated_duration,
-                    elapsed_duration,
-                    comments: comments
-                        .into_iter()
-                        .map(|c| c.into())
-                        .collect::<Vec<CommentRead>>(),
-                    tags,
-                    work_history: history.into_iter().map(|hist| hist.into()).collect::<Vec<_>>(),
-                }
+                id: task.id,
+                title: task.title,
+                description: task.description,
+                status: task.status,
+                scheduled_start_date: task.scheduled_start_date.map(|dt| dt.and_utc()),
+                scheduled_complete_date: task.scheduled_complete_date.map(|dt| dt.and_utc()),
+                actual_start_date: actual_start.map(|dt| dt.and_utc()),
+                actual_complete_date: actual_complete.map(|dt| dt.and_utc()),
+                last_resumed_date: task.last_resumed_date.map(|dt| dt.and_utc()),
+                estimated_duration: task.estimated_duration,
+                elapsed_duration,
+                comments: comments
+                    .into_iter()
+                    .map(|c| c.into())
+                    .collect::<Vec<CommentRead>>(),
+                tags,
+                work_history: history
+                    .into_iter()
+                    .map(|hist| hist.into())
+                    .collect::<Vec<_>>(),
+            }
         })
         .collect();
-                
+
     Ok(PagedData::<TaskRead>::new(
-            params.page,
-            params.page_size,
-            count,
-            task_read,
+        params.page,
+        params.page_size,
+        count,
+        task_read,
     ))
 }
-                    
+
 #[tauri::command]
 pub async fn start_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
@@ -323,14 +358,15 @@ pub async fn start_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
 pub async fn pause_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => set_task_model_inactive(model, Status::Paused, &db).await,
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
+    }
 }
 
 #[tauri::command]
 pub async fn resume_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => set_task_model_active(model, Status::Doing, &db).await,
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
 
@@ -338,7 +374,7 @@ pub async fn resume_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
 pub async fn finish_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => set_task_model_inactive(model, Status::Done, &db).await,
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
 
@@ -349,7 +385,7 @@ pub async fn cancel_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
             delete_work_history_by_task_id(&model.id, &db).await?;
             set_task_model_inactive(model, Status::Cancelled, &db).await
         }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
 
@@ -365,7 +401,7 @@ pub async fn reopen_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
 pub async fn restore_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
     match find_task(task_id, &db).await? {
         Some(model) => set_task_model_inactive(model, Status::Todo, &db).await,
-        None => anyhow_tauri::bail!(not_found_message(task_id)),   
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
     }
 }
 
@@ -376,12 +412,13 @@ pub async fn delete_task(task_id: i64, db: State<'_, Data>) -> TAResult<()> {
             sqlx::query!("DELETE FROM tasks WHERE tasks.id = ?", task_id)
                 .execute(&db.pool)
                 .await
-                .map(|_|())
+                .map(|_| ())
                 .into_ta_result()?;
 
             delete_work_history_by_task_id(&task_id, &db).await
         }
-        None => anyhow_tauri::bail!(not_found_message(task_id)),    }
+        None => anyhow_tauri::bail!(not_found_message(task_id)),
+    }
 }
 
 #[tauri::command]
@@ -393,7 +430,7 @@ pub async fn delete_many_tasks(task_ids: Vec<i64>, db: State<'_, Data>) -> TARes
         .build()
         .execute(&db.pool)
         .await
-        .map(|_|())
+        .map(|_| ())
         .into_ta_result()
 }
 
@@ -410,17 +447,18 @@ pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> TAResult<()> {
                 task.scheduled_complete_date.map(|dt| dt.naive_utc());
             existing_task.estimated_duration = task.estimated_duration;
 
-
             save_task(existing_task, &db).await
         }
-        None => anyhow_tauri::bail!(not_found_message(task.id)),    }
+        None => anyhow_tauri::bail!(not_found_message(task.id)),
+    }
 }
 
 #[tauri::command]
 pub async fn add_comment(comment: CreateComment, db: State<'_, Data>) -> TAResult<()> {
     let model = NewComment::from(comment);
 
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
         INSERT INTO comments (task_id, message, created, modified)
         VALUES (?, ?, ?, ?)
     "#,
@@ -431,7 +469,7 @@ pub async fn add_comment(comment: CreateComment, db: State<'_, Data>) -> TAResul
     )
     .execute(&db.pool)
     .await
-    .map(|_|())
+    .map(|_| ())
     .into_ta_result()
 }
 
@@ -453,7 +491,8 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> TAResu
     found.message = comment.message;
     found.modified = Some(Utc::now().naive_utc());
 
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
         UPDATE comments 
         SET message = ?, 
         modified = ? 
@@ -464,41 +503,46 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> TAResu
     )
     .execute(&db.pool)
     .await
-    .map(|_|())
+    .map(|_| ())
     .into_ta_result()
 }
 
 #[tauri::command]
 pub async fn delete_comment(id: i64, db: State<'_, Data>) -> TAResult<()> {
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
             DELETE FROM comments
             WHERE comments.id = ?
-        "#, 
-        id)
-        .execute(&db.pool)
-        .await
-        .map(|_|())
-        .into_ta_result()
+        "#,
+        id
+    )
+    .execute(&db.pool)
+    .await
+    .map(|_| ())
+    .into_ta_result()
 }
 
 fn not_found_message(task_id: i64) -> String {
     format!("Task with id '{}' not found.", task_id)
 }
 
-async fn delete_work_history_by_task_id(task_id: &i64, db: &State<'_, Data>) ->  TAResult<()> {
-    sqlx::query!(r#"
+async fn delete_work_history_by_task_id(task_id: &i64, db: &State<'_, Data>) -> TAResult<()> {
+    sqlx::query!(
+        r#"
         DELETE FROM task_work_history
         WHERE task_work_history.task_id = ?
     "#,
-    task_id)
+        task_id
+    )
     .execute(&db.pool)
     .await
-    .map(|_|())
+    .map(|_| ())
     .into_ta_result()
 }
 
 async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
         UPDATE tasks
         SET title = ?,
         description = ?,
@@ -516,10 +560,11 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
         task.scheduled_complete_date,
         task.last_resumed_date,
         task.estimated_duration,
-        task.id)
+        task.id
+    )
     .execute(&db.pool)
     .await
-    .map(|_|())
+    .map(|_| ())
     .into_ta_result()
 }
 
@@ -532,31 +577,41 @@ async fn find_task(task_id: i64, db: &State<'_, Data>) -> TAResult<Option<Task>>
 }
 
 /// Update the status when transitioning to an active state.
-async fn set_task_model_active(mut task: Task, status: Status, db: &State<'_, Data>) -> TAResult<()> {
+async fn set_task_model_active(
+    mut task: Task,
+    status: Status,
+    db: &State<'_, Data>,
+) -> TAResult<()> {
     task.status = status;
     task.last_resumed_date = Some(Utc::now().naive_utc());
     save_task(task, db).await
 }
 
 /// Update the status when transition to a paused or finished state.
-async fn set_task_model_inactive(mut task: Task, status: Status, db: &State<'_, Data>) -> TAResult<()> {
+async fn set_task_model_inactive(
+    mut task: Task,
+    status: Status,
+    db: &State<'_, Data>,
+) -> TAResult<()> {
     task.status = status;
 
     if let Some(last_resumed) = task.last_resumed_date {
         // Add an entry into the work history table.
         let last_resumed = last_resumed.round_subsecs(0);
         let now = Utc::now().naive_utc().round_subsecs(0);
-        
-        sqlx::query!(r#"
+
+        sqlx::query!(
+            r#"
             INSERT INTO task_work_history (task_id, start_date, end_date) 
             VALUES (?, ?, ?);
         "#,
-        task.id,
-        last_resumed,
-        now)
+            task.id,
+            last_resumed,
+            now
+        )
         .execute(&db.pool)
         .await
-        .map(|_|())
+        .map(|_| ())
         .into_ta_result()?;
 
         task.last_resumed_date = None;
@@ -566,10 +621,17 @@ async fn set_task_model_inactive(mut task: Task, status: Status, db: &State<'_, 
 }
 
 #[tauri::command]
-pub async fn add_task_work_history(new_task_work_history: NewTaskWorkHistory, db: State<'_, Data>) -> TAResult<()> {
-    let start_date = new_task_work_history.start_date.naive_utc().round_subsecs(0);
+pub async fn add_task_work_history(
+    new_task_work_history: NewTaskWorkHistory,
+    db: State<'_, Data>,
+) -> TAResult<()> {
+    let start_date = new_task_work_history
+        .start_date
+        .naive_utc()
+        .round_subsecs(0);
     let end_date = new_task_work_history.end_date.naive_utc().round_subsecs(0);
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
             INSERT INTO task_work_history (task_id, start_date, end_date)
             VALUES (?, ?, ?)
         "#,
@@ -577,40 +639,50 @@ pub async fn add_task_work_history(new_task_work_history: NewTaskWorkHistory, db
         start_date,
         end_date
     )
-        .execute(&db.pool)
-        .await
-        .map(|_|())
-        .into_ta_result()
+    .execute(&db.pool)
+    .await
+    .map(|_| ())
+    .into_ta_result()
 }
 
 #[tauri::command]
 pub async fn delete_task_work_history(history_id: i64, db: State<'_, Data>) -> TAResult<()> {
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
             DELETE FROM task_work_history
             WHERE task_work_history.id = ?
         "#,
-        history_id)
-        .execute(&db.pool)
-        .await
-        .map(|_|())
-        .into_ta_result()
+        history_id
+    )
+    .execute(&db.pool)
+    .await
+    .map(|_| ())
+    .into_ta_result()
 }
 
 #[tauri::command]
-pub async fn edit_task_work_history(edit_task_work_history: EditTaskWorkHistory, db: State<'_, Data>) -> TAResult<()> {
-    let start_date = edit_task_work_history.start_date.naive_utc().round_subsecs(0);
+pub async fn edit_task_work_history(
+    edit_task_work_history: EditTaskWorkHistory,
+    db: State<'_, Data>,
+) -> TAResult<()> {
+    let start_date = edit_task_work_history
+        .start_date
+        .naive_utc()
+        .round_subsecs(0);
     let end_date = edit_task_work_history.end_date.naive_utc().round_subsecs(0);
-    sqlx::query!(r#"
+    sqlx::query!(
+        r#"
         UPDATE task_work_history
         SET start_date = ?,
         end_date = ?
         WHERE task_work_history.id = ?
     "#,
-    start_date,
-    end_date,
-    edit_task_work_history.id)
+        start_date,
+        end_date,
+        edit_task_work_history.id
+    )
     .execute(&db.pool)
     .await
-    .map(|_|())
+    .map(|_| ())
     .into_ta_result()
 }

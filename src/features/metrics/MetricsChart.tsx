@@ -1,27 +1,19 @@
-import { Stack, Text, useMantineTheme } from "@mantine/core";
-import {
-  CartesianGrid,
-  Line,
-  LineChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import {Stack, Text, useMantineTheme} from "@mantine/core";
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,} from "recharts";
 import useColorPalette from "../../hooks/useColorPalette";
-import { DailyWorkHistory } from "../../models/ZodModels";
+import {DailyWorkHistory} from "../../models/ZodModels";
 
 
 export interface MetricsChartProps {
   workHistory: DailyWorkHistory[];
-};
+}
 
-function MetricsChart({ workHistory }: MetricsChartProps) {
+function MetricsChart({workHistory}: MetricsChartProps) {
   // Helper function to aggregate data by day
   const aggregateWorkByDay = (workHistory: DailyWorkHistory[]) => {
     const aggregatedData: { [key: string]: number } = {};
 
-    workHistory.forEach(({ dayWorked, hoursWorked }) => {
+    workHistory.forEach(({dayWorked, hoursWorked}) => {
       const date = dayWorked.toISOString().split("T")[0]; // Format the date as YYYY-MM-DD
       if (!aggregatedData[date]) {
         aggregatedData[date] = 0;
@@ -57,10 +49,10 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
         Hours Worked per Day
       </Text>
       <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData} margin={{ bottom: 60, right: 50, top: 10 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="date" angle={-60} textAnchor="end" />
-          <YAxis />
+        <LineChart data={chartData} margin={{bottom: 60, right: 50, top: 10}}>
+          <CartesianGrid strokeDasharray="3 3"/>
+          <XAxis dataKey="date" angle={-60} textAnchor="end"/>
+          <YAxis/>
           <Tooltip
             contentStyle={{
               backgroundColor: "#333",

@@ -1,5 +1,5 @@
-import { create } from "zustand";
-import { TimeSpan, TimeSpanLike } from "../../../models/TimeSpan";
+import {create} from "zustand";
+import {TimeSpan, TimeSpanLike} from "../../../models/TimeSpan";
 
 export interface TimerStore {
   initialTime: TimeSpanLike;
@@ -45,10 +45,10 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   minutes: defaultMinutes,
   seconds: defaultSeconds,
   startTimer: () => {
-    set({ isActive: true, isPaused: false });
+    set({isActive: true, isPaused: false});
   },
   pauseTimer: () => {
-    set({ isPaused: true, isActive: false });
+    set({isPaused: true, isActive: false});
   },
   resetTimer: () => {
     set({
@@ -71,14 +71,14 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   decrementTime: () => {
     const time = get().time;
     if (time > 0) {
-      set({ time: time - 1 });
+      set({time: time - 1});
     }
   },
   setIsPlaying: (playing) => {
-    set({ playingSound: playing });
+    set({playingSound: playing});
   },
   setTimeoutMessage: (message) => {
-    set({ message });
+    set({message});
   },
   setHours: (hours) => {
     const ts = TimeSpan.add(
@@ -87,7 +87,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(get().seconds)
     );
 
-    set({ hours, initialTime: ts.toJSON(), time: ts.totalSeconds });
+    set({hours, initialTime: ts.toJSON(), time: ts.totalSeconds});
   },
   setMinutes: (minutes) => {
     const ts = TimeSpan.add(
@@ -96,7 +96,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(get().seconds)
     );
 
-    set({ minutes, initialTime: ts.toJSON(), time: ts.totalSeconds });
+    set({minutes, initialTime: ts.toJSON(), time: ts.totalSeconds});
   },
   setSeconds: (seconds) => {
     const ts = TimeSpan.add(
@@ -105,6 +105,6 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(seconds)
     );
 
-    set({ seconds, initialTime: ts.toJSON(), time: ts.totalSeconds });
+    set({seconds, initialTime: ts.toJSON(), time: ts.totalSeconds});
   },
 }));

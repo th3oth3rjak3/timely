@@ -1,7 +1,7 @@
-import { Stack, TextInput } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
-import { IconSearch, IconX } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import {Stack, TextInput} from "@mantine/core";
+import {useDebouncedValue} from "@mantine/hooks";
+import {IconSearch, IconX} from "@tabler/icons-react";
+import {useEffect, useState} from "react";
 import StyledActionIcon from "./StyledActionIcon";
 
 export interface TextFilterProps {
@@ -38,7 +38,7 @@ function TextFilter(props: TextFilterProps) {
         label={props.label}
         description={props.description}
         placeholder={props.placeholder ?? "Search..."}
-        leftSection={<IconSearch size={16} />}
+        leftSection={<IconSearch size={16}/>}
         rightSection={
           <StyledActionIcon
             size="sm"
@@ -46,7 +46,7 @@ function TextFilter(props: TextFilterProps) {
             color="dimmed"
             onClick={clearSearchValue}
           >
-            <IconX size={14} />
+            <IconX size={14}/>
           </StyledActionIcon>
         }
         value={searchText}

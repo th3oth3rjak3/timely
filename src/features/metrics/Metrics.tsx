@@ -1,19 +1,15 @@
-import { Card, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
-import { useDisclosure } from "@mantine/hooks";
-import {
-  IconFileExport,
-  IconFilter,
-  IconFilterFilled,
-} from "@tabler/icons-react";
-import { useEffect, useMemo, useState } from "react";
+import {Card, Group, Modal, ScrollArea, Stack, Text} from "@mantine/core";
+import {useDisclosure} from "@mantine/hooks";
+import {IconFileExport, IconFilter, IconFilterFilled,} from "@tabler/icons-react";
+import {useEffect, useMemo, useState} from "react";
 
 import StyledActionIcon from "../../components/StyledActionIcon";
-import { useGetAllTags } from "../tags/services/tagService";
+import {useGetAllTags} from "../tags/services/tagService";
 import MetricsChart from "./MetricsChart";
 import MetricsFilter from "./MetricsFilter";
 import MetricsSummaryComponent from "./MetricsSummary";
-import { useGetMetrics, useMetricsStore } from "./services/metricsService";
-import { FilterFormInputs, MetricsFilterCriteria } from "./types";
+import {useGetMetrics, useMetricsStore} from "./services/metricsService";
+import {FilterFormInputs, MetricsFilterCriteria} from "./types";
 
 function Metrics() {
   const [filterOpened, filterActions] = useDisclosure(false);
@@ -55,9 +51,9 @@ function Metrics() {
     };
   }, [startDate, endDate, selectedTags]);
 
-  const { data: tagOptions } = useGetAllTags();
+  const {data: tagOptions} = useGetAllTags();
 
-  const { data: metricsSummary } = useGetMetrics(metricsFilterCriteria);
+  const {data: metricsSummary} = useGetMetrics(metricsFilterCriteria);
 
   const applyFilter = async (inputs: MetricsFilterCriteria) => {
     setStartDate(inputs.startDate);
@@ -84,16 +80,16 @@ function Metrics() {
   const graphSection = isFiltered ? (
     <div>
       <Card withBorder>
-        <MetricsSummaryComponent summary={metricsSummary.summary} />
+        <MetricsSummaryComponent summary={metricsSummary.summary}/>
       </Card>
       <Card withBorder>
-        <MetricsChart workHistory={metricsSummary.workHistory} />
+        <MetricsChart workHistory={metricsSummary.workHistory}/>
       </Card>
     </div>
   ) : (
     <Stack gap="sm">
       <Text size="md">
-        Let's get started! Pick some filter options to view your data.
+        Let&apos;s get started! Pick some filter options to view your data.
       </Text>
     </Stack>
   );
@@ -110,7 +106,7 @@ function Metrics() {
                 tooltipLabel="Filter Data"
                 tooltipPosition="left"
               >
-                {isFiltered ? <IconFilterFilled /> : <IconFilter />}
+                {isFiltered ? <IconFilterFilled/> : <IconFilter/>}
               </StyledActionIcon>
               {isFiltered ? (
                 <StyledActionIcon
@@ -118,7 +114,7 @@ function Metrics() {
                   tooltipLabel="Export"
                   tooltipPosition="left"
                 >
-                  <IconFileExport />
+                  <IconFileExport/>
                 </StyledActionIcon>
               ) : null}
             </Group>
