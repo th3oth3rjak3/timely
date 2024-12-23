@@ -11,15 +11,14 @@ import {
 import dayjs from "dayjs";
 import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
+import { Tag, Task } from "../../models/ZodModels";
 import CommentDetails from "./CommentDetails";
 import TagDetails from "./TagDetails";
 import TaskWorkHistoryDetails from "./TaskWorkHistoryDetails";
-import { Task, Tag, UserSettings } from "../../models/ZodModels";
 
 export interface TaskDetailParams {
   task: Task;
   tagOptions: Tag[];
-  userSettings: UserSettings;
   onStarted: (task: Task) => void;
   onPaused: (task: Task) => void;
   onResumed: (task: Task) => void;

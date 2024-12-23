@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 import useColorPalette from "../../../hooks/useColorPalette";
-import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
-import {
-  decrementTime,
-  resetTimer,
-  setIsPlaying,
-} from "../../../redux/reducers/timerSlice";
 import { showTimerNotification } from "../../../utilities/notificationUtilities";
+import { useUserSettings } from "../../settings/settingsService";
+import { useTimerStore } from "../services/timerService";
 
 const useGlobalTimer = () => {
-  const dispatch = useAppDispatch();
-  const { time, isActive, message } = useAppSelector((state) => state.timer);
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const playing = useAppSelector((state) => state.timer.playingSound);
+  const time = useTimerStore((store) => store.time);
+  const isActive = useTimerStore((store) => store.isActive);
+  const message = useTimerStore((store) => store.message);
+  const playing = useTimerStore((store) => store.playingSound);
+  const decrementTime = useTimerStore((store) => store.decrementTime);
+  const setIsPlaying = useTimerStore((store) => store.setIsPlaying);
+  const resetTimer = useTimerStore((store) => store.resetTimer);
+  const { data: userSettings } = useUserSettings();
   const colorPalette = useColorPalette();
 
   // Reference to persist the Audio object across renders
@@ -38,22 +38,19 @@ const useGlobalTimer = () => {
     if (!isActive) return;
 
     const intervalId = setInterval(() => {
-      dispatch(decrementTime());
+      decrementTime();
     }, 1000);
 
     if (time === 0) {
-      dispatch(setIsPlaying(true));
-      showTimerNotification(colorPalette, message, () =>
-        dispatch(resetTimer())
-      );
-
+      setIsPlaying(true);
+      showTimerNotification(colorPalette, message, resetTimer);
       clearInterval(intervalId);
     }
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [time, isActive, dispatch, userSettings]);
+  }, [time, isActive, userSettings]);
 };
 
 export default useGlobalTimer;

@@ -11,15 +11,15 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import StyledActionIcon from "../components/StyledActionIcon";
+import { useUserSettings } from "../features/settings/settingsService";
 import useGlobalTimer from "../features/timer/hooks/useGlobalTimer";
-import { useAppDispatch, useAppSelector } from "../redux/hooks";
-import { closeNavbar, toggleNavbar } from "../redux/reducers/settingsSlice";
 import Navbar from "./Navbar";
 
 function MainLayout() {
+  const { data: userSettings } = useUserSettings();
+
   /** An app store dispatch function to update store values. */
-  const navOpened = useAppSelector((state) => state.settings.navbarOpen);
-  const dispatch = useAppDispatch();
+
   useGlobalTimer();
   const [maximized, setMaximized] = useState(false);
 
@@ -50,6 +50,10 @@ function MainLayout() {
   /** Toggle the window maximized state. */
   const toggleMaximize = async () => await getCurrentWindow().toggleMaximize();
 
+  if (!userSettings) return;
+
+  const [navOpened, setNavOpened] = useState(userSettings.navbarOpened);
+
   return (
     <AppShell
       header={{ height: 48 }}
@@ -63,7 +67,7 @@ function MainLayout() {
       <AppShell.Header data-tauri-drag-region>
         <Group h="100%" px="md" align="center" data-tauri-drag-region>
           <StyledActionIcon
-            onClick={() => dispatch(toggleNavbar())}
+            onClick={() => setNavOpened(!navOpened)}
             size={28}
             tooltipLabel={navOpened ? "Close Menu" : "Open Menu"}
             tooltipPosition="right"
@@ -108,7 +112,7 @@ function MainLayout() {
       </AppShell.Header>
       <AppShell.Navbar p="md" maw="200px">
         <ScrollArea offsetScrollbars scrollHideDelay={0} scrollbarSize={6}>
-          <Navbar closeNavMenu={() => dispatch(closeNavbar())} />
+          <Navbar closeNavMenu={() => setNavOpened(false)} />
         </ScrollArea>
       </AppShell.Navbar>
       <AppShell.Main>

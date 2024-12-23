@@ -13,30 +13,24 @@ import {
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { IconCheck } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { NotificationSetting } from "../../models/ZodModels";
-import { useAppSelector } from "../../redux/hooks";
+import { homePageOptions, pageSizeOptions } from "../../state/globalState";
 import { toSelectOptions } from "../../utilities/formUtilities";
 import { toProperCase } from "../../utilities/stringUtilities";
-import useSettingsService from "./hooks/useSettingsService";
-
+import { useUpdateUserSettings, useUserSettings } from "./settingsService";
 
 /**
  * Settings page.
  */
 function Settings() {
-  const { updateUserSettings } = useSettingsService();
-
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const pageSizeOptions = useAppSelector(
-    (state) => state.settings.taskListSettings.pageSizeOptions
-  );
-  const homePageOptions = useAppSelector(
-    (state) => state.settings.homePageOptions
-  );
+  const { data: userSettings } = useUserSettings();
+  const queryClient = useQueryClient();
+  const updateUserSettings = useUpdateUserSettings(queryClient);
 
   const colorPalette = useColorPalette();
   const [showGradientOptions, setShowGradientOptions] = useState(
@@ -85,7 +79,7 @@ function Settings() {
   ));
 
   useEffect(() => {
-    setNotificationSettings(userSettings.notificationSettings);
+    setNotificationSettings(userSettings?.notificationSettings ?? []);
   }, [userSettings]);
 
   interface FormUserSettings {
@@ -96,7 +90,7 @@ function Settings() {
     gradientTo: string;
     gradientDegrees?: number;
     navbarOpened: string;
-  };
+  }
 
   const form = useForm<FormUserSettings>({
     mode: "controlled",
@@ -140,7 +134,8 @@ function Settings() {
       navbarOpened: settings.navbarOpened === "true",
       notificationSettings: notificationSettings,
     };
-    await updateUserSettings(userSettings, () => form.resetDirty());
+    await updateUserSettings.mutateAsync(userSettings);
+    form.resetDirty();
   }
 
   function resetForm() {

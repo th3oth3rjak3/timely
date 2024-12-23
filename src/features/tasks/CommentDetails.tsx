@@ -7,10 +7,13 @@ import dayjs from "dayjs";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import { useAppSelector } from "../../redux/hooks";
-import useCommentService from "./hooks/useCommentService";
-import { Comment } from "./types/Comment";
-import { Task } from "../../models/ZodModels";
+import { Comment, Task } from "../../models/ZodModels";
+import { useUserSettings } from "../settings/settingsService";
+import {
+  useAddComment,
+  useDeleteComment,
+  useEditComment,
+} from "./services/commentService";
 
 export interface CommentDetailsProps {
   task: Task;
@@ -19,10 +22,11 @@ export interface CommentDetailsProps {
 
 function CommentDetails(props: CommentDetailsProps) {
   const colorPalette = useColorPalette();
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
+  const { data: userSettings } = useUserSettings();
 
-  const { addComment, editComment, deleteComment } =
-    useCommentService(userSettings);
+  const addComment = useAddComment(userSettings);
+  const editComment = useEditComment(userSettings);
+  const deleteComment = useDeleteComment(userSettings);
 
   const [editModalOpened, editModalActions] = useDisclosure(false);
   const [newModalOpened, newModalActions] = useDisclosure(false);
@@ -78,25 +82,27 @@ function CommentDetails(props: CommentDetailsProps) {
       },
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
-      onConfirm: () => deleteExistingComment(comment),
+      onConfirm: () => deleteComment.mutateAsync(comment.id),
     });
 
   async function addNewComment(values: typeof newCommentForm.values) {
     newCommentForm.reset();
     newModalActions.close();
-    await addComment(props.task.id, values.comment);
+    await addComment.mutateAsync({
+      taskId: props.task.id,
+      message: values.comment,
+    });
     props.onCommentChanged();
   }
 
   async function editExistingComment(comment: typeof editCommentForm.values) {
     editCommentForm.reset();
     editModalActions.close();
-    await editComment(comment.id, comment.comment);
+    await editComment.mutateAsync({
+      commentId: comment.id,
+      message: comment.comment,
+    });
     props.onCommentChanged();
-  }
-
-  async function deleteExistingComment(comment: Comment) {
-    await deleteComment(comment.id, () => props.onCommentChanged());
   }
 
   function commentRow(comment: Comment, withDivider: boolean): JSX.Element {

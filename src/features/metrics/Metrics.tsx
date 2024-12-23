@@ -5,27 +5,25 @@ import {
   IconFilter,
   IconFilterFilled,
 } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
-import { Tag } from "../tags/types/Tag";
+import { useState } from "react";
 
 import StyledActionIcon from "../../components/StyledActionIcon";
-import useTagService from "../tags/hooks/useTagService";
+import { MetricsSummary } from "../../models/ZodModels";
+import { useGetAllTags } from "../tags/services/tagService";
 import useMetricsService from "./hooks/useMetricsService";
 import MetricsChart from "./MetricsChart";
 import MetricsFilter from "./MetricsFilter";
 import MetricsSummaryComponent from "./MetricsSummary";
 import { FilterFormInputs, MetricsFilterCriteria } from "./types";
-import { MetricsSummary } from "../../models/ZodModels";
 
 function Metrics() {
-  const [tagOptions, setTagOptions] = useState<Tag[]>([]);
   const [filterOpened, filterActions] = useDisclosure(false);
   const [filterInputs, setFilterInputs] = useState<FilterFormInputs>({
     startDate: undefined,
     endDate: undefined,
     tags: undefined,
   });
-  const { getAllTags } = useTagService(tagOptions.length);
+  const { data: tagOptions } = useGetAllTags();
   const { getMetrics } = useMetricsService();
   const emptyData: MetricsSummary = {
     startDate: new Date(),
@@ -42,10 +40,6 @@ function Metrics() {
 
   const [metricsSummary, setMetricsSummary] =
     useState<MetricsSummary>(emptyData);
-
-  useEffect(() => {
-    getAllTags().then((tags) => setTagOptions(tags ?? []));
-  }, []);
 
   const applyFilter = async (inputs: MetricsFilterCriteria) => {
     setIsFiltered(true);

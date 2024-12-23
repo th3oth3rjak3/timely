@@ -12,27 +12,30 @@ import {
   DataTableColumn,
   DataTableSortStatus,
 } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { TimeSpan } from "../../models/TimeSpan";
 import { Task, TaskWorkHistory } from "../../models/ZodModels";
-import { useAppSelector } from "../../redux/hooks";
+import { pageSizeOptions } from "../../state/globalState";
 import { getDayOnlyProps } from "../../utilities/dateUtilities";
-import useWorkHistoryService from "./hooks/useWorkHistoryService";
+import { useUserSettings } from "../settings/settingsService";
+import {
+  useAddWorkHistory,
+  useDeleteWorkHistory,
+  useEditWorkHistory,
+} from "./services/workHistoryService";
 import { EditTaskWorkHistory, NewTaskWorkHistory } from "./types/Task";
 
 export interface TaskWorkHistoryProps {
   task: Task;
   onHistoryChanged: () => void;
-};
+}
 
 function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
-  const pageSizeOptions = useAppSelector(
-    (state) => state.settings.taskListSettings.pageSizeOptions
-  );
+  const { data: userSettings } = useUserSettings();
+
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(userSettings.pageSize);
   const [sortStatus, setSortStatus] = useState<
@@ -41,8 +44,6 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
     columnAccessor: "startDate",
     direction: "desc",
   });
-  const data = sortBy(props.task.workHistory, "startDate");
-  const [records, setRecords] = useState(data.reverse()); // Start with records sorted descending by startDate
   const [newWorkHistoryFormOpened, newWorkHistoryFormActions] =
     useDisclosure(false);
   const [editWorkHistoryFormOpened, editWorkHistoryFormActions] =
@@ -80,16 +81,19 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
     },
   ];
 
-  useEffect(() => {
-    const data = sortBy(
-      props.task.workHistory,
-      sortStatus.columnAccessor
-    ) as TaskWorkHistory[];
-    setRecords(sortStatus.direction === "desc" ? data.reverse() : data);
-  }, [props.task, sortStatus]);
+  const records = useMemo(() => {
+    if (sortStatus.direction === "desc") {
+      return sortBy(
+        props.task.workHistory,
+        sortStatus.columnAccessor
+      ).reverse();
+    }
+    return sortBy(props.task.workHistory, sortStatus.columnAccessor);
+  }, [props, sortStatus]);
 
-  const { addWorkHistory, editWorkHistory, deleteWorkHistory } =
-    useWorkHistoryService(userSettings);
+  const addWorkHistory = useAddWorkHistory(userSettings);
+  const editWorkHistory = useEditWorkHistory(userSettings);
+  const deleteWorkHistory = useDeleteWorkHistory(userSettings);
 
   const newWorkHistoryForm = useForm<NewTaskWorkHistory>({
     mode: "controlled",
@@ -118,7 +122,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
     newWorkHistoryFormActions.close();
     values.startDate = dayjs(values.startDate).startOf("second").toDate();
     values.endDate = dayjs(values.endDate).startOf("second").toDate();
-    await addWorkHistory(values);
+    await addWorkHistory.mutateAsync(values);
     newWorkHistoryForm.reset();
     props.onHistoryChanged();
   }
@@ -155,7 +159,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
     editWorkHistoryFormActions.close();
     values.startDate = dayjs(values.startDate).startOf("second").toDate();
     values.endDate = dayjs(values.endDate).startOf("second").toDate();
-    await editWorkHistory(values);
+    await editWorkHistory.mutateAsync(values);
     editWorkHistoryForm.reset();
     props.onHistoryChanged();
   }
@@ -177,7 +181,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
 
   async function deleteWorkHistoryItem(id: number) {
     setPage(1);
-    await deleteWorkHistory(id);
+    await deleteWorkHistory.mutateAsync(id);
     props.onHistoryChanged();
   }
 

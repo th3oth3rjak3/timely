@@ -1,8 +1,8 @@
 import { notifications } from "@mantine/notifications";
 import { ColorPalette } from "../features/settings/hooks/useColorService";
-import { UserSettings } from "../features/settings/UserSettings";
 import { TimelyAction } from "../models/TauriAction";
 import { Stringer } from "./formUtilities";
+import { UserSettings } from "../models/ZodModels";
 
 export function showTimerNotification<T extends Stringer>(
   colorPalette: ColorPalette,

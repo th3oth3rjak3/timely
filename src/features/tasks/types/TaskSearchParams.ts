@@ -62,12 +62,12 @@ export function taskSearchParams(
   page: number,
   pageSize: number,
   statuses: string[],
-  queryString?: string,
-  sortField?: string,
-  sortDirection?: string,
-  startByFilter?: DateRangeFilter,
-  dueByFilter?: DateRangeFilter,
-  quickFilter?: QuickFilter
+  queryString: string | null,
+  sortField: string | null,
+  sortDirection: string | null,
+  startByFilter: DateRangeFilter | null,
+  dueByFilter: DateRangeFilter | null,
+  quickFilter: QuickFilter | null
 ): TaskSearchParams {
   return {
     page,

@@ -12,25 +12,25 @@ import { IconClock } from "@tabler/icons-react";
 import { useMemo } from "react";
 import StyledButton from "../../components/StyledButton";
 import { TimeSpan } from "../../models/TimeSpan";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks";
-import {
-  pauseTimer,
-  resetTimer,
-  resetToDefault,
-  setHours,
-  setMinutes,
-  setSeconds,
-  setTimeoutMessage,
-  startTimer,
-} from "../../redux/reducers/timerSlice";
 import { createRange } from "../../utilities/rangeUtilities";
+import { useTimerStore } from "./services/timerService";
 
 function CountdownTimer() {
-  const { time, isActive, isPaused, hours, minutes, seconds } = useAppSelector(
-    (state) => state.timer
-  );
-  const message = useAppSelector((state) => state.timer.message);
-  const dispatch = useAppDispatch();
+  const message = useTimerStore((store) => store.message);
+  const time = useTimerStore((store) => store.time);
+  const isActive = useTimerStore((store) => store.isActive);
+  const isPaused = useTimerStore((store) => store.isPaused);
+  const hours = useTimerStore((store) => store.hours);
+  const setHours = useTimerStore((store) => store.setHours);
+  const minutes = useTimerStore((store) => store.minutes);
+  const setMinutes = useTimerStore((store) => store.setMinutes);
+  const seconds = useTimerStore((store) => store.seconds);
+  const setSeconds = useTimerStore((store) => store.setSeconds);
+  const startTimer = useTimerStore((store) => store.startTimer);
+  const pauseTimer = useTimerStore((store) => store.pauseTimer);
+  const resetTimer = useTimerStore((store) => store.resetTimer);
+  const setTimeoutMessage = useTimerStore((store) => store.setTimeoutMessage);
+  const resetToDefault = useTimerStore((store) => store.resetToDefault);
 
   const displayTime = useMemo(() => {
     return TimeSpan.fromSeconds(time).toString();
@@ -38,14 +38,10 @@ function CountdownTimer() {
 
   const handleTimerToggle = () => {
     if (!isActive || isPaused || time === 0) {
-      dispatch(startTimer());
+      startTimer();
     } else {
-      dispatch(pauseTimer());
+      pauseTimer();
     }
-  };
-
-  const handleTimerReset = () => {
-    dispatch(resetTimer());
   };
 
   return (
@@ -60,7 +56,7 @@ function CountdownTimer() {
               label={isActive ? "Pause" : "Start"}
               onClick={handleTimerToggle}
             />
-            <StyledButton label="Reset" onClick={handleTimerReset} />
+            <StyledButton label="Reset" onClick={resetTimer} />
           </Group>
           <Accordion variant="contained" w="100%" p="sm">
             <Accordion.Item value="time">
@@ -75,7 +71,7 @@ function CountdownTimer() {
                       label="Hours"
                       data={createRange(0, 23).map((v) => v.toString())}
                       value={hours.toString()}
-                      onChange={(value) => dispatch(setHours(Number(value)))}
+                      onChange={(value) => setHours(Number(value))}
                     ></Select>
                   </Grid.Col>
                   <Grid.Col span={4}>
@@ -84,7 +80,7 @@ function CountdownTimer() {
                       label="Minutes"
                       data={createRange(0, 59).map((m) => m.toString())}
                       value={minutes.toString()}
-                      onChange={(value) => dispatch(setMinutes(Number(value)))}
+                      onChange={(value) => setMinutes(Number(value))}
                     ></Select>
                   </Grid.Col>
                   <Grid.Col span={4}>
@@ -93,7 +89,7 @@ function CountdownTimer() {
                       label="Seconds"
                       data={createRange(0, 59).map((m) => m.toString())}
                       value={seconds.toString()}
-                      onChange={(value) => dispatch(setSeconds(Number(value)))}
+                      onChange={(value) => setSeconds(Number(value))}
                     ></Select>
                   </Grid.Col>
                   <Grid.Col span={12}>
@@ -101,15 +97,13 @@ function CountdownTimer() {
                       disabled={isActive}
                       label="Notification Message"
                       value={message}
-                      onChange={(m) =>
-                        dispatch(setTimeoutMessage(m.currentTarget.value))
-                      }
+                      onChange={(m) => setTimeoutMessage(m.currentTarget.value)}
                     ></TextInput>
                   </Grid.Col>
                   <Grid.Col span={12}>
                     <StyledButton
                       label="Reset To Default"
-                      onClick={() => dispatch(resetToDefault())}
+                      onClick={resetToDefault}
                       disabled={isActive}
                     />
                   </Grid.Col>

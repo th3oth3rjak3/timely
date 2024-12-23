@@ -1,15 +1,13 @@
 import useTauri from "../../../hooks/useTauri";
 import { TimelyAction } from "../../../models/TauriAction";
 import { MetricsSummary } from "../../../models/ZodModels";
-import { useAppSelector } from "../../../redux/hooks";
 import { tryMap } from "../../../utilities/nullableUtilities";
+import { useUserSettings } from "../../settings/settingsService";
 import { MetricsFilterCriteria } from "../types";
-
-
 
 const useMetricsService = () => {
   const { invoke } = useTauri();
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
+  const { data: userSettings } = useUserSettings();
 
   const getMetrics = async (
     searchCriteria: MetricsFilterCriteria

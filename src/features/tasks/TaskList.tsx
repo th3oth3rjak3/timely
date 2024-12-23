@@ -11,6 +11,7 @@ import {
 import { DateInput } from "@mantine/dates";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import {
   IconArrowBackUp,
   IconCancel,
@@ -23,10 +24,12 @@ import {
   IconTrash,
   IconTrashX,
 } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { useAtom } from "jotai";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DateFilter from "../../components/DateFilter.tsx";
 import MultiSelectFilter from "../../components/MultiSelectFilter.tsx";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
@@ -37,13 +40,9 @@ import useWindowSize from "../../hooks/useWindowSize.tsx";
 import { TaskStatus } from "../../models/TaskStatus.ts";
 import { TimelyAction } from "../../models/TauriAction.ts";
 import { TimeSpan } from "../../models/TimeSpan.ts";
-import { useAppDispatch, useAppSelector } from "../../redux/hooks.ts";
-import {
-  setCurrentTaskPage,
-  setTaskPageSize,
-  setTaskSearchParams,
-  setTaskSortStatus,
-} from "../../redux/reducers/settingsSlice.ts";
+import { Tag, Task } from "../../models/ZodModels.ts";
+import { pageSizeOptions } from "../../state/globalState.ts";
+import { findLastPage } from "../../utilities/dataTableUtilities.ts";
 import {
   getDayOnlyProps,
   maybeFormattedDate,
@@ -53,97 +52,275 @@ import {
   toSelectOptions,
   validateLength,
 } from "../../utilities/formUtilities.ts";
-import { showSuccessNotification } from "../../utilities/notificationUtilities";
-import useTagService from "../tags/hooks/useTagService.tsx";
-import useFetchTasks from "./hooks/useFetchTasks.tsx";
-import useTaskService from "./hooks/useTaskService.tsx";
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from "../../utilities/notificationUtilities";
+import { useUserSettings } from "../settings/settingsService.ts";
+import {
+  tryFindTagByName,
+  useAddTagToTask,
+  useCreateNewTag,
+  useGetAllTags,
+  useRemoveTagFromTask,
+} from "../tags/services/tagService.ts";
 import QuickFilterComponent, {
   TagFilterSelection,
 } from "./QuickFilterComponent.tsx";
+import {
+  TaskLike,
+  useCancelTask,
+  useCreateTask,
+  useDeleteManyTasks,
+  useDeleteTask,
+  useEditTask,
+  useFinishTask,
+  usePauseTask,
+  useReopenTask,
+  useRestoreTask,
+  useResumeTask,
+  useSearchTasks,
+  useStartTask,
+} from "./services/tasksService.ts";
 import TaskDetail from "./TaskDetail.tsx";
+import {
+  taskListDueByFilterAtom,
+  taskListPageAtom,
+  taskListPageSizeAtom,
+  taskListQueryAtom,
+  taskListQuickFilterAtom,
+  taskListSelectedRecordsAtom,
+  taskListSelectedStatusAtom,
+  taskListSortStatusAtom,
+  taskListStartByFilterAtom,
+} from "./taskListState.ts";
 import { NewTask } from "./types/Task.ts";
-import { FilterName, QuickFilter } from "./types/TaskSearchParams.ts";
-import { Task, Tag } from "../../models/ZodModels.ts";
+import {
+  FilterName,
+  QuickFilter,
+  TaskSearchParams,
+  taskSearchParams,
+} from "./types/TaskSearchParams.ts";
 
 function TaskList() {
   //#region State
 
-  const { showContextMenu, hideContextMenu } = useContextMenu();
-  const userSettings = useAppSelector((state) => state.settings.userSettings);
+  const queryClient = useQueryClient();
+
+  const { data: userSettings } = useUserSettings();
+  const { data: tagOptions } = useGetAllTags();
+
   const colorPalette = useColorPalette();
 
-  /** The globally set number of items per page in the application. */
-  const pageSize = useAppSelector(
-    (state) => state.settings.taskListSettings.params.pageSize
+  const [pageSize, setPageSize] = useAtom(taskListPageSizeAtom);
+  const [page, setPage] = useAtom(taskListPageAtom);
+  const [query, setQuery] = useAtom(taskListQueryAtom);
+  const [selectedStatuses, setSelectedStatuses] = useAtom(
+    taskListSelectedStatusAtom
+  );
+  const [sortStatus, setSortStatus] = useAtom(taskListSortStatusAtom);
+  const [startByFilter, setStartByFilter] = useAtom(taskListStartByFilterAtom);
+  const [dueByFilter, setDueByFilter] = useAtom(taskListDueByFilterAtom);
+  const [quickFilter, setQuickFilter] = useAtom(taskListQuickFilterAtom);
+  const [selectedRecords, setSelectedRecords] = useAtom(
+    taskListSelectedRecordsAtom
   );
 
-  const page = useAppSelector(
-    (state) => state.settings.taskListSettings.params.page
-  );
+  const prevPageRef = useRef(page);
+  const prevPageSizeRef = useRef(pageSize);
 
-  /** The globally set choices for how many items per page can be chosen. */
-  const pageSizeOptions = useAppSelector(
-    (state) => state.settings.taskListSettings.pageSizeOptions
-  );
+  useEffect(() => {
+    if (prevPageRef.current !== page || prevPageSizeRef.current !== pageSize) {
+      // Reset selected records only if page or pageSize has changed
+      setSelectedRecords([]);
+    }
 
-  const statusOptions = useAppSelector(
-    (state) => state.settings.taskListSettings.statusOptions
+    // Update the refs with the current values
+    prevPageRef.current = page;
+    prevPageSizeRef.current = pageSize;
+  }, [page, pageSize, setSelectedRecords]);
+
+  const params = useMemo(() => {
+    return taskSearchParams(
+      page,
+      pageSize,
+      selectedStatuses,
+      query,
+      sortStatus.columnAccessor,
+      sortStatus.direction,
+      startByFilter,
+      dueByFilter,
+      quickFilter
+    );
+  }, [
+    page,
+    pageSize,
+    query,
+    selectedStatuses,
+    sortStatus,
+    startByFilter,
+    dueByFilter,
+    quickFilter,
+  ]);
+
+  const { showContextMenu, hideContextMenu } = useContextMenu();
+  const {
+    data: tasks,
+    isPending: loading,
+    status,
+    error,
+    refetch,
+  } = useSearchTasks(params);
+
+  if (status === "error" && error !== null) {
+    showErrorNotification(error);
+  }
+
+  const lastPage = useMemo(() => {
+    return findLastPage(tasks.totalItemCount - 1, pageSize);
+  }, [pageSize, tasks]);
+
+  const pageShouldChangeAfterDeleteMany = (
+    tasks: TaskLike[],
+    recordCount: number,
+    taskSearchParams: TaskSearchParams
+  ): boolean => {
+    const remainder = recordCount % taskSearchParams.pageSize;
+    return remainder < tasks.length && taskSearchParams.page > 1;
+  };
+
+  const handleDeleteManyDataFetch =
+    (taskList: TaskLike[]): (() => Promise<void>) =>
+    async () => {
+      if (
+        pageShouldChangeAfterDeleteMany(taskList, tasks.totalItemCount, params)
+      ) {
+        const lastPage = findLastPage(
+          tasks.totalItemCount - taskList.length,
+          pageSize
+        );
+        setPage(lastPage);
+      } else {
+        refreshTasks();
+      }
+    };
+
+  const handleDataFetch =
+    (task: TaskLike, action: TimelyAction): (() => Promise<void>) =>
+    async () => {
+      if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
+        setPage(lastPage);
+      } else {
+        refreshTasks();
+      }
+    };
+
+  const pageShouldChange = (
+    task: TaskLike,
+    action: TimelyAction,
+    recordCount: number,
+    taskSearchParams: TaskSearchParams
+  ): boolean => {
+    const remainder = recordCount % taskSearchParams.pageSize;
+    const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
+
+    switch (action) {
+      case TimelyAction.CancelTask:
+        return (
+          lastItemOnThePage &&
+          !taskSearchParams.statuses.includes(TaskStatus.Cancelled)
+        );
+      case TimelyAction.DeleteTask:
+        return lastItemOnThePage;
+      case TimelyAction.StartTask:
+      case TimelyAction.ResumeTask:
+      case TimelyAction.ReopenFinishedTask:
+        return (
+          lastItemOnThePage &&
+          !taskSearchParams.statuses.includes(TaskStatus.Doing)
+        );
+      case TimelyAction.PauseTask:
+        return (
+          lastItemOnThePage &&
+          !taskSearchParams.statuses.includes(TaskStatus.Paused)
+        );
+      case TimelyAction.FinishTask:
+        return (
+          lastItemOnThePage &&
+          !taskSearchParams.statuses.includes(TaskStatus.Done)
+        );
+      case TimelyAction.RestoreCancelledTask:
+        return (
+          lastItemOnThePage &&
+          ((task.elapsedDuration !== null &&
+            task.elapsedDuration > 0 &&
+            !taskSearchParams.statuses.includes(TaskStatus.Paused) &&
+            task.actualStartDate !== null) ||
+            (task.elapsedDuration === 0 &&
+              !taskSearchParams.statuses.includes(TaskStatus.Todo)))
+        );
+      case TimelyAction.EditTask:
+        return (
+          lastItemOnThePage &&
+          taskSearchParams.queryString !== null &&
+          !(
+            task.title.includes(taskSearchParams.queryString) ||
+            task.description.includes(taskSearchParams.queryString)
+          )
+        );
+      default:
+        return false;
+    }
+  };
+
+  const startTask = useStartTask(userSettings, handleDataFetch, queryClient);
+  const pauseTask = usePauseTask(userSettings, handleDataFetch, queryClient);
+  const createTask = useCreateTask(userSettings, queryClient);
+  const resumeTask = useResumeTask(userSettings, handleDataFetch, queryClient);
+  const finishTask = useFinishTask(userSettings, handleDataFetch, queryClient);
+  const cancelTask = useCancelTask(userSettings, handleDataFetch, queryClient);
+  const restoreTask = useRestoreTask(
+    userSettings,
+    handleDataFetch,
+    queryClient
   );
-  const taskSearchParams = useAppSelector(
-    (state) => state.settings.taskListSettings.params
+  const deleteTask = useDeleteTask(userSettings, handleDataFetch, queryClient);
+  const deleteManyTasks = useDeleteManyTasks(
+    userSettings,
+    handleDeleteManyDataFetch,
+    queryClient
   );
+  const reopenTask = useReopenTask(userSettings, handleDataFetch, queryClient);
+
+  const createNewTag = useCreateNewTag(userSettings, queryClient);
+  const addTagToTask = useAddTagToTask(userSettings);
+  const removeTagFromTask = useRemoveTagFromTask(userSettings);
+
+  const statusOptions = [
+    TaskStatus.Todo,
+    TaskStatus.Doing,
+    TaskStatus.Done,
+    TaskStatus.Paused,
+    TaskStatus.Cancelled,
+  ];
 
   const [newFormOpened, newFormActions] = useDisclosure(false);
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const editTask = useEditTask(
+    userSettings,
+    taskToEdit,
+    handleDataFetch,
+    queryClient
+  );
+
   const [newTaskTags, setNewTaskTags] = useState<Tag[]>([]);
   const editTags = useMemo(() => {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
 
-  const [selectedRecords, setSelectedRecords] = useState<Task[]>([]);
-
-  useEffect(() => {
-    setSelectedRecords([]);
-  }, [page, pageSize]);
-
-  const [searchQuery, setSearchQuery] = useState(taskSearchParams.queryString);
-
-  useEffect(() => {
-    dispatch(
-      setTaskSearchParams({
-        ...taskSearchParams,
-        page: 1,
-        queryString: searchQuery,
-      })
-    );
-  }, [searchQuery]);
-
-  /** An app store dispatch function to update store values. */
-  const dispatch = useAppDispatch();
-
-  const sortStatus = useAppSelector(
-    (state) => state.settings.taskListSettings.sortStatus
-  );
-
-  const [loading, setLoading] = useState(true);
-
-  const { tasks, recordCount, tagOptions, fetchAllData } =
-    useFetchTasks(taskSearchParams);
   const { windowWidth } = useWindowSize();
-  const {
-    createTask,
-    startTask,
-    editTask,
-    cancelTask,
-    pauseTask,
-    resumeTask,
-    restoreTask,
-    deleteTask,
-    deleteManyTasks,
-    finishTask,
-    reopenTask,
-  } = useTaskService(colorPalette, userSettings, recordCount, fetchAllData);
 
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
@@ -219,27 +396,94 @@ function TaskList() {
       updated = null;
     }
 
-    setSearchQuery(updated);
+    setQuery(updated);
   }
 
   function updateSelectedStatuses(statuses: SelectOption[]) {
-    dispatch(
-      setTaskSearchParams({
-        ...taskSearchParams,
-        page: 1,
-        statuses: statuses.map((st) => st.value as TaskStatus),
-      })
-    );
+    setPage(1);
+    setSelectedStatuses(statuses.map((st) => st.value as TaskStatus));
   }
 
   /** Set the page size and reset the current page to 1 to avoid a page with no values being displayed. */
   function updatePageSize(size: number) {
-    dispatch(setCurrentTaskPage(1));
-    dispatch(setTaskPageSize(size));
+    setPage(1);
+    setPageSize(size);
   }
 
-  function updateCurrentPage(page: number) {
-    dispatch(setCurrentTaskPage(page));
+  async function refreshTasks() {
+    await refetch();
+    showSuccessNotification(
+      TimelyAction.RefreshTasks,
+      userSettings,
+      "So fresh."
+    );
+  }
+
+  function handleCancelRequested(task: Task) {
+    modals.openConfirmModal({
+      title: "Cancel Task",
+      children: <Text>Are you sure you want to cancel this task?</Text>,
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      confirmProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      cancelProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      onCancel: () => {},
+      onConfirm: async () => cancelTask.mutateAsync(task),
+    });
+  }
+
+  function handleDeleteOneRequested(task: Task) {
+    modals.openConfirmModal({
+      title: "Delete Task",
+      children: <Text>Are you sure you want to delete this task?</Text>,
+      confirmProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      cancelProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
+      onConfirm: async () => deleteTask.mutateAsync(task),
+    });
+  }
+
+  function handleDeleteManyRequested(tasks: Task[]) {
+    modals.openConfirmModal({
+      title: "Delete Tasks",
+      children: (
+        <Text>{`Are you sure you want to delete ${tasks.length} task${
+          tasks.length == 1 ? "" : "s"
+        }?`}</Text>
+      ),
+      confirmProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      cancelProps: {
+        variant: colorPalette.variant,
+        color: colorPalette.colorName,
+        gradient: colorPalette.gradient,
+      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
+      onConfirm: async () => {
+        await deleteManyTasks.mutateAsync(tasks);
+        setSelectedRecords([]);
+      },
+    });
   }
 
   function getContextMenuItems(task: Task): ContextMenuContent {
@@ -247,56 +491,56 @@ function TaskList() {
       key: "start-task",
       title: "Start Task",
       icon: <IconPlayerPlay size={16} />,
-      onClick: () => startTask(task),
+      onClick: () => startTask.mutateAsync(task),
     };
 
     const pauseTaskItem = {
       key: "pause-task",
       title: "Pause Task",
       icon: <IconPlayerPause size={16} />,
-      onClick: () => pauseTask(task),
+      onClick: () => pauseTask.mutateAsync(task),
     };
 
     const resumeTaskItem = {
       key: "resume-task",
       title: "Resume Task",
       icon: <IconPlayerPlay size={16} />,
-      onClick: () => resumeTask(task),
+      onClick: () => resumeTask.mutateAsync(task),
     };
 
     const finishTaskItem = {
       key: "finish-task",
       title: "Finish Task",
       icon: <IconCheck size={16} />,
-      onClick: () => finishTask(task),
+      onClick: () => finishTask.mutateAsync(task),
     };
 
     const reopenTaskItem = {
       key: "reopen-task",
       title: "Reopen Task",
       icon: <IconArrowBackUp size={16} />,
-      onClick: () => reopenTask(task),
+      onClick: () => reopenTask.mutateAsync(task),
     };
 
     const cancelTaskItem = {
       key: "cancel-task",
       title: "Cancel Task",
       icon: <IconCancel size={16} />,
-      onClick: () => cancelTask(task),
+      onClick: () => handleCancelRequested(task),
     };
 
     const restoreTaskItem = {
       key: "restore-task",
       title: "Restore Task",
       icon: <IconArrowBackUp size={16} />,
-      onClick: () => restoreTask(task),
+      onClick: () => restoreTask.mutateAsync(task),
     };
 
     const deleteTaskItem = {
       key: "delete-task",
       title: "Delete Task",
       icon: <IconTrash size={16} />,
-      onClick: () => deleteTask(task),
+      onClick: () => handleDeleteOneRequested(task),
     };
 
     const editTaskItem = {
@@ -306,13 +550,11 @@ function TaskList() {
       onClick: () => beginEditingTask(task),
     };
 
-    let status = task.status.toLowerCase();
-
-    if (status === "to do") {
+    if (task.status === TaskStatus.Todo) {
       return [startTaskItem, editTaskItem, cancelTaskItem, deleteTaskItem];
     }
 
-    if (status === "doing") {
+    if (task.status === TaskStatus.Doing) {
       return [
         pauseTaskItem,
         finishTaskItem,
@@ -322,11 +564,11 @@ function TaskList() {
       ];
     }
 
-    if (status === "done") {
+    if (task.status === TaskStatus.Done) {
       return [reopenTaskItem, deleteTaskItem];
     }
 
-    if (status === "paused") {
+    if (task.status === TaskStatus.Paused) {
       return [
         resumeTaskItem,
         finishTaskItem,
@@ -336,7 +578,7 @@ function TaskList() {
       ];
     }
 
-    if (status === "cancelled") {
+    if (task.status === TaskStatus.Cancelled) {
       return [restoreTaskItem, deleteTaskItem];
     }
 
@@ -351,7 +593,7 @@ function TaskList() {
       ).totalSeconds;
     }
     newItem.tags = newTaskTags;
-    await createTask(newItem);
+    await createTask.mutateAsync(newItem);
     newForm.reset();
     newFormActions.close();
     setNewTaskTags([]);
@@ -376,7 +618,7 @@ function TaskList() {
       editedTask.elapsedDuration
     ).totalSeconds;
 
-    await editTask(taskToEdit, updatedItem);
+    await editTask.mutateAsync(updatedItem);
   };
 
   const beginEditingTask = (task: Task) => {
@@ -399,9 +641,6 @@ function TaskList() {
     editFormActions.open();
   };
 
-  const { tryFindTagByName, createNewTag, addTagToTask, removeTagFromTask } =
-    useTagService(tagOptions.length);
-
   async function removeTagByName(tagName: string) {
     const maybeTag = tryFindTagByName(tagName, tagOptions);
     if (!maybeTag) return;
@@ -411,7 +650,7 @@ function TaskList() {
   async function addTagByName(tagName: string) {
     let tag = tryFindTagByName(tagName, tagOptions);
     if (!tag) {
-      tag = await createNewTag(tagName);
+      tag = await createNewTag.mutateAsync(tagName);
       if (!tag) return;
     }
 
@@ -421,24 +660,23 @@ function TaskList() {
   async function removeTagByNameToEditForm(tagName: string) {
     const maybeTag = tryFindTagByName(tagName, tagOptions);
     if (!maybeTag || !taskToEdit) return;
-    removeTagFromTask(taskToEdit.id, maybeTag);
-    await fetchAllData();
+    await removeTagFromTask.mutateAsync({
+      taskId: taskToEdit.id,
+      tag: maybeTag,
+    });
+    refreshTasks();
   }
 
   async function addTagByNameToEditForm(tagName: string) {
     let tag = tryFindTagByName(tagName, tagOptions);
     if (!tag) {
-      tag = await createNewTag(tagName);
+      tag = await createNewTag.mutateAsync(tagName);
       if (!tag) return;
     }
     if (taskToEdit !== null) {
-      addTagToTask(taskToEdit.id, tag);
-      await fetchAllData();
+      await addTagToTask.mutateAsync({ taskId: taskToEdit.id, tag });
+      refreshTasks();
     }
-  }
-
-  async function deleteSelectedTasks() {
-    await deleteManyTasks(selectedRecords, () => setSelectedRecords([]));
   }
 
   function updateTagFilter(
@@ -446,32 +684,19 @@ function TaskList() {
     selection: TagFilterSelection
   ) {
     if (filterName === FilterName.Tagged) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          page: 1,
-          quickFilter: QuickFilter.tagged(
-            selection.tags?.map((t) => t.value) ?? null,
-            selection.tagFilter
-          ).serialize(),
-        })
+      setPage(1);
+      setQuickFilter(
+        QuickFilter.tagged(
+          selection.tags?.map((t) => t.value) ?? null,
+          selection.tagFilter
+        )
       );
     } else if (filterName === null) {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          page: 1,
-          quickFilter: null,
-        })
-      );
+      setPage(1);
+      setQuickFilter(null);
     } else {
-      dispatch(
-        setTaskSearchParams({
-          ...taskSearchParams,
-          page: 1,
-          quickFilter: new QuickFilter(filterName).serialize(),
-        })
-      );
+      setPage(1);
+      setQuickFilter(new QuickFilter(filterName));
     }
   }
 
@@ -489,13 +714,11 @@ function TaskList() {
           label="Title/Description"
           description="Search the title and description"
           placeholder="Search..."
-          initialValue={searchQuery}
+          initialValue={query}
           onFiltered={updateDescriptionQuery}
         />
       ),
-      filtering:
-        taskSearchParams.queryString !== null &&
-        taskSearchParams.queryString !== "",
+      filtering: params.queryString !== null && params.queryString !== "",
       ellipsis: false,
     },
     {
@@ -508,16 +731,12 @@ function TaskList() {
           description="Show all tasks with any of the selected statuses"
           placeholder="Search statuses..."
           options={toSelectOptions(statusOptions, statusOptions)}
-          initialSelections={toSelectOptions(
-            taskSearchParams.statuses,
-            taskSearchParams.statuses
-          )}
+          initialSelections={toSelectOptions(params.statuses, params.statuses)}
           onFiltered={updateSelectedStatuses}
         />
       ),
       filtering:
-        !!taskSearchParams.statuses &&
-        taskSearchParams.statuses.length !== statusOptions.length,
+        !!params.statuses && params.statuses.length !== statusOptions.length,
     },
     {
       accessor: "scheduledStartDate",
@@ -527,18 +746,9 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
       filter: (
-        <DateFilter
-          filter={useAppSelector(
-            (state) => state.settings.taskListSettings.params.startByFilter
-          )}
-          onRangeChanged={(value) =>
-            dispatch(
-              setTaskSearchParams({ ...taskSearchParams, startByFilter: value })
-            )
-          }
-        />
+        <DateFilter filter={startByFilter} onRangeChanged={setStartByFilter} />
       ),
-      filtering: taskSearchParams.startByFilter !== null,
+      filtering: params.startByFilter !== null,
     },
     {
       accessor: "scheduledCompleteDate",
@@ -548,27 +758,12 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
       filter: (
-        <DateFilter
-          filter={useAppSelector(
-            (state) => state.settings.taskListSettings.params.dueByFilter
-          )}
-          onRangeChanged={(value) =>
-            dispatch(
-              setTaskSearchParams({ ...taskSearchParams, dueByFilter: value })
-            )
-          }
-        />
+        <DateFilter filter={dueByFilter} onRangeChanged={setDueByFilter} />
       ),
-      filtering: taskSearchParams.dueByFilter !== null,
+      filtering: params.dueByFilter !== null,
     },
   ];
 
-  //#endregion
-
-  //#region Effects
-  useEffect(() => {
-    fetchAllData().then(() => setLoading(false));
-  }, [taskSearchParams]);
   //#endregion
 
   //#region Component
@@ -581,12 +776,13 @@ function TaskList() {
             <StyledActionIcon
               tooltipLabel="Delete Selected Tasks"
               tooltipPosition="left"
-              onClick={deleteSelectedTasks}
+              onClick={() => handleDeleteManyRequested(selectedRecords)}
             >
               <IconTrashX />
             </StyledActionIcon>
           ) : null}
           <QuickFilterComponent
+            selectedFilter={quickFilter}
             tagOptions={tagOptions}
             onFilter={updateTagFilter}
           />
@@ -598,15 +794,7 @@ function TaskList() {
             <IconPlus />
           </StyledActionIcon>
           <StyledActionIcon
-            onClick={() =>
-              fetchAllData().then(() =>
-                showSuccessNotification(
-                  TimelyAction.RefreshTasks,
-                  userSettings,
-                  "So fresh."
-                )
-              )
-            }
+            onClick={refreshTasks}
             tooltipLabel="Refresh Tasks"
             tooltipPosition="left"
           >
@@ -627,16 +815,16 @@ function TaskList() {
           withColumnBorders
           fz="sm"
           columns={columns}
-          records={tasks}
-          page={taskSearchParams.page}
-          totalRecords={recordCount}
+          records={tasks.data}
+          page={page}
+          onPageChange={setPage}
+          totalRecords={tasks.totalItemCount}
           recordsPerPage={pageSize}
-          onPageChange={(page) => updateCurrentPage(page)}
           recordsPerPageOptions={pageSizeOptions}
-          onRecordsPerPageChange={(size) => updatePageSize(size)}
+          onRecordsPerPageChange={updatePageSize}
           key={"id"}
           sortStatus={sortStatus}
-          onSortStatusChange={(status) => dispatch(setTaskSortStatus(status))}
+          onSortStatusChange={setSortStatus}
           paginationActiveBackgroundColor={colorPalette.background}
           paginationActiveTextColor={
             userSettings.buttonVariant === "filled" ||
@@ -652,24 +840,23 @@ function TaskList() {
                 <TaskDetail
                   task={record}
                   tagOptions={tagOptions}
-                  userSettings={userSettings}
-                  onStarted={startTask}
-                  onPaused={pauseTask}
-                  onFinished={finishTask}
-                  onResumed={resumeTask}
-                  onRestored={restoreTask}
-                  onCancelled={cancelTask}
-                  onReopened={reopenTask}
+                  onStarted={startTask.mutateAsync}
+                  onPaused={pauseTask.mutateAsync}
+                  onResumed={resumeTask.mutateAsync}
+                  onFinished={finishTask.mutateAsync}
+                  onReopened={reopenTask.mutateAsync}
+                  onCancelled={handleCancelRequested}
+                  onRestored={restoreTask.mutateAsync}
                   onEdited={beginEditingTask}
-                  onDeleted={deleteTask}
-                  onCommentChanged={fetchAllData}
-                  onTagsChanged={fetchAllData}
-                  onHistoryChanged={fetchAllData}
+                  onDeleted={handleDeleteOneRequested}
+                  onCommentChanged={refetch}
+                  onTagsChanged={refetch}
+                  onHistoryChanged={refetch}
                 />
               );
             },
           }}
-          minHeight={tasks.length === 0 ? 200 : undefined}
+          minHeight={tasks.data.length === 0 ? 200 : undefined}
           noRecordsText="No Tasks"
           paginationSize="xs"
         />

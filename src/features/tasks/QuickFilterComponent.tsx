@@ -14,12 +14,12 @@ import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
 import { Tag } from "../../models/ZodModels";
-import { useAppSelector } from "../../redux/hooks";
 import { SelectOption } from "../../utilities/formUtilities";
 import { splitAtUpperCase } from "../../utilities/stringUtilities";
-import { FilterName } from "./types/TaskSearchParams";
+import { FilterName, QuickFilter } from "./types/TaskSearchParams";
 
 export interface TagFilterProps {
+  selectedFilter: QuickFilter | null;
   tagOptions: Tag[];
   onFilter: (
     filterName: FilterName | null,
@@ -30,15 +30,15 @@ export interface TagFilterProps {
 export interface TagFilterSelection {
   tags: Tag[] | null;
   tagFilter: string | null;
-};
+}
 
 function QuickFilterComponent(props: TagFilterProps) {
   const [isOpen, tagFilterActions] = useDisclosure(false);
-  const [selectedTags, setSelectedTags] = useState<string[] | null>(null);
-  const [filterOption, setFilterOption] = useState<FilterName | null>(null);
-
-  const isFiltered = useAppSelector(
-    (state) => state.settings.taskListSettings.params.quickFilter !== null
+  const [selectedTags, setSelectedTags] = useState<string[] | null>(
+    props.selectedFilter?.tags ?? null
+  );
+  const [filterOption, setFilterOption] = useState<QuickFilter | null>(
+    props.selectedFilter ?? null
   );
 
   const colorPalette = useColorPalette();
@@ -48,12 +48,16 @@ function QuickFilterComponent(props: TagFilterProps) {
     options: "",
   });
 
+  const isFiltered = useMemo(() => {
+    return props.selectedFilter !== null;
+  }, [props.selectedFilter]);
+
   const [tagFilter, setTagFilter] = useState<string>("all");
 
   const filterOptions: SelectOption[] = Object.entries(FilterName)
     .map(
       ([key, value]) =>
-        ({ label: splitAtUpperCase(key), value } as SelectOption)
+        ({ label: splitAtUpperCase(key), value }) as SelectOption
     )
     .slice()
     .sort((a, b) => a.value.localeCompare(b.value));
@@ -84,8 +88,8 @@ function QuickFilterComponent(props: TagFilterProps) {
   }, [selectedTags, filterOption]);
 
   function validateForm() {
-    const tagsValid = validators.tags(selectedTags, filterOption);
-    const optionsValid = validators.options(filterOption);
+    const tagsValid = validators.tags(selectedTags, filterOption?.kind ?? null);
+    const optionsValid = validators.options(filterOption?.kind ?? null);
 
     setErrors({ tags: tagsValid ?? "", options: optionsValid ?? "" });
 
@@ -98,11 +102,11 @@ function QuickFilterComponent(props: TagFilterProps) {
     }
 
     const tags =
-      filterOption === FilterName.Tagged
+      filterOption?.kind === FilterName.Tagged
         ? props.tagOptions.filter((t) => selectedTags?.includes(t.value))
         : [];
     tagFilterActions.close();
-    props.onFilter(filterOption, { tags, tagFilter });
+    props.onFilter(filterOption?.kind ?? null, { tags, tagFilter });
   }
 
   return (
@@ -126,15 +130,15 @@ function QuickFilterComponent(props: TagFilterProps) {
             label="Quick Filter Option"
             data={filterOptions}
             allowDeselect={false}
-            value={filterOption}
+            value={filterOption?.kind}
             onChange={(option) => {
               if (option !== null) {
-                setFilterOption(option as FilterName);
+                setFilterOption(new QuickFilter(option as FilterName));
               }
             }}
             error={errors["options"]}
           />
-          {filterOption === FilterName.Tagged ? (
+          {filterOption?.kind === FilterName.Tagged ? (
             <>
               <TagsInput
                 label="Selected Tags"
