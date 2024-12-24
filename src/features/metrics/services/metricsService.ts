@@ -1,9 +1,9 @@
-import {useQuery} from "@tanstack/react-query";
-import {invoke} from "@tauri-apps/api/core";
-import {create} from "zustand";
-import {MetricsSummary, Tag} from "../../../models/ZodModels";
-import {tryMap} from "../../../utilities/nullableUtilities";
-import {MetricsFilterCriteria} from "../types";
+import { useQuery } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
+import { create } from "zustand";
+import { MetricsSummary, Tag } from "../../../models/ZodModels";
+import { tryMap } from "../../../utilities/nullableUtilities";
+import { MetricsSearchCriteria } from "../types";
 
 export interface MetricsStore {
   startDate?: Date;
@@ -16,11 +16,11 @@ export interface MetricsStore {
 
 export const useMetricsStore = create<MetricsStore>((set) => ({
   startDate: undefined,
-  setStartDate: (startDate) => set({startDate}),
+  setStartDate: (startDate) => set({ startDate }),
   endDate: undefined,
-  setEndDate: (endDate) => set({endDate}),
+  setEndDate: (endDate) => set({ endDate }),
   selectedTags: undefined,
-  setSelectedTags: (selectedTags) => set({selectedTags}),
+  setSelectedTags: (selectedTags) => set({ selectedTags }),
 }));
 
 const emptyData = {
@@ -36,12 +36,16 @@ const emptyData = {
   workHistory: [],
 };
 
-export function useGetMetrics(searchCriteria: MetricsFilterCriteria) {
+export function useGetMetrics(searchCriteria: MetricsSearchCriteria) {
   return useQuery({
     queryKey: ["getMetrics", searchCriteria],
     queryFn: async () => {
-      if (searchCriteria) {
-        const metricsData = await invoke("get_metrics", {searchCriteria});
+      if (
+        searchCriteria &&
+        searchCriteria.tags.length &&
+        searchCriteria.buckets.length
+      ) {
+        const metricsData = await invoke("get_metrics", { searchCriteria });
         return tryMap(metricsData, MetricsSummary.parse) ?? emptyData;
       }
       return emptyData;

@@ -10,6 +10,14 @@ use crate::features::tags::Tag;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+pub struct MetricsBucket {
+    pub start_date: DateTime<Utc>,
+    pub end_date: DateTime<Utc>,
+    pub hours: f64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct StatisticalSummary {
     pub tasks_started: i64,
     pub tasks_completed: i64,
@@ -35,18 +43,9 @@ impl StatisticalSummary {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct MetricsFilterCriteria {
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+pub struct MetricsSearchCriteria {
     pub tags: Vec<Tag>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DailyWorkHistory {
-    pub task_id: i64,
-    pub day_worked: DateTime<Utc>,
-    pub hours_worked: f64,
+    pub buckets: Vec<MetricsBucket>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,7 +55,7 @@ pub struct MetricsSummary {
     pub end_date: DateTime<Utc>,
     pub selected_tags: Vec<Tag>,
     pub summary: StatisticalSummary,
-    pub work_history: Vec<DailyWorkHistory>,
+    pub work_history: Vec<MetricsBucket>,
 }
 
 impl MetricsSummary {
@@ -65,7 +64,7 @@ impl MetricsSummary {
         end_date: DateTime<Utc>,
         selected_tags: Vec<Tag>,
         summary: StatisticalSummary,
-        work_history: Vec<DailyWorkHistory>,
+        work_history: Vec<MetricsBucket>,
     ) -> Self {
         Self {
             start_date,

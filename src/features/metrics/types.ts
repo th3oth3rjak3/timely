@@ -1,4 +1,4 @@
-import {Tag} from "../../models/ZodModels";
+import { MetricsBucket, Tag } from "../../models/ZodModels";
 
 export interface FilterFormInputs {
   startDate?: Date;
@@ -10,4 +10,9 @@ export interface MetricsFilterCriteria {
   startDate: Date;
   endDate: Date;
   tags: Tag[];
+}
+
+export interface MetricsSearchCriteria {
+  tags: Tag[];
+  buckets: MetricsBucket[];
 }

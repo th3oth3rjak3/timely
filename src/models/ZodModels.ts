@@ -1,5 +1,5 @@
-import {z} from "zod";
-import {maybeDate, toDate} from "../utilities/dateUtilities";
+import { z } from "zod";
+import { maybeDate, toDate } from "../utilities/dateUtilities";
 
 /* Zod Types */
 export const Tag = z.object({
@@ -20,6 +20,14 @@ export const DailyWorkHistory = z.object({
 
 export type DailyWorkHistory = z.infer<typeof DailyWorkHistory>;
 
+export const MetricsBucket = z.object({
+  startDate: z.string().transform(toDate),
+  endDate: z.string().transform(toDate),
+  hours: z.number(),
+});
+
+export type MetricsBucket = z.infer<typeof MetricsBucket>;
+
 export const StatisticalSummary = z.object({
   tasksStarted: z.number(),
   tasksCompleted: z.number(),
@@ -34,7 +42,7 @@ export const MetricsSummary = z.object({
   endDate: z.string().transform(toDate),
   selectedTags: z.array(Tag),
   summary: StatisticalSummary,
-  workHistory: z.array(DailyWorkHistory),
+  workHistory: z.array(MetricsBucket),
 });
 
 export type MetricsSummary = z.infer<typeof MetricsSummary>;
@@ -45,9 +53,9 @@ export const Comment = z.object({
   message: z.string(),
   created: z.string().transform((isoStr) => new Date(isoStr)),
   modified: z
-  .string()
-  .nullable()
-  .transform((isoStr) => (isoStr === null ? null : new Date(isoStr))),
+    .string()
+    .nullable()
+    .transform((isoStr) => (isoStr === null ? null : new Date(isoStr))),
 });
 
 export type Comment = z.infer<typeof Comment>;

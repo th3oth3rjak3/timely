@@ -25,12 +25,12 @@ function MainLayout() {
   useEffect(() => {
     updateMaximized();
     //navHandler.open();
-    const unlisten = getCurrentWindow().onResized(() => {
+    const unsubscribe = getCurrentWindow().onResized(() => {
       updateMaximized();
     });
 
     return () => {
-      unlisten.then((u) => u());
+      unsubscribe.then((u) => u());
     };
   }, []);
 

@@ -18,18 +18,18 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 members = ["./timely_macros"]
 
 [build-dependencies]
-tauri-build = { version = "2.0.0", features = [] }
+tauri-build = { version = "2.0.3", features = [] }
 
 [dependencies]
 timely_macros = { path = "./timely_macros" }
-tauri = { version = "2.0.0", features = [] }
-tauri-plugin-shell = "2.0.0"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+tauri = { version = "2.1.1", features = [] }
+tauri-plugin-shell = "2.2.0"
+serde = { version = "1.0.216", features = ["derive"] }
+serde_json = "1.0.134"
 serde_repr = "0.1.19"
-chrono = { version = "0.4.38", features = ["serde"] }
+chrono = { version = "0.4.39", features = ["serde"] }
 dotenvy = "0.15.7"
 sqlx = { version = "0.8.2", features = ["chrono", "sqlite", "runtime-tokio"] }
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 anyhow-tauri = { version = "1.0.0", features = ["show_errs_in_release"] }
 tap = "1.0.1"

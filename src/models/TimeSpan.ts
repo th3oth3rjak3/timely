@@ -152,7 +152,7 @@ export class TimeSpan extends Object {
 
   static add(...others: TimeSpan[]): TimeSpan {
     let totalSeconds = 0;
-    for (let ts of others) {
+    for (const ts of others) {
       totalSeconds += ts.totalSeconds;
     }
 
