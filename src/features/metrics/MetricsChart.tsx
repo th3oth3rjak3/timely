@@ -1,8 +1,11 @@
 import { Stack, Text, useMantineTheme } from "@mantine/core";
+import dayjs from "dayjs";
 import {
   CartesianGrid,
+  Label,
   Line,
   LineChart,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -18,7 +21,7 @@ export interface MetricsChartProps {
 function MetricsChart({ workHistory }: MetricsChartProps) {
   // Helper function to aggregate data by day
   const aggregateWorkByDay = (workHistory: MetricsBucket[]) => {
-    const aggregatedData: { [key: string]: number } = {};
+    const aggregatedData: { [key: string]: number | null } = {};
 
     workHistory.forEach(({ startDate, hours }) => {
       const date = startDate.toISOString().split("T")[0]; // Format the date as YYYY-MM-DD
@@ -26,6 +29,10 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
         aggregatedData[date] = 0;
       }
       aggregatedData[date] += hours;
+      // Remove data points in the future, but keep the dates on the axis.
+      if (dayjs(startDate).isAfter(dayjs())) {
+        aggregatedData[date] = null;
+      }
     });
 
     return aggregatedData;
@@ -41,7 +48,7 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
     // Return the data format that Recharts expects
     return labels.map((label, index) => ({
       date: label,
-      hours: data[index].toFixed(1),
+      hours: data[index]?.toFixed(1),
     }));
   };
 
@@ -50,6 +57,7 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
 
   const colorPalette = useColorPalette();
   const theme = useMantineTheme();
+  const date = dayjs().startOf("day").toDate().toISOString().split("T")[0];
   return (
     <Stack align="center">
       <Text size="xl" fw={500}>
@@ -71,8 +79,25 @@ function MetricsChart({ workHistory }: MetricsChartProps) {
             name="Hours Worked"
             stroke={theme.colors[colorPalette.colorName][5]}
             strokeWidth={3}
-            fill="rgba(76, 175, 80, 0.2)"
+            fill={theme.colors[colorPalette.colorName][5]}
           />
+          <ReferenceLine
+            x={date}
+            stroke={theme.colors[colorPalette.colorName][5]}
+            strokeDasharray={10}
+            strokeWidth={2}
+          >
+            <Label
+              value="Today"
+              position={"insideTopRight"}
+              style={{
+                fill: theme.colors[colorPalette.colorName][2],
+                padding: "5px 10px",
+                borderRadius: "5px",
+                textAlign: "center",
+              }}
+            />
+          </ReferenceLine>
         </LineChart>
       </ResponsiveContainer>
     </Stack>
