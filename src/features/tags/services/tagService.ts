@@ -78,6 +78,7 @@ export function useCreateNewTag(
         "Successfully added tag."
       );
       await queryClient.invalidateQueries({queryKey: "getAllTags"});
+      await queryClient.invalidateQueries({queryKey: "searchForTags"});
     },
     onError: (error) => showErrorNotification(error),
   });

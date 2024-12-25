@@ -71,7 +71,7 @@ function TaskList() {
   const queryClient = useQueryClient();
 
   const {data: userSettings} = useUserSettings();
-  const {data: tagOptions} = useGetAllTags();
+  const {data: tagOptions, refetch: refetchTags} = useGetAllTags();
 
   const colorPalette = useColorPalette();
 
@@ -171,7 +171,7 @@ function TaskList() {
           );
           setPage(lastPage);
         } else {
-          refreshTasks();
+          await refreshTasks();
         }
       };
 
@@ -181,7 +181,7 @@ function TaskList() {
         if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
           setPage(lastPage);
         } else {
-          refreshTasks();
+          await refreshTasks();
         }
       };
 
@@ -382,6 +382,7 @@ function TaskList() {
 
   async function refreshTasks() {
     await refetch();
+    await refetchTags();
     showSuccessNotification(
       TimelyAction.RefreshTasks,
       userSettings,
@@ -623,6 +624,7 @@ function TaskList() {
     let tag = tryFindTagByName(tagName, tagOptions);
     if (!tag) {
       tag = await createNewTag.mutateAsync(tagName);
+      await refetchTags();
       if (!tag) return;
     }
 
@@ -636,7 +638,7 @@ function TaskList() {
       taskId: taskToEdit.id,
       tag: maybeTag,
     });
-    refreshTasks();
+    await refreshTasks();
   }
 
   async function addTagByNameToEditForm(tagName: string) {
@@ -647,7 +649,7 @@ function TaskList() {
     }
     if (taskToEdit !== null) {
       await addTagToTask.mutateAsync({taskId: taskToEdit.id, tag});
-      refreshTasks();
+      await refreshTasks();
     }
   }
 

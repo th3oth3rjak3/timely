@@ -199,23 +199,27 @@ async fn get_work_history(
             &buckets,
         );
 
-        values.iter().for_each(|(id, start_date, end_date, seconds)| {
-            seconds_per_task_per_day.upsert_add((*id, *start_date, *end_date), *seconds)
-        });
+        values
+            .iter()
+            .for_each(|(id, start_date, end_date, seconds)| {
+                seconds_per_task_per_day.upsert_add((*id, *start_date, *end_date), *seconds)
+            });
     }
 
     let mut aggregated_data: HashMap<(DateTime<Utc>, DateTime<Utc>), f64> = HashMap::new();
 
     seconds_per_task_per_day
         .iter()
-        .for_each(|((_id, start_date, end_date), seconds)| aggregated_data.upsert_add((*start_date, *end_date), f64::from(*seconds) / 3_600f64));
+        .for_each(|((_id, start_date, end_date), seconds)| {
+            aggregated_data.upsert_add((*start_date, *end_date), f64::from(*seconds) / 3_600f64)
+        });
 
     aggregated_data
         .into_iter()
         .map(|((start_date, end_date), hours)| MetricsBucket {
             start_date,
             end_date,
-            hours
+            hours,
         })
         .collect::<Vec<_>>()
         .tap_mut(|values| values.sort_by_key(|bucket| bucket.start_date))
