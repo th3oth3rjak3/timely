@@ -371,10 +371,8 @@ checksum = "7e36cc9d416881d2e24f9a963be5fb1cd90966419ac844274161d10488b3e825"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
- "js-sys",
  "num-traits",
  "serde",
- "wasm-bindgen",
  "windows-targets 0.52.6",
 ]
 
@@ -1652,6 +1650,35 @@ dependencies = [
 ]
 
 [[package]]
+name = "jiff"
+version = "0.1.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e997bf1906c6896eaa4b4086d4c9420b58ee2b2c7c23dcb99c616954c6bf6492"
+dependencies = [
+ "jiff-tzdb-platform",
+ "log",
+ "portable-atomic",
+ "portable-atomic-util",
+ "serde",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "jiff-tzdb"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91335e575850c5c4c673b9bd467b0e025f164ca59d0564f69d0c2ee0ffad4653"
+
+[[package]]
+name = "jiff-tzdb-platform"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9835f0060a626fe59f160437bc725491a6af23133ea906500027d1bd2f8f4329"
+dependencies = [
+ "jiff-tzdb",
+]
+
+[[package]]
 name = "jni"
 version = "0.21.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2616,6 +2643,21 @@ dependencies = [
 ]
 
 [[package]]
+name = "portable-atomic"
+version = "1.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "280dc24453071f1b63954171985a0b0d30058d287960968b9b2aca264c8d4ee6"
+
+[[package]]
+name = "portable-atomic-util"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8a2f0d8d040d7848a709caf78912debcc3f33ee4b3cac47d73d1e1069e83507"
+dependencies = [
+ "portable-atomic",
+]
+
+[[package]]
 name = "powerfmt"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3354,7 +3396,6 @@ dependencies = [
  "atoi",
  "byteorder",
  "bytes",
- "chrono",
  "crc",
  "crossbeam-queue",
  "either",
@@ -3435,7 +3476,6 @@ dependencies = [
  "bitflags 2.6.0",
  "byteorder",
  "bytes",
- "chrono",
  "crc",
  "digest",
  "dotenvy",
@@ -3477,7 +3517,6 @@ dependencies = [
  "base64 0.22.1",
  "bitflags 2.6.0",
  "byteorder",
- "chrono",
  "crc",
  "dotenvy",
  "etcetera",
@@ -3513,7 +3552,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d5b2cf34a45953bfd3daaf3db0f7a7878ab9b7a6b91b422d24a7a9e4c857b680"
 dependencies = [
  "atoi",
- "chrono",
  "flume",
  "futures-channel",
  "futures-core",
@@ -4052,8 +4090,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "anyhow-tauri",
- "chrono",
  "dotenvy",
+ "jiff",
  "serde",
  "serde_json",
  "serde_repr",

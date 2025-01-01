@@ -1,24 +1,33 @@
-import {Group, Modal, Stack, Text, TextInput} from "@mantine/core";
-import {DateTimePicker} from "@mantine/dates";
-import {FormErrors, useForm} from "@mantine/form";
-import {useDisclosure, useMediaQuery} from "@mantine/hooks";
-import {modals} from "@mantine/modals";
-import {IconEdit, IconPlus, IconTrash} from "@tabler/icons-react";
+import { Group, Modal, Stack, Text, TextInput } from "@mantine/core";
+import { DateTimePicker } from "@mantine/dates";
+import { FormErrors, useForm } from "@mantine/form";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
+import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
-import {sortBy} from "lodash";
-import {ContextMenuContent, useContextMenu} from "mantine-contextmenu";
-import {DataTable, DataTableColumn, DataTableSortStatus,} from "mantine-datatable";
-import {useMemo, useState} from "react";
+import { sortBy } from "lodash";
+import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
+import {
+  DataTable,
+  DataTableColumn,
+  DataTableSortStatus,
+} from "mantine-datatable";
+import { useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import {TimeSpan} from "../../models/TimeSpan";
-import {Task, TaskWorkHistory} from "../../models/ZodModels";
-import {pageSizeOptions} from "../../state/globalState";
-import {getDayOnlyProps} from "../../utilities/dateUtilities";
-import {useUserSettings} from "../settings/settingsService";
-import {useAddWorkHistory, useDeleteWorkHistory, useEditWorkHistory,} from "./services/workHistoryService";
-import {EditTaskWorkHistory, NewTaskWorkHistory} from "./types/Task";
+import { TaskStatus } from "../../models/TaskStatus";
+import { TimeSpan } from "../../models/TimeSpan";
+import { Task, TaskWorkHistory } from "../../models/ZodModels";
+import { pageSizeOptions } from "../../state/globalState";
+import { getDayOnlyProps } from "../../utilities/dateUtilities";
+import { useUserSettings } from "../settings/settingsService";
+import {
+  useAddWorkHistory,
+  useDeleteWorkHistory,
+  useEditWorkHistory,
+} from "./services/workHistoryService";
+import { EditTaskWorkHistory, NewTaskWorkHistory } from "./types/Task";
 
 export interface TaskWorkHistoryProps {
   task: Task;
@@ -26,7 +35,7 @@ export interface TaskWorkHistoryProps {
 }
 
 function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
-  const {data: userSettings} = useUserSettings();
+  const { data: userSettings } = useUserSettings();
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(userSettings.pageSize);
@@ -41,8 +50,11 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
   const [editWorkHistoryFormOpened, editWorkHistoryFormActions] =
     useDisclosure(false);
   const colorPalette = useColorPalette();
-  const {showContextMenu, hideContextMenu} = useContextMenu();
+  const { showContextMenu, hideContextMenu } = useContextMenu();
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
+  const isDisabled = useMemo(() => {
+    return props.task.status === TaskStatus.Doing;
+  }, [props.task]);
 
   const columns: DataTableColumn<TaskWorkHistory>[] = [
     {
@@ -51,8 +63,8 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
       sortable: true,
       render: (history) =>
         dayjs(history.startDate)
-        .startOf("second")
-        .format("MM/DD/YYYY hh:mm:ss A"),
+          .startOf("second")
+          .format("MM/DD/YYYY hh:mm:ss A"),
       sortKey: "startDate",
     },
     {
@@ -61,8 +73,8 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
       sortable: true,
       render: (history) =>
         dayjs(history.endDate)
-        .startOf("second")
-        .format("MM/DD/YYYY hh:mm:ss A"),
+          .startOf("second")
+          .format("MM/DD/YYYY hh:mm:ss A"),
       sortKey: "endDate",
     },
     {
@@ -190,9 +202,8 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
         variant: colorPalette.variant,
         gradient: colorPalette.gradient,
       },
-      labels: {confirm: "Confirm", cancel: "Deny"},
-      onCancel: () => {
-      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
       onConfirm: () => deleteWorkHistoryItem(history.id),
     });
 
@@ -200,14 +211,16 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
     const editHistory = {
       key: "edit-history",
       title: "Edit History",
-      icon: <IconEdit size={16}/>,
+      icon: <IconEdit size={16} />,
+      disabled: isDisabled,
       onClick: () => beginEditingWorkHistory(history),
     };
 
     const deleteHistory = {
       key: "delete-history",
       title: "Delete History",
-      icon: <IconTrash size={16}/>,
+      icon: <IconTrash size={16} />,
+      disabled: isDisabled,
       onClick: () => openDeleteModal(history),
     };
 
@@ -223,8 +236,10 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
           tooltipPosition="left"
           size="sm"
           onClick={newWorkHistoryFormActions.open}
+          disabled={isDisabled}
+          disabledLabel="Pause the task to edit work history"
         >
-          <IconPlus/>
+          <IconPlus />
         </StyledActionIcon>
       </Group>
       <DataTable
@@ -243,7 +258,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
         noRecordsText="No Work History"
         sortStatus={sortStatus}
         onSortStatusChange={(status) => setSortStatus(status)}
-        onRowContextMenu={({record, event}) =>
+        onRowContextMenu={({ record, event }) =>
           showContextMenu(getContextMenuItems(record))(event)
         }
         paginationActiveBackgroundColor={colorPalette.background}

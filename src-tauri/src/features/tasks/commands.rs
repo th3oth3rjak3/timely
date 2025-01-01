@@ -1,7 +1,6 @@
 use super::models::Task;
 use anyhow_tauri::{IntoTAResult, TAResult};
-use chrono::{NaiveDateTime, SubsecRound, Utc};
-use sqlx::QueryBuilder;
+use sqlx::{QueryBuilder, Sqlite, Transaction};
 use tauri::State;
 
 use crate::{
@@ -82,9 +81,9 @@ fn generate_search_query<'a>(
     {
         builder
             .push(" AND tasks.scheduled_start_date BETWEEN ")
-            .push_bind(start.naive_utc())
+            .push_bind(UnixTimestamp::from(start))
             .push(" AND ")
-            .push_bind(end.naive_utc());
+            .push_bind(UnixTimestamp::from(end));
     }
 
     if let Some(DateFilter {
@@ -94,9 +93,9 @@ fn generate_search_query<'a>(
     {
         builder
             .push(" AND tasks.scheduled_complete_date BETWEEN ")
-            .push_bind(start.naive_utc())
+            .push_bind(UnixTimestamp::from(start))
             .push(" AND ")
-            .push_bind(end.naive_utc());
+            .push_bind(UnixTimestamp::from(end));
     }
 
     if let Some(ref quick_filter) = &params.quick_filter {
@@ -147,7 +146,7 @@ fn generate_search_query<'a>(
                     AND (tasks.scheduled_start_date < 
                 "#,
                 );
-                builder.push_bind(Utc::now().naive_utc());
+                builder.push_bind(UnixTimestamp::now());
                 builder.push(
                     r#" AND tasks.id NOT IN (
                     SELECT DISTINCT t.id
@@ -163,7 +162,7 @@ fn generate_search_query<'a>(
                     AND (tasks.scheduled_complete_date < 
                 "#,
                 );
-                builder.push_bind(Utc::now().naive_utc());
+                builder.push_bind(UnixTimestamp::now());
                 builder.push(" AND tasks.status <> 'Done') ");
             }
         }
@@ -193,19 +192,15 @@ fn generate_search_query<'a>(
 
 fn elapsed_duration(history: &Vec<TaskWorkHistory>) -> i64 {
     history.iter().fold(0, |acc, el| {
-        acc + (el.end_date - el.start_date).num_seconds()
+        acc + (el.end_date - el.start_date)
     })
 }
 
-fn get_actual_start(task: &Task, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
-    if task.status == Status::Doing {
-        return task.last_resumed_date;
-    }
-
-    history.iter().map(|hist| hist.start_date).min()
+fn get_actual_start(history: &Vec<TaskWorkHistory>) -> OptionalUnixTimestamp {
+    history.iter().map(|hist| hist.start_date).min().into()
 }
 
-fn get_actual_complete(status: &Status, history: &Vec<TaskWorkHistory>) -> Option<NaiveDateTime> {
+fn get_actual_complete(status: &Status, history: &Vec<TaskWorkHistory>) -> Option<UnixTimestamp> {
     if status != &Status::Done {
         return None;
     }
@@ -284,10 +279,10 @@ pub async fn get_tasks(
         let task_work_history = sqlx::query_as!(
             TaskWorkHistory,
             r#"
-            SELECT task_work_history.*
-            FROM task_work_history
-            WHERE task_work_history.task_id = ?
-            ORDER BY task_work_history.start_date DESC
+            SELECT twh.id, twh.task_id, twh.start_date, COALESCE(twh.end_date, CAST(strftime('%s', 'now') as INTEGER)) AS end_date
+            FROM task_work_history twh
+            WHERE twh.task_id = ?
+            ORDER BY twh.start_date DESC
         "#,
             task.id
         )
@@ -304,26 +299,20 @@ pub async fn get_tasks(
         .zip(tags)
         .zip(work_history)
         .map(|(((task, comments), tags), history)| {
-            let mut elapsed_duration: i64 = elapsed_duration(&history);
-            let actual_start = get_actual_start(&task, &history);
+            let elapsed_duration: i64 = elapsed_duration(&history);
+            let actual_start = get_actual_start(&history);
             let actual_complete = get_actual_complete(&task.status, &history);
-
-            if let Some(last_resumed) = task.last_resumed_date {
-                let diff = Utc::now().naive_utc() - last_resumed;
-                elapsed_duration += diff.num_seconds();
-            }
 
             TaskRead {
                 id: task.id,
                 title: task.title,
                 description: task.description,
                 status: task.status,
-                scheduled_start_date: task.scheduled_start_date.map(|dt| dt.and_utc()),
-                scheduled_complete_date: task.scheduled_complete_date.map(|dt| dt.and_utc()),
-                actual_start_date: actual_start.map(|dt| dt.and_utc()),
-                actual_complete_date: actual_complete.map(|dt| dt.and_utc()),
-                last_resumed_date: task.last_resumed_date.map(|dt| dt.and_utc()),
-                estimated_duration: task.estimated_duration,
+                scheduled_start_date: task.scheduled_start_date.into(),
+                scheduled_complete_date: task.scheduled_complete_date.into(),
+                actual_start_date: actual_start.into(),
+                actual_complete_date: actual_complete.map(|value| value.into()),
+                estimated_duration: task.estimated_duration.into(),
                 elapsed_duration,
                 comments: comments
                     .into_iter()
@@ -442,12 +431,13 @@ pub async fn edit_task(task: EditTask, db: State<'_, Data>) -> TAResult<()> {
 
             existing_task.title = task.title;
             existing_task.description = task.description;
-            existing_task.scheduled_start_date = task.scheduled_start_date.map(|dt| dt.naive_utc());
-            existing_task.scheduled_complete_date =
-                task.scheduled_complete_date.map(|dt| dt.naive_utc());
-            existing_task.estimated_duration = task.estimated_duration;
+            existing_task.scheduled_start_date = task.scheduled_start_date.into();
+            existing_task.scheduled_complete_date = task.scheduled_complete_date.into();
+            existing_task.estimated_duration = task.estimated_duration.into();
+            let mut transaction = db.pool.begin().await.into_ta_result()?;
+            save_task(existing_task, &mut transaction).await?;
 
-            save_task(existing_task, &db).await
+            transaction.commit().await.into_ta_result()
         }
         None => anyhow_tauri::bail!(not_found_message(task.id)),
     }
@@ -489,7 +479,7 @@ pub async fn update_comment(comment: EditComment, db: State<'_, Data>) -> TAResu
     .into_ta_result()?;
 
     found.message = comment.message;
-    found.modified = Some(Utc::now().naive_utc());
+    found.modified = OptionalUnixTimestamp::now();
 
     sqlx::query!(
         r#"
@@ -540,7 +530,7 @@ async fn delete_work_history_by_task_id(task_id: &i64, db: &State<'_, Data>) -> 
     .into_ta_result()
 }
 
-async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
+async fn save_task(task: Task, transaction: &mut Transaction<'_, Sqlite>) -> TAResult<()> {
     sqlx::query!(
         r#"
         UPDATE tasks
@@ -549,7 +539,6 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
         status = ?,
         scheduled_start_date = ?,
         scheduled_complete_date = ?,
-        last_resumed_date = ?,
         estimated_duration = ?
         WHERE tasks.id = ?
         "#,
@@ -558,11 +547,10 @@ async fn save_task(task: Task, db: &State<'_, Data>) -> TAResult<()> {
         task.status,
         task.scheduled_start_date,
         task.scheduled_complete_date,
-        task.last_resumed_date,
         task.estimated_duration,
         task.id
     )
-    .execute(&db.pool)
+    .execute(&mut **transaction)
     .await
     .map(|_| ())
     .into_ta_result()
@@ -583,8 +571,43 @@ async fn set_task_model_active(
     db: &State<'_, Data>,
 ) -> TAResult<()> {
     task.status = status;
-    task.last_resumed_date = Some(Utc::now().naive_utc());
-    save_task(task, db).await
+
+    let mut transaction = db.pool.begin().await.into_ta_result()?;
+    let result = async {
+
+        sqlx::query!("DELETE FROM task_work_history WHERE end_date IS NULL")
+        .execute(&mut *transaction)
+        .await
+        .map(|_|())
+        .into_ta_result()?;
+    
+        let now = OptionalUnixTimestamp::now();
+        let duration = OptionalDurationInSeconds::none();
+        
+        sqlx::query!(
+            r#"
+            INSERT INTO task_work_history (task_id, start_date, end_date) 
+            VALUES (?, ?, ?);
+            "#,
+            task.id,
+            now,
+            duration,
+        )
+        .execute(&mut *transaction)
+        .await
+        .map(|_|())
+        .into_ta_result()?;
+
+        save_task(task, &mut transaction).await
+    }.await;
+
+    match result {
+        Ok(()) => transaction.commit().await.into_ta_result(),
+        Err(e) => {
+            transaction.rollback().await.into_ta_result()?;
+            Err(e)
+        }
+    }
 }
 
 /// Update the status when transition to a paused or finished state.
@@ -595,29 +618,51 @@ async fn set_task_model_inactive(
 ) -> TAResult<()> {
     task.status = status;
 
-    if let Some(last_resumed) = task.last_resumed_date {
-        // Add an entry into the work history table.
-        let last_resumed = last_resumed.round_subsecs(0);
-        let now = Utc::now().naive_utc().round_subsecs(0);
-
-        sqlx::query!(
+    let mut transaction = db.pool.begin().await.into_ta_result()?;
+    let result = async {
+        let existing = sqlx::query_as!(
+            TaskWorkHistory, 
             r#"
-            INSERT INTO task_work_history (task_id, start_date, end_date) 
-            VALUES (?, ?, ?);
-        "#,
-            task.id,
-            last_resumed,
-            now
+            SELECT * from task_work_history twh
+            WHERE twh.task_id = ?
+            AND twh.end_date IS NULL
+            LIMIT 1
+            "#,
+            task.id
         )
-        .execute(&db.pool)
+        .fetch_optional(&mut *transaction)
         .await
-        .map(|_| ())
         .into_ta_result()?;
+    
+    
+        if let Some(existing) = existing {
+            let now = OptionalUnixTimestamp::now();
+            
+            sqlx::query!(
+                r#"
+                UPDATE task_work_history 
+                SET end_date = ?
+                WHERE id = ?
+                "#,
+                now,
+                existing.id,
+            )
+            .execute(&mut *transaction)
+            .await
+            .map(|_| ())
+            .into_ta_result()?;
+        }
 
-        task.last_resumed_date = None;
+        save_task(task, &mut transaction).await
+    }.await;
+
+    match result {
+        Ok(()) => transaction.commit().await.into_ta_result(),
+        Err(e) => {
+            transaction.rollback().await.into_ta_result()?;
+            Err(e)
+        }
     }
-
-    save_task(task, db).await
 }
 
 #[tauri::command]
@@ -625,11 +670,8 @@ pub async fn add_task_work_history(
     new_task_work_history: NewTaskWorkHistory,
     db: State<'_, Data>,
 ) -> TAResult<()> {
-    let start_date = new_task_work_history
-        .start_date
-        .naive_utc()
-        .round_subsecs(0);
-    let end_date = new_task_work_history.end_date.naive_utc().round_subsecs(0);
+    let start_date: UnixTimestamp = UnixTimestamp::from(&new_task_work_history.start_date);
+    let end_date: OptionalUnixTimestamp = OptionalUnixTimestamp::some(new_task_work_history.end_date);
     sqlx::query!(
         r#"
             INSERT INTO task_work_history (task_id, start_date, end_date)
@@ -665,11 +707,9 @@ pub async fn edit_task_work_history(
     edit_task_work_history: EditTaskWorkHistory,
     db: State<'_, Data>,
 ) -> TAResult<()> {
-    let start_date = edit_task_work_history
-        .start_date
-        .naive_utc()
-        .round_subsecs(0);
-    let end_date = edit_task_work_history.end_date.naive_utc().round_subsecs(0);
+    let start_date: UnixTimestamp = UnixTimestamp::from(&edit_task_work_history.start_date);
+    let end_date: OptionalUnixTimestamp = OptionalUnixTimestamp::some(edit_task_work_history.end_date);
+
     sqlx::query!(
         r#"
         UPDATE task_work_history

@@ -27,9 +27,9 @@ tauri-plugin-shell = "2.2.0"
 serde = { version = "1.0.216", features = ["derive"] }
 serde_json = "1.0.134"
 serde_repr = "0.1.19"
-chrono = { version = "0.4.39", features = ["serde"] }
 dotenvy = "0.15.7"
-sqlx = { version = "0.8.2", features = ["chrono", "sqlite", "runtime-tokio"] }
+sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio"] }
 anyhow = "1.0.95"
 anyhow-tauri = { version = "1.0.0", features = ["show_errs_in_release"] }
 tap = "1.0.1"
+jiff = { version = "0.1.17", features = ["serde"] }

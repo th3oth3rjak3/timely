@@ -3,7 +3,7 @@ use std::{
     ops::{Add, AddAssign},
 };
 
-use chrono::{DateTime, Utc};
+use jiff::Timestamp;
 use serde::{Deserialize, Serialize};
 
 use crate::features::tags::Tag;
@@ -11,8 +11,8 @@ use crate::features::tags::Tag;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MetricsBucket {
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub start_date: Timestamp,
+    pub end_date: Timestamp,
     pub hours: f64,
 }
 
@@ -51,8 +51,8 @@ pub struct MetricsSearchCriteria {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MetricsSummary {
-    pub start_date: DateTime<Utc>,
-    pub end_date: DateTime<Utc>,
+    pub start_date: Timestamp,
+    pub end_date: Timestamp,
     pub selected_tags: Vec<Tag>,
     pub summary: StatisticalSummary,
     pub work_history: Vec<MetricsBucket>,
@@ -60,8 +60,8 @@ pub struct MetricsSummary {
 
 impl MetricsSummary {
     pub fn new(
-        start_date: DateTime<Utc>,
-        end_date: DateTime<Utc>,
+        start_date: Timestamp,
+        end_date: Timestamp,
         selected_tags: Vec<Tag>,
         summary: StatisticalSummary,
         work_history: Vec<MetricsBucket>,

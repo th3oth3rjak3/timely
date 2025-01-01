@@ -1,8 +1,17 @@
-import {Group, Modal, NumberInput, Stack, TagsInput, Text, Textarea, TextInput,} from "@mantine/core";
-import {DateInput} from "@mantine/dates";
-import {useForm} from "@mantine/form";
-import {useDisclosure, useMediaQuery} from "@mantine/hooks";
-import {modals} from "@mantine/modals";
+import {
+  Group,
+  Modal,
+  NumberInput,
+  Stack,
+  TagsInput,
+  Text,
+  Textarea,
+  TextInput,
+} from "@mantine/core";
+import { DateInput } from "@mantine/dates";
+import { useForm } from "@mantine/form";
+import { useDisclosure, useMediaQuery } from "@mantine/hooks";
+import { modals } from "@mantine/modals";
 import {
   IconArrowBackUp,
   IconCancel,
@@ -15,11 +24,11 @@ import {
   IconTrash,
   IconTrashX,
 } from "@tabler/icons-react";
-import {useQueryClient} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
-import {ContextMenuContent, useContextMenu} from "mantine-contextmenu";
-import {DataTable} from "mantine-datatable";
-import {useEffect, useMemo, useRef, useState} from "react";
+import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
+import { DataTable } from "mantine-datatable";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DateFilter from "../../components/DateFilter.tsx";
 import MultiSelectFilter from "../../components/MultiSelectFilter.tsx";
 import StyledActionIcon from "../../components/StyledActionIcon.tsx";
@@ -27,16 +36,26 @@ import StyledButton from "../../components/StyledButton.tsx";
 import TextFilter from "../../components/TextFilter.tsx";
 import useColorPalette from "../../hooks/useColorPalette.tsx";
 import useWindowSize from "../../hooks/useWindowSize.tsx";
-import {TaskStatus} from "../../models/TaskStatus.ts";
-import {TimelyAction} from "../../models/TauriAction.ts";
-import {TimeSpan} from "../../models/TimeSpan.ts";
-import {Tag, Task} from "../../models/ZodModels.ts";
-import {pageSizeOptions} from "../../state/globalState.ts";
-import {findLastPage} from "../../utilities/dataTableUtilities.ts";
-import {getDayOnlyProps, maybeFormattedDate,} from "../../utilities/dateUtilities.ts";
-import {SelectOption, toSelectOptions, validateLength,} from "../../utilities/formUtilities.ts";
-import {showErrorNotification, showSuccessNotification,} from "../../utilities/notificationUtilities";
-import {useUserSettings} from "../settings/settingsService.ts";
+import { TaskStatus } from "../../models/TaskStatus.ts";
+import { TimelyAction } from "../../models/TauriAction.ts";
+import { TimeSpan } from "../../models/TimeSpan.ts";
+import { Tag, Task } from "../../models/ZodModels.ts";
+import { pageSizeOptions } from "../../state/globalState.ts";
+import { findLastPage } from "../../utilities/dataTableUtilities.ts";
+import {
+  getDayOnlyProps,
+  maybeFormattedDate,
+} from "../../utilities/dateUtilities.ts";
+import {
+  SelectOption,
+  toSelectOptions,
+  validateLength,
+} from "../../utilities/formUtilities.ts";
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from "../../utilities/notificationUtilities";
+import { useUserSettings } from "../settings/settingsService.ts";
 import {
   tryFindTagByName,
   useAddTagToTask,
@@ -44,7 +63,9 @@ import {
   useGetAllTags,
   useRemoveTagFromTask,
 } from "../tags/services/tagService.ts";
-import QuickFilterComponent, {TagFilterSelection,} from "./QuickFilterComponent.tsx";
+import QuickFilterComponent, {
+  TagFilterSelection,
+} from "./QuickFilterComponent.tsx";
 import {
   TaskLike,
   useCancelTask,
@@ -62,16 +83,21 @@ import {
   useTaskStore,
 } from "./services/tasksService.ts";
 import TaskDetail from "./TaskDetail.tsx";
-import {NewTask} from "./types/Task.ts";
-import {FilterName, QuickFilter, TaskSearchParams, taskSearchParams,} from "./types/TaskSearchParams.ts";
+import { NewTask } from "./types/Task.ts";
+import {
+  FilterName,
+  QuickFilter,
+  TaskSearchParams,
+  taskSearchParams,
+} from "./types/TaskSearchParams.ts";
 
 function TaskList() {
   //#region State
 
   const queryClient = useQueryClient();
 
-  const {data: userSettings} = useUserSettings();
-  const {data: tagOptions, refetch: refetchTags} = useGetAllTags();
+  const { data: userSettings } = useUserSettings();
+  const { data: tagOptions, refetch: refetchTags } = useGetAllTags();
 
   const colorPalette = useColorPalette();
 
@@ -133,7 +159,7 @@ function TaskList() {
     quickFilter,
   ]);
 
-  const {showContextMenu, hideContextMenu} = useContextMenu();
+  const { showContextMenu, hideContextMenu } = useContextMenu();
   const {
     data: tasks,
     isPending: loading,
@@ -161,29 +187,29 @@ function TaskList() {
 
   const handleDeleteManyDataFetch =
     (taskList: TaskLike[]): (() => Promise<void>) =>
-      async () => {
-        if (
-          pageShouldChangeAfterDeleteMany(taskList, tasks.totalItemCount, params)
-        ) {
-          const lastPage = findLastPage(
-            tasks.totalItemCount - taskList.length,
-            pageSize
-          );
-          setPage(lastPage);
-        } else {
-          await refreshTasks();
-        }
-      };
+    async () => {
+      if (
+        pageShouldChangeAfterDeleteMany(taskList, tasks.totalItemCount, params)
+      ) {
+        const lastPage = findLastPage(
+          tasks.totalItemCount - taskList.length,
+          pageSize
+        );
+        setPage(lastPage);
+      } else {
+        await refreshTasks();
+      }
+    };
 
   const handleDataFetch =
     (task: TaskLike, action: TimelyAction): (() => Promise<void>) =>
-      async () => {
-        if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
-          setPage(lastPage);
-        } else {
-          await refreshTasks();
-        }
-      };
+    async () => {
+      if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
+        setPage(lastPage);
+      } else {
+        await refreshTasks();
+      }
+    };
 
   const pageShouldChange = (
     task: TaskLike,
@@ -223,9 +249,9 @@ function TaskList() {
         return (
           lastItemOnThePage &&
           ((task.elapsedDuration !== null &&
-              task.elapsedDuration > 0 &&
-              !taskSearchParams.statuses.includes(TaskStatus.Paused) &&
-              task.actualStartDate !== null) ||
+            task.elapsedDuration > 0 &&
+            !taskSearchParams.statuses.includes(TaskStatus.Paused) &&
+            task.actualStartDate !== null) ||
             (task.elapsedDuration === 0 &&
               !taskSearchParams.statuses.includes(TaskStatus.Todo)))
         );
@@ -290,7 +316,7 @@ function TaskList() {
     return taskToEdit === null ? [] : taskToEdit.tags.map((t) => t.value);
   }, [taskToEdit]);
 
-  const {windowWidth} = useWindowSize();
+  const { windowWidth } = useWindowSize();
 
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
@@ -303,7 +329,7 @@ function TaskList() {
         maxValue: 2000,
       }),
     title: (value?: string | null) =>
-      validateLength({fieldName: "Title", value, minValue: 1, maxValue: 100}),
+      validateLength({ fieldName: "Title", value, minValue: 1, maxValue: 100 }),
   };
 
   const editForm = useForm<Task>({
@@ -394,7 +420,7 @@ function TaskList() {
     modals.openConfirmModal({
       title: "Cancel Task",
       children: <Text>Are you sure you want to cancel this task?</Text>,
-      labels: {confirm: "Confirm", cancel: "Deny"},
+      labels: { confirm: "Confirm", cancel: "Deny" },
       confirmProps: {
         variant: colorPalette.variant,
         color: colorPalette.colorName,
@@ -405,8 +431,7 @@ function TaskList() {
         color: colorPalette.colorName,
         gradient: colorPalette.gradient,
       },
-      onCancel: () => {
-      },
+      onCancel: () => {},
       onConfirm: async () => cancelTask.mutateAsync(task),
     });
   }
@@ -425,9 +450,8 @@ function TaskList() {
         color: colorPalette.colorName,
         gradient: colorPalette.gradient,
       },
-      labels: {confirm: "Confirm", cancel: "Deny"},
-      onCancel: () => {
-      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
       onConfirm: async () => deleteTask.mutateAsync(task),
     });
   }
@@ -450,9 +474,8 @@ function TaskList() {
         color: colorPalette.colorName,
         gradient: colorPalette.gradient,
       },
-      labels: {confirm: "Confirm", cancel: "Deny"},
-      onCancel: () => {
-      },
+      labels: { confirm: "Confirm", cancel: "Deny" },
+      onCancel: () => {},
       onConfirm: async () => {
         await deleteManyTasks.mutateAsync(tasks);
         setSelectedTasks([]);
@@ -464,63 +487,63 @@ function TaskList() {
     const startTaskItem = {
       key: "start-task",
       title: "Start Task",
-      icon: <IconPlayerPlay size={16}/>,
+      icon: <IconPlayerPlay size={16} />,
       onClick: () => startTask.mutateAsync(task),
     };
 
     const pauseTaskItem = {
       key: "pause-task",
       title: "Pause Task",
-      icon: <IconPlayerPause size={16}/>,
+      icon: <IconPlayerPause size={16} />,
       onClick: () => pauseTask.mutateAsync(task),
     };
 
     const resumeTaskItem = {
       key: "resume-task",
       title: "Resume Task",
-      icon: <IconPlayerPlay size={16}/>,
+      icon: <IconPlayerPlay size={16} />,
       onClick: () => resumeTask.mutateAsync(task),
     };
 
     const finishTaskItem = {
       key: "finish-task",
       title: "Finish Task",
-      icon: <IconCheck size={16}/>,
+      icon: <IconCheck size={16} />,
       onClick: () => finishTask.mutateAsync(task),
     };
 
     const reopenTaskItem = {
       key: "reopen-task",
       title: "Reopen Task",
-      icon: <IconArrowBackUp size={16}/>,
+      icon: <IconArrowBackUp size={16} />,
       onClick: () => reopenTask.mutateAsync(task),
     };
 
     const cancelTaskItem = {
       key: "cancel-task",
       title: "Cancel Task",
-      icon: <IconCancel size={16}/>,
+      icon: <IconCancel size={16} />,
       onClick: () => handleCancelRequested(task),
     };
 
     const restoreTaskItem = {
       key: "restore-task",
       title: "Restore Task",
-      icon: <IconArrowBackUp size={16}/>,
+      icon: <IconArrowBackUp size={16} />,
       onClick: () => restoreTask.mutateAsync(task),
     };
 
     const deleteTaskItem = {
       key: "delete-task",
       title: "Delete Task",
-      icon: <IconTrash size={16}/>,
+      icon: <IconTrash size={16} />,
       onClick: () => handleDeleteOneRequested(task),
     };
 
     const editTaskItem = {
       key: "edit-task",
       title: "Edit Task",
-      icon: <IconEdit size={16}/>,
+      icon: <IconEdit size={16} />,
       onClick: () => beginEditingTask(task),
     };
 
@@ -560,7 +583,7 @@ function TaskList() {
   }
 
   const onValidNewTaskSubmit = async (newTask: NewTask) => {
-    const newItem = {...newTask};
+    const newItem = { ...newTask };
     if (newTask.estimatedDuration) {
       newItem.estimatedDuration = TimeSpan.fromHours(
         newTask.estimatedDuration
@@ -574,14 +597,12 @@ function TaskList() {
   };
 
   const onValidEditTaskSubmit = async (editedTask: Task) => {
-    const updatedItem = {...editedTask};
+    const updatedItem = { ...editedTask };
     setTaskToEdit(null);
     editForm.reset();
     editForm.clearErrors();
     editFormActions.close();
-    if (
-      editedTask.estimatedDuration
-    ) {
+    if (editedTask.estimatedDuration) {
       updatedItem.estimatedDuration = TimeSpan.fromHours(
         editedTask.estimatedDuration
       ).totalSeconds;
@@ -595,7 +616,7 @@ function TaskList() {
   };
 
   const beginEditingTask = (task: Task) => {
-    setTaskToEdit({...task});
+    setTaskToEdit({ ...task });
     editForm.setValues({
       id: task.id,
       title: task.title,
@@ -648,7 +669,7 @@ function TaskList() {
       if (!tag) return;
     }
     if (taskToEdit !== null) {
-      await addTagToTask.mutateAsync({taskId: taskToEdit.id, tag});
+      await addTagToTask.mutateAsync({ taskId: taskToEdit.id, tag });
       await refreshTasks();
     }
   }
@@ -720,7 +741,7 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
       filter: (
-        <DateFilter filter={startByFilter} onRangeChanged={setStartByFilter}/>
+        <DateFilter filter={startByFilter} onRangeChanged={setStartByFilter} />
       ),
       filtering: params.startByFilter !== null,
     },
@@ -732,7 +753,7 @@ function TaskList() {
       render: (record: Task) =>
         maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
       filter: (
-        <DateFilter filter={dueByFilter} onRangeChanged={setDueByFilter}/>
+        <DateFilter filter={dueByFilter} onRangeChanged={setDueByFilter} />
       ),
       filtering: params.dueByFilter !== null,
     },
@@ -752,7 +773,7 @@ function TaskList() {
               tooltipPosition="left"
               onClick={() => handleDeleteManyRequested(selectedTasks)}
             >
-              <IconTrashX/>
+              <IconTrashX />
             </StyledActionIcon>
           ) : null}
           <QuickFilterComponent
@@ -765,14 +786,14 @@ function TaskList() {
             tooltipLabel="Create New Task"
             tooltipPosition="left"
           >
-            <IconPlus/>
+            <IconPlus />
           </StyledActionIcon>
           <StyledActionIcon
             onClick={refreshTasks}
             tooltipLabel="Refresh Tasks"
             tooltipPosition="left"
           >
-            <IconRefresh/>
+            <IconRefresh />
           </StyledActionIcon>
         </Group>
       </Group>
@@ -781,7 +802,7 @@ function TaskList() {
       ) : (
         <DataTable
           textSelectionDisabled={isTouchScreen}
-          onRowContextMenu={({record, event}) =>
+          onRowContextMenu={({ record, event }) =>
             showContextMenu(getContextMenuItems(record))(event)
           }
           onScroll={hideContextMenu}
@@ -809,7 +830,7 @@ function TaskList() {
           selectedRecords={selectedTasks}
           onSelectedRecordsChange={setSelectedTasks}
           rowExpansion={{
-            content: ({record}) => {
+            content: ({ record }) => {
               return (
                 <TaskDetail
                   task={record}
