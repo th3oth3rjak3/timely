@@ -1,10 +1,19 @@
-import {Accordion, Card, Grid, Group, Select, Stack, Text, TextInput,} from "@mantine/core";
-import {IconClock} from "@tabler/icons-react";
-import {useMemo} from "react";
+import {
+  Accordion,
+  Card,
+  Grid,
+  Group,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from "@mantine/core";
+import { IconClock } from "@tabler/icons-react";
+import { useMemo } from "react";
 import StyledButton from "../../components/StyledButton";
-import {TimeSpan} from "../../models/TimeSpan";
-import {createRange} from "../../utilities/rangeUtilities";
-import {useTimerStore} from "./services/timerService";
+import { TimeSpan } from "../../models/TimeSpan";
+import { createRange } from "../../utilities/rangeUtilities";
+import { useTimerStore } from "./services/timerService";
 
 function CountdownTimer() {
   const message = useTimerStore((store) => store.message);
@@ -47,11 +56,11 @@ function CountdownTimer() {
               label={isActive ? "Pause" : "Start"}
               onClick={handleTimerToggle}
             />
-            <StyledButton label="Reset" onClick={resetTimer}/>
+            <StyledButton label="Reset" onClick={resetTimer} />
           </Group>
           <Accordion variant="contained" w="100%" p="sm">
             <Accordion.Item value="time">
-              <Accordion.Control icon={<IconClock/>}>
+              <Accordion.Control icon={<IconClock />}>
                 Settings
               </Accordion.Control>
               <Accordion.Panel>

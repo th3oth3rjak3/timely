@@ -1,8 +1,8 @@
-import {notifications} from "@mantine/notifications";
-import {TimelyAction} from "../models/TauriAction";
-import {Stringer} from "./formUtilities";
-import {UserSettings} from "../models/ZodModels";
-import {ColorPalette} from "../hooks/useColorPalette.tsx";
+import { notifications } from "@mantine/notifications";
+import { ColorPalette } from "../hooks/useColorPalette.tsx";
+import { TimelyAction } from "../models/TauriAction";
+import { UserSettings } from "../models/ZodModels";
+import { Stringer } from "./formUtilities";
 
 export function showTimerNotification<T extends Stringer>(
   colorPalette: ColorPalette,
@@ -55,6 +55,16 @@ export function showErrorNotification<T extends Stringer>(error: T) {
     message: `Error: '${error.toString()}'`,
     autoClose: false,
     color: "red",
+    withBorder: true,
+  });
+}
+
+export function showInfoNotification<T extends Stringer>(message: T) {
+  notifications.show({
+    title: "Info",
+    message: message.toString(),
+    autoClose: false,
+    color: "cyan",
     withBorder: true,
   });
 }

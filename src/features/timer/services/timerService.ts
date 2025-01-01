@@ -1,8 +1,9 @@
-import {create} from "zustand";
-import {TimeSpan, TimeSpanLike} from "../../../models/TimeSpan";
+import { create } from "zustand";
+import { TimeSpan } from "../../../models/TimeSpan";
+import { showInfoNotification } from "../../../utilities/notificationUtilities";
 
 export interface TimerStore {
-  initialTime: TimeSpanLike;
+  initialTime: number;
   time: number;
   isActive: boolean;
   isPaused: boolean;
@@ -27,15 +28,32 @@ const defaultHours = 1;
 const defaultMinutes = 0;
 const defaultSeconds = 0;
 
-const defaultTime = TimeSpan.add(
+let defaultTime = TimeSpan.add(
   TimeSpan.fromHours(defaultHours),
   TimeSpan.fromMinutes(defaultMinutes),
   TimeSpan.fromSeconds(defaultSeconds)
 );
+
+let initialTimer = TimeSpan.fromSeconds(defaultTime.totalSeconds);
+
 const defaultMessage = "Beep beep, time has run out.";
 
+const existingTimerKey = "saved_timer";
+const existingInitialTimerKey = "saved_timer_initial_value";
+
+const existingTimer = localStorage.getItem(existingTimerKey);
+const existingInitialTimer = localStorage.getItem(existingInitialTimerKey);
+
+if (existingTimer !== null && existingInitialTimer !== null) {
+  defaultTime = TimeSpan.fromSeconds(Number(existingTimer));
+  initialTimer = TimeSpan.fromSeconds(Number(existingInitialTimer));
+  showInfoNotification(
+    "Your previous timer has been restored and is currently paused."
+  );
+}
+
 export const useTimerStore = create<TimerStore>((set, get) => ({
-  initialTime: defaultTime.toJSON(),
+  initialTime: initialTimer.totalSeconds,
   time: defaultTime.totalSeconds,
   isActive: false,
   isPaused: false,
@@ -45,40 +63,49 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   minutes: defaultMinutes,
   seconds: defaultSeconds,
   startTimer: () => {
-    set({isActive: true, isPaused: false});
+    set({ isActive: true, isPaused: false });
+    localStorage.setItem(existingTimerKey, get().time.toString());
+    localStorage.setItem(existingInitialTimerKey, get().initialTime.toString());
   },
   pauseTimer: () => {
-    set({isPaused: true, isActive: false});
+    set({ isPaused: true, isActive: false });
   },
   resetTimer: () => {
     set({
       isActive: false,
       isPaused: false,
-      time: get().initialTime.seconds,
+      time: get().initialTime,
       playingSound: false,
     });
+
+    localStorage.removeItem(existingTimerKey);
+    localStorage.removeItem(existingInitialTimerKey);
   },
   resetToDefault: () => {
     set({
-      initialTime: defaultTime.toJSON(),
+      initialTime: defaultTime.totalSeconds,
       time: defaultTime.totalSeconds,
       message: defaultMessage,
       hours: defaultHours,
       minutes: defaultMinutes,
       seconds: defaultSeconds,
     });
+
+    localStorage.removeItem(existingTimerKey);
+    localStorage.removeItem(existingInitialTimerKey);
   },
   decrementTime: () => {
     const time = get().time;
     if (time > 0) {
-      set({time: time - 1});
+      set({ time: time - 1 });
+      localStorage.setItem(existingTimerKey, (time - 1).toString());
     }
   },
   setIsPlaying: (playing) => {
-    set({playingSound: playing});
+    set({ playingSound: playing });
   },
   setTimeoutMessage: (message) => {
-    set({message});
+    set({ message });
   },
   setHours: (hours) => {
     const ts = TimeSpan.add(
@@ -87,7 +114,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(get().seconds)
     );
 
-    set({hours, initialTime: ts.toJSON(), time: ts.totalSeconds});
+    set({ hours, initialTime: ts.totalSeconds, time: ts.totalSeconds });
   },
   setMinutes: (minutes) => {
     const ts = TimeSpan.add(
@@ -96,7 +123,7 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(get().seconds)
     );
 
-    set({minutes, initialTime: ts.toJSON(), time: ts.totalSeconds});
+    set({ minutes, initialTime: ts.totalSeconds, time: ts.totalSeconds });
   },
   setSeconds: (seconds) => {
     const ts = TimeSpan.add(
@@ -105,6 +132,6 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       TimeSpan.fromSeconds(seconds)
     );
 
-    set({seconds, initialTime: ts.toJSON(), time: ts.totalSeconds});
+    set({ seconds, initialTime: ts.totalSeconds, time: ts.totalSeconds });
   },
 }));

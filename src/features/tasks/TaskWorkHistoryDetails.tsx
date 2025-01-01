@@ -237,7 +237,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
           size="sm"
           onClick={newWorkHistoryFormActions.open}
           disabled={isDisabled}
-          disabledLabel="Pause the task to edit work history"
+          disabledLabel="Pause Task Before Editing"
         >
           <IconPlus />
         </StyledActionIcon>
