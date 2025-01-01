@@ -187,7 +187,6 @@ function TaskList() {
     recordCount: number,
     taskSearchParams: TaskSearchParams
   ): boolean => {
-    console.log(recordCount);
     const remainder = recordCount % taskSearchParams.pageSize;
     const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
 

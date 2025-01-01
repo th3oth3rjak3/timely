@@ -386,7 +386,7 @@ function TagsList() {
         closeOnClickOutside={false}
         closeOnEscape={false}
       >
-        <form onSubmit={newForm.onSubmit(onValidNewTagSubmit, console.log)}>
+        <form onSubmit={newForm.onSubmit(onValidNewTagSubmit)}>
           <Stack gap="sm">
             <TextInput
               withAsterisk
