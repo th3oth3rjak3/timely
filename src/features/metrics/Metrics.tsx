@@ -1,10 +1,6 @@
 import { Card, Group, Modal, ScrollArea, Stack, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
-import {
-  IconFileExport,
-  IconFilter,
-  IconFilterFilled,
-} from "@tabler/icons-react";
+import { IconFilter, IconFilterFilled } from "@tabler/icons-react";
 import { useEffect, useMemo, useState } from "react";
 
 import dayjs from "dayjs";
@@ -109,7 +105,7 @@ function Metrics() {
   const applyFilter = async (inputs: MetricsFilterCriteria) => {
     setStartDate(inputs.startDate);
     setEndDate(inputs.endDate);
-    setSelectedTags(inputs.tags);
+    setSelectedTags([...inputs.tags]);
     filterActions.close();
   };
   const clearFilter = () => {
@@ -122,10 +118,6 @@ function Metrics() {
     setEndDate(undefined);
     setSelectedTags(undefined);
     filterActions.close();
-  };
-
-  const exportMetrics = () => {
-    // TODO: figure out how we want to export the metrics.
   };
 
   const graphSection = isFiltered ? (
@@ -159,15 +151,6 @@ function Metrics() {
               >
                 {isFiltered ? <IconFilterFilled /> : <IconFilter />}
               </StyledActionIcon>
-              {isFiltered ? (
-                <StyledActionIcon
-                  onClick={exportMetrics}
-                  tooltipLabel="Export"
-                  tooltipPosition="left"
-                >
-                  <IconFileExport />
-                </StyledActionIcon>
-              ) : null}
             </Group>
           </Group>
           {graphSection}

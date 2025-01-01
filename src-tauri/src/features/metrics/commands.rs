@@ -7,11 +7,12 @@ use crate::{
     Data,
 };
 use anyhow_tauri::{bail, IntoTAResult, TAResult};
+use jiff::tz::TimeZone;
 use sqlx::QueryBuilder;
 use std::collections::HashMap;
 use tap::{Pipe, Tap};
 use tauri::State;
-use jiff::{Span, Timestamp};
+use jiff::Timestamp;
 
 #[tauri::command]
 pub async fn get_metrics(
@@ -226,9 +227,9 @@ async fn count_started_tasks(
 
     builder.push_bind(UnixTimestamp::from(start_date));
 
-    builder.push(" AND twh2.start_date < ");
+    builder.push(" AND twh2.start_date <= ");
 
-    let end_date = end_date.checked_add(Span::new().days(1)).into_ta_result()?;
+    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
     builder.push(
         r#" 
@@ -254,7 +255,7 @@ async fn count_started_tasks(
     );
 
     builder.push_bind(UnixTimestamp::from(start_date));
-    builder.push(" AND MIN(twh2.start_date) < ");
+    builder.push(" AND MIN(twh2.start_date) <= ");
 
     builder.push_bind(UnixTimestamp::from(&end_date));
     builder.push(
@@ -320,8 +321,8 @@ async fn count_completed_tasks(
 
     builder.push(" AND twh.end_date >= ");
     builder.push_bind(UnixTimestamp::from(start_date));
-    builder.push(" AND twh.end_date < ");
-    let end_date = end_date.checked_add(Span::new().days(1)).into_ta_result()?;
+    builder.push(" AND twh.end_date <= ");
+    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
 
     builder.push(
@@ -382,7 +383,7 @@ async fn count_tasks_worked(
 
     builder.push(" AND twh.start_date <= ");
 
-    let end_date = end_date.checked_add(Span::new().days(1)).into_ta_result()?;
+    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
     builder.push(
         r#"

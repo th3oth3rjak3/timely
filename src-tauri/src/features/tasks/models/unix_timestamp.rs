@@ -1,6 +1,6 @@
 use std::ops::Sub;
 
-use jiff::Timestamp;
+use jiff::{Timestamp, Zoned};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::{FromRow, Type};
 
@@ -53,6 +53,12 @@ impl From<UnixTimestamp> for Timestamp {
 impl From<&Timestamp> for UnixTimestamp {
     fn from(value: &Timestamp) -> Self {
         UnixTimestamp(value.as_second())
+    }
+}
+
+impl From<&Zoned> for UnixTimestamp {
+    fn from(value: &Zoned) -> Self {
+        UnixTimestamp(value.timestamp().as_second())
     }
 }
 
