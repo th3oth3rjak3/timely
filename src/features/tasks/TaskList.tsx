@@ -172,44 +172,14 @@ function TaskList() {
     showErrorNotification(error);
   }
 
-  const lastPage = useMemo(() => {
-    return findLastPage(tasks.totalItemCount - 1, pageSize);
-  }, [pageSize, tasks]);
-
   const pageShouldChangeAfterDeleteMany = (
     tasks: TaskLike[],
     recordCount: number,
     taskSearchParams: TaskSearchParams
   ): boolean => {
     const remainder = recordCount % taskSearchParams.pageSize;
-    return remainder < tasks.length && taskSearchParams.page > 1;
+    return remainder <= tasks.length && taskSearchParams.page > 1;
   };
-
-  const handleDeleteManyDataFetch =
-    (taskList: TaskLike[]): (() => Promise<void>) =>
-    async () => {
-      if (
-        pageShouldChangeAfterDeleteMany(taskList, tasks.totalItemCount, params)
-      ) {
-        const lastPage = findLastPage(
-          tasks.totalItemCount - taskList.length,
-          pageSize
-        );
-        setPage(lastPage);
-      } else {
-        await refreshTasks();
-      }
-    };
-
-  const handleDataFetch =
-    (task: TaskLike, action: TimelyAction): (() => Promise<void>) =>
-    async () => {
-      if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
-        setPage(lastPage);
-      } else {
-        await refreshTasks();
-      }
-    };
 
   const pageShouldChange = (
     task: TaskLike,
@@ -217,6 +187,7 @@ function TaskList() {
     recordCount: number,
     taskSearchParams: TaskSearchParams
   ): boolean => {
+    console.log(recordCount);
     const remainder = recordCount % taskSearchParams.pageSize;
     const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
 
@@ -269,24 +240,43 @@ function TaskList() {
     }
   };
 
-  const startTask = useStartTask(userSettings, handleDataFetch, queryClient);
-  const pauseTask = usePauseTask(userSettings, handleDataFetch, queryClient);
+  const startTask = useStartTask(userSettings, queryClient);
+  const pauseTask = usePauseTask(userSettings, queryClient);
   const createTask = useCreateTask(userSettings, queryClient);
-  const resumeTask = useResumeTask(userSettings, handleDataFetch, queryClient);
-  const finishTask = useFinishTask(userSettings, handleDataFetch, queryClient);
-  const cancelTask = useCancelTask(userSettings, handleDataFetch, queryClient);
-  const restoreTask = useRestoreTask(
-    userSettings,
-    handleDataFetch,
-    queryClient
-  );
-  const deleteTask = useDeleteTask(userSettings, handleDataFetch, queryClient);
-  const deleteManyTasks = useDeleteManyTasks(
-    userSettings,
-    handleDeleteManyDataFetch,
-    queryClient
-  );
-  const reopenTask = useReopenTask(userSettings, handleDataFetch, queryClient);
+  const resumeTask = useResumeTask(userSettings, queryClient);
+  const finishTask = useFinishTask(userSettings, queryClient);
+  const cancelTask = useCancelTask(userSettings, queryClient);
+  const restoreTask = useRestoreTask(userSettings, queryClient);
+  const deleteTask = useDeleteTask(userSettings, queryClient);
+  const deleteManyTasks = useDeleteManyTasks(userSettings, queryClient);
+  const reopenTask = useReopenTask(userSettings, queryClient);
+
+  const handleStartTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.StartTask);
+    await startTask.mutateAsync(task);
+  };
+
+  const handlePauseTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.PauseTask);
+    await pauseTask.mutateAsync(task);
+  };
+
+  const handleResumeTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.ResumeTask);
+    await resumeTask.mutateAsync(task);
+  };
+  const handleRestoreTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.RestoreCancelledTask);
+    await restoreTask.mutateAsync(task);
+  };
+  const handleReopenTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.ReopenFinishedTask);
+    await reopenTask.mutateAsync(task);
+  };
+  const handleFinishTask = async (task: Task) => {
+    handlePageChange(task, TimelyAction.FinishTask);
+    await finishTask.mutateAsync(task);
+  };
 
   const createNewTag = useCreateNewTag(userSettings, queryClient);
   const addTagToTask = useAddTagToTask(userSettings);
@@ -304,12 +294,7 @@ function TaskList() {
   const [editFormOpened, editFormActions] = useDisclosure(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
 
-  const editTask = useEditTask(
-    userSettings,
-    taskToEdit,
-    handleDataFetch,
-    queryClient
-  );
+  const editTask = useEditTask(userSettings, taskToEdit, queryClient);
 
   const [newTaskTags, setNewTaskTags] = useState<Tag[]>([]);
   const editTags = useMemo(() => {
@@ -330,6 +315,12 @@ function TaskList() {
       }),
     title: (value?: string | null) =>
       validateLength({ fieldName: "Title", value, minValue: 1, maxValue: 100 }),
+  };
+
+  const handlePageChange = (task: Task, action: TimelyAction) => {
+    if (pageShouldChange(task, action, tasks.totalItemCount, params)) {
+      setPage(page - 1);
+    }
   };
 
   const editForm = useForm<Task>({
@@ -432,7 +423,10 @@ function TaskList() {
         gradient: colorPalette.gradient,
       },
       onCancel: () => {},
-      onConfirm: async () => cancelTask.mutateAsync(task),
+      onConfirm: async () => {
+        handlePageChange(task, TimelyAction.CancelTask);
+        cancelTask.mutateAsync(task);
+      },
     });
   }
 
@@ -452,16 +446,19 @@ function TaskList() {
       },
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
-      onConfirm: async () => deleteTask.mutateAsync(task),
+      onConfirm: async () => {
+        handlePageChange(task, TimelyAction.DeleteTask);
+        deleteTask.mutateAsync(task);
+      },
     });
   }
 
-  function handleDeleteManyRequested(tasks: Task[]) {
+  function handleDeleteManyRequested(taskList: Task[]) {
     modals.openConfirmModal({
       title: "Delete Tasks",
       children: (
-        <Text>{`Are you sure you want to delete ${tasks.length} task${
-          tasks.length == 1 ? "" : "s"
+        <Text>{`Are you sure you want to delete ${taskList.length} task${
+          taskList.length == 1 ? "" : "s"
         }?`}</Text>
       ),
       confirmProps: {
@@ -477,7 +474,21 @@ function TaskList() {
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
       onConfirm: async () => {
-        await deleteManyTasks.mutateAsync(tasks);
+        if (
+          pageShouldChangeAfterDeleteMany(
+            taskList,
+            tasks.totalItemCount,
+            params
+          )
+        ) {
+          const lastPage = findLastPage(
+            tasks.totalItemCount - taskList.length,
+            pageSize
+          );
+
+          setPage(lastPage);
+        }
+        await deleteManyTasks.mutateAsync(taskList);
         setSelectedTasks([]);
       },
     });
@@ -488,35 +499,35 @@ function TaskList() {
       key: "start-task",
       title: "Start Task",
       icon: <IconPlayerPlay size={16} />,
-      onClick: () => startTask.mutateAsync(task),
+      onClick: () => handleStartTask(task),
     };
 
     const pauseTaskItem = {
       key: "pause-task",
       title: "Pause Task",
       icon: <IconPlayerPause size={16} />,
-      onClick: () => pauseTask.mutateAsync(task),
+      onClick: () => handlePauseTask(task),
     };
 
     const resumeTaskItem = {
       key: "resume-task",
       title: "Resume Task",
       icon: <IconPlayerPlay size={16} />,
-      onClick: () => resumeTask.mutateAsync(task),
+      onClick: () => handleResumeTask(task),
     };
 
     const finishTaskItem = {
       key: "finish-task",
       title: "Finish Task",
       icon: <IconCheck size={16} />,
-      onClick: () => finishTask.mutateAsync(task),
+      onClick: () => handleFinishTask(task),
     };
 
     const reopenTaskItem = {
       key: "reopen-task",
       title: "Reopen Task",
       icon: <IconArrowBackUp size={16} />,
-      onClick: () => reopenTask.mutateAsync(task),
+      onClick: () => handleReopenTask(task),
     };
 
     const cancelTaskItem = {
@@ -530,7 +541,7 @@ function TaskList() {
       key: "restore-task",
       title: "Restore Task",
       icon: <IconArrowBackUp size={16} />,
-      onClick: () => restoreTask.mutateAsync(task),
+      onClick: () => handleRestoreTask(task),
     };
 
     const deleteTaskItem = {
@@ -611,7 +622,7 @@ function TaskList() {
     updatedItem.elapsedDuration = TimeSpan.fromHours(
       editedTask.elapsedDuration
     ).totalSeconds;
-
+    handlePageChange(editedTask, TimelyAction.EditTask);
     await editTask.mutateAsync(updatedItem);
   };
 
@@ -835,13 +846,13 @@ function TaskList() {
                 <TaskDetail
                   task={record}
                   tagOptions={tagOptions}
-                  onStarted={startTask.mutateAsync}
-                  onPaused={pauseTask.mutateAsync}
-                  onResumed={resumeTask.mutateAsync}
-                  onFinished={finishTask.mutateAsync}
-                  onReopened={reopenTask.mutateAsync}
+                  onStarted={handleStartTask}
+                  onPaused={handlePauseTask}
+                  onResumed={handleResumeTask}
+                  onFinished={handleFinishTask}
+                  onReopened={handleReopenTask}
                   onCancelled={handleCancelRequested}
-                  onRestored={restoreTask.mutateAsync}
+                  onRestored={handleRestoreTask}
                   onEdited={beginEditingTask}
                   onDeleted={handleDeleteOneRequested}
                   onCommentChanged={refetch}

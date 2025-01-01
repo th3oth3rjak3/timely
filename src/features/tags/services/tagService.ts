@@ -1,20 +1,25 @@
-import {QueryClient, useMutation, useQuery} from "@tanstack/react-query";
-import {invoke} from "@tauri-apps/api/core";
-import {DataTableSortStatus} from "mantine-datatable";
-import {create} from "zustand";
-import {PagedData} from "../../../models/PagedData";
-import {TimelyAction} from "../../../models/TauriAction";
-import {PagedTagData, Tag, TagArray, UserSettings} from "../../../models/ZodModels";
-import {showErrorNotification, showSuccessNotification,} from "../../../utilities/notificationUtilities";
-import {tryMap} from "../../../utilities/nullableUtilities";
-import {TagSearchParams} from "../types/TagSearchParams";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
+import { DataTableSortStatus } from "mantine-datatable";
+import { create } from "zustand";
+import { PagedData } from "../../../models/PagedData";
+import { TimelyAction } from "../../../models/TauriAction";
+import {
+  PagedTagData,
+  Tag,
+  TagArray,
+  UserSettings,
+} from "../../../models/ZodModels";
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from "../../../utilities/notificationUtilities";
+import { tryMap } from "../../../utilities/nullableUtilities";
+import { TagSearchParams } from "../types/TagSearchParams";
 
 export interface TagLike {
   value: string;
 }
-
-type DataFetch = (tag: TagLike, action: TimelyAction) => void;
-type DataFetchMany = (tags: TagLike[]) => void;
 
 export interface TagStore {
   page: number;
@@ -31,15 +36,15 @@ export interface TagStore {
 
 export const useTagStore = create<TagStore>((set) => ({
   page: 1,
-  setPage: (page: number) => set({page}),
+  setPage: (page: number) => set({ page }),
   pageSize: 5,
-  setPageSize: (pageSize: number) => set({pageSize}),
-  sortStatus: {columnAccessor: "value", direction: "asc"},
-  setSortStatus: (sortStatus: DataTableSortStatus<Tag>) => set({sortStatus}),
+  setPageSize: (pageSize: number) => set({ pageSize }),
+  sortStatus: { columnAccessor: "value", direction: "asc" },
+  setSortStatus: (sortStatus: DataTableSortStatus<Tag>) => set({ sortStatus }),
   queryString: null,
-  setQueryString: (queryString: string | null) => set({queryString}),
+  setQueryString: (queryString: string | null) => set({ queryString }),
   selectedTags: [],
-  setSelectedTags: (selectedTags: Tag[]) => set({selectedTags}),
+  setSelectedTags: (selectedTags: Tag[]) => set({ selectedTags }),
 }));
 
 export function tryFindTagByName(tagName: string, options: Tag[]): Tag | null {
@@ -68,7 +73,7 @@ export function useCreateNewTag(
 ) {
   return useMutation({
     mutationFn: async (tagName: string) => {
-      const tag = await invoke("add_new_tag", {newTag: tagName});
+      const tag = await invoke("add_new_tag", { newTag: tagName });
       return tryMap(tag, Tag.parse);
     },
     onSuccess: async () => {
@@ -77,8 +82,8 @@ export function useCreateNewTag(
         userSettings,
         "Successfully added tag."
       );
-      await queryClient.invalidateQueries({queryKey: "getAllTags"});
-      await queryClient.invalidateQueries({queryKey: "searchForTags"});
+      await queryClient.invalidateQueries({ queryKey: "getAllTags" });
+      await queryClient.invalidateQueries({ queryKey: "searchForTags" });
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -87,8 +92,8 @@ export function useCreateNewTag(
 export function useAddTagToTask(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (input: { taskId: number; tag: Tag }) => {
-      const {taskId, tag} = input;
-      await invoke("add_tag_to_task", {taskId, tagId: tag.id});
+      const { taskId, tag } = input;
+      await invoke("add_tag_to_task", { taskId, tagId: tag.id });
     },
     onSuccess: () => {
       showSuccessNotification(
@@ -104,8 +109,8 @@ export function useAddTagToTask(userSettings: UserSettings) {
 export function useRemoveTagFromTask(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (input: { taskId: number; tag: Tag }) => {
-      const {taskId, tag} = input;
-      await invoke("remove_tag_from_task", {taskId, tagId: tag.id});
+      const { taskId, tag } = input;
+      await invoke("remove_tag_from_task", { taskId, tagId: tag.id });
     },
     onSuccess: () => {
       showSuccessNotification(
@@ -120,21 +125,20 @@ export function useRemoveTagFromTask(userSettings: UserSettings) {
 
 export function useDeleteTag(
   userSettings: UserSettings,
-  queryClient: QueryClient,
-  fetchData: DataFetch
+  queryClient: QueryClient
 ) {
   return useMutation({
     mutationFn: async (tag: Tag) => {
-      await invoke("delete_tag", {tagId: tag.id});
+      await invoke("delete_tag", { tagId: tag.id });
     },
-    onSuccess: async (_, tag) => {
+    onSuccess: async () => {
       showSuccessNotification(
         TimelyAction.DeleteTag,
         userSettings,
         "Successfully deleted tag."
       );
-      fetchData({value: tag.value}, TimelyAction.DeleteTag);
-      await queryClient.invalidateQueries({queryKey: ["searchForTags"]});
+      await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
+      await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -142,12 +146,11 @@ export function useDeleteTag(
 
 export function useDeleteManyTags(
   userSettings: UserSettings,
-  fetchData: DataFetchMany,
   queryClient: QueryClient
 ) {
   return useMutation({
     mutationFn: async (tags: Tag[]) => {
-      await invoke("delete_many_tags", {tagIds: tags.map((t) => t.id)});
+      await invoke("delete_many_tags", { tagIds: tags.map((t) => t.id) });
     },
     onSuccess: async (_, tags) => {
       showSuccessNotification(
@@ -157,8 +160,8 @@ export function useDeleteManyTags(
           tags.length === 1 ? "" : "s"
         }.`
       );
-      fetchData(tags.map((t) => ({value: t.value})));
-      await queryClient.invalidateQueries({queryKey: ["searchForTags"]});
+      await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
+      await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -168,7 +171,7 @@ export function useSearchForTags(params: TagSearchParams) {
   return useQuery({
     queryKey: ["searchForTags", params],
     queryFn: async () => {
-      const pagedData = await invoke<PagedData<Tag>>("get_tags", {params});
+      const pagedData = await invoke<PagedData<Tag>>("get_tags", { params });
       if (pagedData) {
         return PagedTagData.parse(pagedData);
       }
@@ -185,18 +188,22 @@ export function useSearchForTags(params: TagSearchParams) {
   });
 }
 
-export function useEditTag(userSettings: UserSettings, fetchData: DataFetch) {
+export function useEditTag(
+  userSettings: UserSettings,
+  queryClient: QueryClient
+) {
   return useMutation({
     mutationFn: async (tag: Tag) => {
-      await invoke("edit_tag", {tag});
+      await invoke("edit_tag", { tag });
     },
-    onSuccess: (_, tag) => {
+    onSuccess: async () => {
       showSuccessNotification(
         TimelyAction.EditTag,
         userSettings,
         "Updated tag successfully."
       );
-      fetchData({value: tag.value}, TimelyAction.EditTag);
+      await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
+      await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
     },
     onError: (error) => showErrorNotification(error),
   });
