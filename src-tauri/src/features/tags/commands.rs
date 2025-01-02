@@ -147,8 +147,6 @@ pub async fn delete_many_tags(tag_ids: Vec<i64>, db: State<'_, Data>) -> TAResul
     let mut builder = QueryBuilder::new("DELETE FROM tags WHERE tags.id");
     add_in_expression(&mut builder, &tag_ids);
 
-    println!("{}", builder.sql());
-
     builder
         .build()
         .execute(&db.pool)

@@ -1,8 +1,8 @@
 [package]
 name = "timely"
 version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+description = "A robust task management application to keep you timely."
+authors = ["Jake Hathaway <jake.d.hathaway@gmail.com>"]
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

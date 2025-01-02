@@ -7,15 +7,23 @@ pub mod query_utils;
 use data_access::*;
 use models::*;
 use std::env;
-use tauri::async_runtime::block_on;
+use tauri::{async_runtime::block_on, Manager};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let pool = block_on(establish_connection_pool());
+    
 
     tauri::Builder::default()
+        .setup(|app| {
+            let path = app.path().app_data_dir().expect("App Data Directory is required to run this application.");
+            if !path.exists() {
+                std::fs::create_dir(&path).expect("Could not create application bundle location in data directory");
+            }
+            let pool = block_on(establish_connection_pool(path));
+            app.manage(Data { pool });
+            Ok(())
+        })
         .plugin(tauri_plugin_shell::init())
-        .manage(Data { pool })
         .invoke_handler(tauri::generate_handler![
             features::tasks::get_tasks,
             features::tasks::create_task,

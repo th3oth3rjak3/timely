@@ -66,7 +66,11 @@ function TagsList() {
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
   const { data: userSettings, isPending: settingsPending } = useUserSettings();
-  const { data: tags, isPending: tagsPending } = useSearchForTags(params);
+  const {
+    data: tags,
+    isPending: tagsPending,
+    refetch: refetchTags,
+  } = useSearchForTags(params);
 
   const loading = useMemo(() => {
     return tagsPending || settingsPending;
@@ -197,9 +201,9 @@ function TagsList() {
       },
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
-      onConfirm: () => {
+      onConfirm: async () => {
         handlePageChange(tag, TimelyAction.DeleteTag);
-        deleteTag.mutateAsync(tag);
+        await deleteTag.mutateAsync(tag);
       },
     });
   }
@@ -224,7 +228,7 @@ function TagsList() {
       },
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
-      onConfirm: () => {
+      onConfirm: async () => {
         if (
           pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)
         ) {
@@ -234,7 +238,7 @@ function TagsList() {
           );
           setPage(lastPage);
         }
-        deleteManyTags.mutateAsync(tagList);
+        await deleteManyTags.mutateAsync(tagList);
       },
     });
   }
@@ -269,6 +273,7 @@ function TagsList() {
 
   const onValidNewTagSubmit = async (newTag: NewTag) => {
     await createTag.mutateAsync(newTag.value);
+    await refetchTags();
     newForm.reset();
     newFormActions.close();
   };
