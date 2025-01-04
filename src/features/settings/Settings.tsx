@@ -1,22 +1,36 @@
-import {ActionIcon, Card, Grid, Group, Select, Slider, Stack, Switch, Table, Tabs, Text,} from "@mantine/core";
-import {useForm} from "@mantine/form";
-import {IconCheck} from "@tabler/icons-react";
-import {useQueryClient} from "@tanstack/react-query";
-import {useEffect, useMemo, useState} from "react";
+import {
+  ActionIcon,
+  Card,
+  Grid,
+  Group,
+  Select,
+  Slider,
+  Stack,
+  Switch,
+  Table,
+  Tabs,
+  Text,
+} from "@mantine/core";
+import { useForm } from "@mantine/form";
+import { IconCheck } from "@tabler/icons-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import MyTooltip from "../../components/MyTooltip";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import {NotificationSetting} from "../../models/ZodModels";
-import {homePageOptions, pageSizeOptions} from "../../state/globalState";
-import {toSelectOptions} from "../../utilities/formUtilities";
-import {toProperCase} from "../../utilities/stringUtilities";
-import {useUpdateUserSettings, useUserSettings} from "./settingsService";
+import { TimeSpan } from "../../models/TimeSpan";
+import { NotificationSetting } from "../../models/ZodModels";
+import { homePageOptions, pageSizeOptions } from "../../state/globalState";
+import { toSelectOptions } from "../../utilities/formUtilities";
+import { createRange } from "../../utilities/rangeUtilities";
+import { toProperCase } from "../../utilities/stringUtilities";
+import { useUpdateUserSettings, useUserSettings } from "./settingsService";
 
 /**
  * Settings page.
  */
 function Settings() {
-  const {data: userSettings} = useUserSettings();
+  const { data: userSettings } = useUserSettings();
   const queryClient = useQueryClient();
   const updateUserSettings = useUpdateUserSettings(queryClient);
 
@@ -42,26 +56,28 @@ function Settings() {
     );
   }, [notificationSettings]);
 
-  const notificationSettingTableRows = notificationSettings.map((setting) => <Table.Tr key={setting.name}>
-    <Table.Td>{setting.name}</Table.Td>
-    <Table.Td>
-      <Switch
-        checked={setting.enabled}
-        onChange={(event) => {
-          let found = notificationSettings.find((s) => s.id === setting.id);
-          if (found === undefined) return;
-          found = {...found};
-          found.enabled = event.currentTarget.checked;
-          const updated = [
-            ...notificationSettings.filter((s) => s.id !== found.id),
-            found,
-          ];
-          updated.sort((a, b) => a.name.localeCompare(b.name));
-          setNotificationSettings(updated);
-        }}
-      />
-    </Table.Td>
-  </Table.Tr>);
+  const notificationSettingTableRows = notificationSettings.map((setting) => (
+    <Table.Tr key={setting.name}>
+      <Table.Td>{setting.name}</Table.Td>
+      <Table.Td>
+        <Switch
+          checked={setting.enabled}
+          onChange={(event) => {
+            let found = notificationSettings.find((s) => s.id === setting.id);
+            if (found === undefined) return;
+            found = { ...found };
+            found.enabled = event.currentTarget.checked;
+            const updated = [
+              ...notificationSettings.filter((s) => s.id !== found.id),
+              found,
+            ];
+            updated.sort((a, b) => a.name.localeCompare(b.name));
+            setNotificationSettings(updated);
+          }}
+        />
+      </Table.Td>
+    </Table.Tr>
+  ));
 
   useEffect(() => {
     setNotificationSettings(userSettings?.notificationSettings ?? []);
@@ -75,6 +91,9 @@ function Settings() {
     gradientTo: string;
     gradientDegrees?: number;
     navbarOpened: string;
+    defaultTimerHours: string;
+    defaultTimerMinutes: string;
+    defaultTimerSeconds: string;
   }
 
   const form = useForm<FormUserSettings>({
@@ -88,6 +107,15 @@ function Settings() {
       gradientTo: colorPalette.gradient.to,
       gradientDegrees: colorPalette.gradient.deg,
       navbarOpened: userSettings.navbarOpened.toString(),
+      defaultTimerHours: TimeSpan.fromSeconds(
+        userSettings.defaultTimer
+      ).hours.toString(),
+      defaultTimerMinutes: TimeSpan.fromSeconds(
+        userSettings.defaultTimer
+      ).minutes.toString(),
+      defaultTimerSeconds: TimeSpan.fromSeconds(
+        userSettings.defaultTimer
+      ).seconds.toString(),
     },
     initialDirty: {
       pageSize: false,
@@ -97,6 +125,9 @@ function Settings() {
       gradientTo: false,
       gradientDegrees: false,
       navbarOpened: false,
+      defaultTimerSeconds: false,
+      defaultTimerHours: false,
+      defaultTimerMinutes: false,
     },
     initialTouched: {
       pageSize: false,
@@ -106,6 +137,9 @@ function Settings() {
       gradientTo: false,
       gradientDegrees: false,
       navbarOpened: false,
+      defaultTimerSeconds: false,
+      defaultTimerHours: false,
+      defaultTimerMinutes: false,
     },
   });
 
@@ -118,6 +152,11 @@ function Settings() {
       gradientDegrees: gradientDegrees ?? 0,
       navbarOpened: settings.navbarOpened === "true",
       notificationSettings: notificationSettings,
+      defaultTimer: TimeSpan.add(
+        TimeSpan.fromHours(Number(settings.defaultTimerHours)),
+        TimeSpan.fromMinutes(Number(settings.defaultTimerMinutes)),
+        TimeSpan.fromSeconds(Number(settings.defaultTimerSeconds))
+      ).totalSeconds,
     };
     await updateUserSettings.mutateAsync(userSettings);
     form.resetDirty();
@@ -198,7 +237,7 @@ function Settings() {
                 color={opt}
                 onClick={() => setGradientTo(opt)}
               >
-                {gradientTo === opt ? <IconCheck size={24}/> : null}
+                {gradientTo === opt ? <IconCheck size={24} /> : null}
               </ActionIcon>
             </MyTooltip>
           ))}
@@ -215,9 +254,9 @@ function Settings() {
       value={gradientDegrees}
       label={(value) => `${value}°`}
       marks={[
-        {value: 90, label: "90°"},
-        {value: 180, label: "180°"},
-        {value: 270, label: "270°"},
+        { value: 90, label: "90°" },
+        { value: 180, label: "180°" },
+        { value: 270, label: "270°" },
       ]}
       step={10}
       mb="sm"
@@ -257,11 +296,35 @@ function Settings() {
                     allowDeselect={false}
                   />
                 </Grid.Col>
-                <Grid.Col span={6}>
+                <Grid.Col span={12}>
                   <Select
                     label="Start With Navbar Open"
                     data={toSelectOptions([true, false], ["True", "False"])}
                     {...form.getInputProps("navbarOpened")}
+                    allowDeselect={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <Select
+                    label="Timer Hours"
+                    data={createRange(0, 23).map((v) => v.toString())}
+                    {...form.getInputProps("defaultTimerHours")}
+                    allowDeselect={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <Select
+                    label="Timer Minutes"
+                    data={createRange(0, 59).map((v) => v.toString())}
+                    {...form.getInputProps("defaultTimerMinutes")}
+                    allowDeselect={false}
+                  />
+                </Grid.Col>
+                <Grid.Col span={4}>
+                  <Select
+                    label="Timer Seconds"
+                    data={createRange(0, 59).map((v) => v.toString())}
+                    {...form.getInputProps("defaultTimerSeconds")}
                     allowDeselect={false}
                   />
                 </Grid.Col>
@@ -315,7 +378,7 @@ function Settings() {
                         setShowGradientOptions(false);
                       }
                       setControlledVariant(value ?? "");
-                      form.setValues({buttonVariant: value ?? ""});
+                      form.setValues({ buttonVariant: value ?? "" });
                     }}
                     value={controlledVariant}
                   />

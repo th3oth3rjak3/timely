@@ -119,6 +119,7 @@ export const UserSettings = z.object({
   gradientDegrees: z.number(),
   navbarOpened: z.boolean(),
   notificationSettings: z.array(NotificationSetting),
+  defaultTimer: z.number(),
 });
 
 export type UserSettings = z.infer<typeof UserSettings>;

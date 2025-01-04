@@ -1,9 +1,12 @@
-import {QueryClient, useMutation, useQuery} from "@tanstack/react-query";
-import {invoke} from "@tauri-apps/api/core";
-import {TimelyAction} from "../../models/TauriAction";
-import {UserSettings} from "../../models/ZodModels";
-import {showErrorNotification, showSuccessNotification,} from "../../utilities/notificationUtilities";
-import {tryMap} from "../../utilities/nullableUtilities";
+import { QueryClient, useMutation, useQuery } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
+import { TimelyAction } from "../../models/TauriAction";
+import { UserSettings } from "../../models/ZodModels";
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from "../../utilities/notificationUtilities";
+import { tryMap } from "../../utilities/nullableUtilities";
 
 const defaultUserSettings = {
   homePage: "",
@@ -15,6 +18,7 @@ const defaultUserSettings = {
   gradientDegrees: 0,
   navbarOpened: true,
   notificationSettings: [],
+  defaultTimer: 0,
 };
 
 /** Determine if the user settings have actually been gotten from the database yet. */
@@ -37,7 +41,7 @@ export function useUserSettings() {
 export function useUpdateUserSettings(queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (userSettings: UserSettings): Promise<void> => {
-      await invoke("update_user_settings", {settings: {...userSettings}});
+      await invoke("update_user_settings", { settings: { ...userSettings } });
     },
     onSuccess: async (_, variables) => {
       showSuccessNotification(
@@ -45,7 +49,7 @@ export function useUpdateUserSettings(queryClient: QueryClient) {
         variables,
         "Successfully updated settings."
       );
-      await queryClient.invalidateQueries({queryKey: ["userSettings"]});
+      await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
     },
     onError: (error) => {
       showErrorNotification(error);
