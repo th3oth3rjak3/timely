@@ -62,7 +62,8 @@ pub async fn update_user_settings(
             gradient_to = ?,
             gradient_from = ?,
             gradient_degrees = ?,
-            navbar_opened = ?
+            navbar_opened = ?,
+            default_timer = ?
             WHERE id = ?
         "#,
         found.page_size,
@@ -73,6 +74,7 @@ pub async fn update_user_settings(
         found.gradient_from,
         found.gradient_degrees,
         found.navbar_opened,
+        found.default_timer,
         found.id
     )
     .execute(&db.pool)
