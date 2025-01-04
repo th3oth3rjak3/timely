@@ -1,7 +1,11 @@
-# Tauri + React + Typescript
+# Timely
+An application to help you manage tasks more efficiently than your post-it note collection.
 
-This template should help get you started developing with Tauri, React and Typescript in Vite.
+## Features
+- Task Management
+- Automatic Time Tracking
+- Tags to organize work
+- Metrics to see time spent on tagged items.
+- Lots of user settings.
 
-## Recommended IDE Setup
-
-- [VS Code](https://code.visualstudio.com/) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer)
+  
