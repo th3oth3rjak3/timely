@@ -28,25 +28,26 @@ const defaultHours = 1;
 const defaultMinutes = 0;
 const defaultSeconds = 0;
 
-let defaultTime = TimeSpan.add(
+const defaultTimer = TimeSpan.add(
   TimeSpan.fromHours(defaultHours),
   TimeSpan.fromMinutes(defaultMinutes),
   TimeSpan.fromSeconds(defaultSeconds)
 );
 
-let initialTimer = TimeSpan.fromSeconds(defaultTime.totalSeconds);
+let initialTimer = TimeSpan.fromSeconds(defaultTimer.totalSeconds);
+let remainingTime = initialTimer.totalSeconds;
 
 const defaultMessage = "Beep beep, time has run out.";
 
-const existingTimerKey = "saved_timer";
-const existingInitialTimerKey = "saved_timer_initial_value";
+const existingTimeKey = "saved_timer";
+const existingInitialTimeKey = "saved_timer_initial_value";
 
-const existingTimer = localStorage.getItem(existingTimerKey);
-const existingInitialTimer = localStorage.getItem(existingInitialTimerKey);
+const existingTime = localStorage.getItem(existingTimeKey);
+const existingInitialTime = localStorage.getItem(existingInitialTimeKey);
 
-if (existingTimer !== null && existingInitialTimer !== null) {
-  defaultTime = TimeSpan.fromSeconds(Number(existingTimer));
-  initialTimer = TimeSpan.fromSeconds(Number(existingInitialTimer));
+if (existingTime !== null && existingInitialTime !== null) {
+  remainingTime = Number(existingTime);
+  initialTimer = TimeSpan.fromSeconds(Number(existingInitialTime));
   showInfoNotification(
     "Your previous timer has been restored and is currently paused."
   );
@@ -54,18 +55,18 @@ if (existingTimer !== null && existingInitialTimer !== null) {
 
 export const useTimerStore = create<TimerStore>((set, get) => ({
   initialTime: initialTimer.totalSeconds,
-  time: defaultTime.totalSeconds,
+  time: remainingTime,
   isActive: false,
   isPaused: false,
   message: defaultMessage,
   playingSound: false,
-  hours: defaultHours,
-  minutes: defaultMinutes,
-  seconds: defaultSeconds,
+  hours: initialTimer.hours,
+  minutes: initialTimer.minutes,
+  seconds: initialTimer.seconds,
   startTimer: () => {
     set({ isActive: true, isPaused: false });
-    localStorage.setItem(existingTimerKey, get().time.toString());
-    localStorage.setItem(existingInitialTimerKey, get().initialTime.toString());
+    localStorage.setItem(existingTimeKey, get().time.toString());
+    localStorage.setItem(existingInitialTimeKey, get().initialTime.toString());
   },
   pauseTimer: () => {
     set({ isPaused: true, isActive: false });
@@ -78,27 +79,27 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
       playingSound: false,
     });
 
-    localStorage.removeItem(existingTimerKey);
-    localStorage.removeItem(existingInitialTimerKey);
+    localStorage.removeItem(existingTimeKey);
+    localStorage.removeItem(existingInitialTimeKey);
   },
   resetToDefault: () => {
     set({
-      initialTime: defaultTime.totalSeconds,
-      time: defaultTime.totalSeconds,
+      initialTime: defaultTimer.totalSeconds,
+      time: defaultTimer.totalSeconds,
       message: defaultMessage,
       hours: defaultHours,
       minutes: defaultMinutes,
       seconds: defaultSeconds,
     });
 
-    localStorage.removeItem(existingTimerKey);
-    localStorage.removeItem(existingInitialTimerKey);
+    localStorage.removeItem(existingTimeKey);
+    localStorage.removeItem(existingInitialTimeKey);
   },
   decrementTime: () => {
     const time = get().time;
     if (time > 0) {
       set({ time: time - 1 });
-      localStorage.setItem(existingTimerKey, (time - 1).toString());
+      localStorage.setItem(existingTimeKey, (time - 1).toString());
     }
   },
   setIsPlaying: (playing) => {
