@@ -13,6 +13,7 @@ pub struct UpdateUserSettings {
     pub gradient_degrees: i64,
     pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
+    pub default_timer: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -27,6 +28,7 @@ pub struct UserSetting {
     pub gradient_from: String,
     pub gradient_degrees: i64,
     pub navbar_opened: bool,
+    pub default_timer: i64,
 }
 
 impl UserSetting {
@@ -41,6 +43,7 @@ impl UserSetting {
             gradient_from: update.gradient_from,
             gradient_degrees: update.gradient_degrees,
             navbar_opened: update.navbar_opened,
+            default_timer: update.default_timer,
         }
     }
 }
@@ -58,6 +61,7 @@ impl From<UserSetting> for UserSettingRead {
             gradient_degrees: value.gradient_degrees,
             notification_settings: Vec::new(),
             navbar_opened: value.navbar_opened,
+            default_timer: value.default_timer,
         }
     }
 }
@@ -74,6 +78,7 @@ impl From<UserSettingRead> for UserSetting {
             gradient_from: value.gradient_from,
             gradient_degrees: value.gradient_degrees,
             navbar_opened: value.navbar_opened,
+            default_timer: value.default_timer,
         }
     }
 }
@@ -91,6 +96,7 @@ pub struct UserSettingRead {
     pub gradient_degrees: i64,
     pub navbar_opened: bool,
     pub notification_settings: Vec<NotificationSetting>,
+    pub default_timer: i64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
