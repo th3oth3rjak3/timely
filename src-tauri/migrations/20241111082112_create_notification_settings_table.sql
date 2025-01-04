@@ -25,4 +25,7 @@ VALUES (1, 1, 'Add New Tag', 1),
     (17, 1, 'Resume Task', 1),
     (18, 1, 'Add New Comment', 1),
     (19, 1, 'Edit Comment', 1),
-    (20, 1, 'Delete Comment', 1);
+    (20, 1, 'Delete Comment', 1),
+    (21, 1, 'Edit Work History', 1),
+    (22, 1, 'Add New Work History', 1),
+    (23, 1, 'Delete Work History', 1);
