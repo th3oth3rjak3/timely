@@ -133,7 +133,13 @@ export const useTimerStore = create<TimerStore>((set, get) => ({
   setDefaultTimer: (timer) => {
     set({ defaultTimer: timer });
     if (!get().isActive && !get().isPaused) {
-      set({ initialTime: timer.totalSeconds, time: timer.totalSeconds });
+      set({
+        initialTime: timer.totalSeconds,
+        time: timer.totalSeconds,
+        hours: timer.hours,
+        minutes: timer.minutes,
+        seconds: timer.seconds,
+      });
     }
   },
 }));
