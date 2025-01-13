@@ -42,6 +42,17 @@ function App() {
     setDefaultTimer(TimeSpan.fromSeconds(userSettings.defaultTimer));
   }, [userSettings]);
 
+  useEffect(() => {
+    // Disable the right click menu to hide browser things.
+    if (import.meta.env.PROD) {
+      window.onload = function () {
+        document.addEventListener("contextmenu", (event) => {
+          event.preventDefault();
+        });
+      };
+    }
+  }, []);
+
   const router = useMemo(() => {
     if (!isDefaultSettings(userSettings)) {
       return createBrowserRouter([
