@@ -8,7 +8,7 @@ import {EditTaskWorkHistory, NewTaskWorkHistory} from "../types/Task";
 export function useAddWorkHistory(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (history: NewTaskWorkHistory) => {
-      await invoke("add_task_work_history", {newWorkHistory: history});
+      await invoke("add_task_work_history", {newTaskWorkHistory: history});
     },
     onSuccess: () => {
       showSuccessNotification(
