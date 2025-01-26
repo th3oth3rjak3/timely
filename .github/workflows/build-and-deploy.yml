@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write # Grants write access to create releases and modify repository contents
+
 jobs:
   build:
     name: Build for ${{ matrix.os }}
@@ -30,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22"
+          node-version: "22" # Updated to Node.js version 22
 
       # Install dependencies on Ubuntu
       - name: Install Ubuntu Dependencies
@@ -95,10 +98,17 @@ jobs:
         with:
           path: ./artifacts
 
+      # Rename and organize artifacts
+      - name: Rename and Organize Artifacts
+        run: |
+          mv ./artifacts/timely-ubuntu-22.04.zip ./timely-linux.zip || true
+          mv ./artifacts/timely-macos-latest.zip ./timely-macos.zip || true
+          mv ./artifacts/timely-windows-latest.zip ./timely-windows.zip || true
+
       # Create Release
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
-          files: ./artifacts/*.zip
+          files: "*.zip"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
