@@ -1,0 +1,82 @@
+name: Build and Release Timely
+
+on:
+  push:
+    tags:
+      - "v*.*.*" # Trigger on version tags like v1.0.0
+
+jobs:
+  build:
+    name: Build for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-latest, windows-latest]
+
+    steps:
+      # Checkout code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Set up Rust environment
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      # Install Node.js (for Tauri frontend)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "22" # Adjust to match your project
+
+      # Install dependencies
+      - name: Install Dependencies
+        run: npm install
+
+      # Install Tauri CLI
+      - name: Install Tauri CLI
+        run: npm install --global @tauri-apps/cli
+
+      # Build Tauri application
+      - name: Build Timely
+        run: npm run tauri build
+
+      # Archive build artifacts
+      - name: Archive Artifacts
+        run: |
+          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+            zip -r timely-windows.zip src-tauri/target/release/bundle/msi
+          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+            zip -r timely-macos.zip src-tauri/target/release/bundle/dmg
+          else
+            zip -r timely-linux.zip src-tauri/target/release/bundle/appimage
+          fi
+
+      # Upload build artifacts
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: timely-${{ matrix.os }}
+          path: "*.zip"
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      # Download all build artifacts
+      - name: Download Artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: ./artifacts
+
+      # Create GitHub Release
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./artifacts/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
