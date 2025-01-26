@@ -1,6 +1,6 @@
 [package]
 name = "timely"
-version = "0.1.3"
+version = "0.1.4"
 description = "A robust task management application to keep you timely."
 authors = ["Jake Hathaway <jake.d.hathaway@gmail.com>"]
 edition = "2021"
