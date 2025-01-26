@@ -59,16 +59,23 @@ jobs:
       - name: Build Timely
         run: npm run tauri build
 
-      # Archive build artifacts
-      - name: Archive Artifacts
+      # Archive Windows artifacts
+      - name: Archive Windows Artifacts
+        if: runner.os == 'Windows'
         run: |
-          if [ "${{ matrix.os }}" == "windows-latest" ]; then
-            zip -r timely-windows.zip src-tauri/target/release/bundle/msi
-          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-            zip -r timely-macos.zip src-tauri/target/release/bundle/dmg
-          else
-            zip -r timely-linux.zip src-tauri/target/release/bundle/appimage
-          fi
+          Compress-Archive -Path src-tauri/target/release/bundle/msi/* -DestinationPath timely-windows.zip
+
+      # Archive macOS artifacts
+      - name: Archive macOS Artifacts
+        if: runner.os == 'macOS'
+        run: |
+          zip -r timely-macos.zip src-tauri/target/release/bundle/dmg
+
+      # Archive Linux artifacts
+      - name: Archive Linux Artifacts
+        if: runner.os == 'Linux'
+        run: |
+          zip -r timely-linux.zip src-tauri/target/release/bundle/appimage
 
       # Upload build artifacts
       - name: Upload Artifacts
@@ -80,7 +87,7 @@ jobs:
   release:
     name: Create GitHub Release
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       # Download all build artifacts
       - name: Download Artifacts
