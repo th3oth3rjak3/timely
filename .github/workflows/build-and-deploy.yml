@@ -47,9 +47,9 @@ jobs:
       # Archive build artifacts
       - name: Archive Artifacts
         run: |
-          if [[ "${{ matrix.os }}" == "windows-latest" ]]; then
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
             zip -r timely-windows.zip src-tauri/target/release/bundle/msi
-          elif [[ "${{ matrix.os }}" == "macos-latest" ]]; then
+          elif [ "${{ matrix.os }}" == "macos-latest" ]; then
             zip -r timely-macos.zip src-tauri/target/release/bundle/dmg
           else
             zip -r timely-linux.zip src-tauri/target/release/bundle/appimage
