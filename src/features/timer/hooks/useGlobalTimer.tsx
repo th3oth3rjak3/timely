@@ -1,8 +1,8 @@
-import {useEffect, useRef} from "react";
+import { useEffect, useMemo, useState } from "react";
 import useColorPalette from "../../../hooks/useColorPalette";
-import {showTimerNotification} from "../../../utilities/notificationUtilities";
-import {useUserSettings} from "../../settings/settingsService";
-import {useTimerStore} from "../services/timerService";
+import { showTimerNotification } from "../../../utilities/notificationUtilities";
+import { useUserSettings } from "../../settings/settingsService";
+import { useTimerStore } from "../services/timerService";
 
 const useGlobalTimer = () => {
   const time = useTimerStore((store) => store.time);
@@ -12,11 +12,24 @@ const useGlobalTimer = () => {
   const decrementTime = useTimerStore((store) => store.decrementTime);
   const setIsPlaying = useTimerStore((store) => store.setIsPlaying);
   const resetTimer = useTimerStore((store) => store.resetTimer);
-  const {data: userSettings} = useUserSettings();
+  const { data: userSettings } = useUserSettings();
   const colorPalette = useColorPalette();
 
   // Reference to persist the Audio object across renders
-  const sound = useRef(new Audio("/beep.mp3")).current;
+  const [soundSource, setSoundSource] = useState("");
+  const sound = useMemo(() => {
+    return new Audio(`data:audio/mpeg;base64,${soundSource}`);
+  }, [soundSource]);
+
+  useEffect(() => {
+    fetch("/beep.txt")
+      .then((response) => {
+        if (response.ok) {
+          return response.text();
+        }
+      })
+      .then((text) => setSoundSource(text ?? ""));
+  }, []);
 
   useEffect(() => {
     let beepInterval: number | undefined;

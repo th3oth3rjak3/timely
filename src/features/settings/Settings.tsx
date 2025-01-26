@@ -25,6 +25,8 @@ import { toSelectOptions } from "../../utilities/formUtilities";
 import { createRange } from "../../utilities/rangeUtilities";
 import { toProperCase } from "../../utilities/stringUtilities";
 import { useUpdateUserSettings, useUserSettings } from "./settingsService";
+import { useTagStore } from "../tags/services/tagService";
+import { useTaskStore } from "../tasks/services/tasksService";
 
 /**
  * Settings page.
@@ -32,7 +34,12 @@ import { useUpdateUserSettings, useUserSettings } from "./settingsService";
 function Settings() {
   const { data: userSettings } = useUserSettings();
   const queryClient = useQueryClient();
-  const updateUserSettings = useUpdateUserSettings(queryClient);
+  const { setPage: setTagPage } = useTagStore();
+  const { setPage: setTaskPage } = useTaskStore();
+  const updateUserSettings = useUpdateUserSettings(queryClient, () => {
+    setTagPage(1);
+    setTaskPage(1);
+  });
 
   const colorPalette = useColorPalette();
   const [showGradientOptions, setShowGradientOptions] = useState(

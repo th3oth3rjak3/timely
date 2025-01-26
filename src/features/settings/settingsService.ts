@@ -38,7 +38,10 @@ export function useUserSettings() {
   });
 }
 
-export function useUpdateUserSettings(queryClient: QueryClient) {
+export function useUpdateUserSettings(
+  queryClient: QueryClient,
+  action: () => void
+) {
   return useMutation({
     mutationFn: async (userSettings: UserSettings): Promise<void> => {
       await invoke("update_user_settings", { settings: { ...userSettings } });
@@ -50,6 +53,7 @@ export function useUpdateUserSettings(queryClient: QueryClient) {
         "Successfully updated settings."
       );
       await queryClient.invalidateQueries({ queryKey: ["userSettings"] });
+      action();
     },
     onError: (error) => {
       showErrorNotification(error);
