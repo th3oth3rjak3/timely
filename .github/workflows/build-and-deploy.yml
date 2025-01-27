@@ -17,11 +17,9 @@ jobs:
         os: [ubuntu-22.04, macos-latest, windows-latest]
 
     steps:
-      # Checkout code
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      # Set up Rust environment
       - name: Setup Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -29,17 +27,14 @@ jobs:
           toolchain: stable
           override: true
 
-      # Install Node.js (for Tauri frontend)
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: "22"
 
-      # Install dependencies on Ubuntu
       - name: Install Ubuntu Dependencies
         if: runner.os == 'Linux'
         run: |
-          echo "Updating and installing Ubuntu dependencies..."
           sudo apt update
           sudo apt install -y libwebkit2gtk-4.1-dev \
                              build-essential \
@@ -50,86 +45,63 @@ jobs:
                              libssl-dev \
                              libayatana-appindicator3-dev \
                              librsvg2-dev
-          echo "Ubuntu dependencies installed successfully."
 
-      # Install dependencies
       - name: Install Dependencies
-        run: |
-          echo "Installing Node.js dependencies..."
-          npm install
-          echo "Node.js dependencies installed successfully."
+        run: npm install
 
-      # Install Tauri CLI
       - name: Install Tauri CLI
-        run: |
-          echo "Installing Tauri CLI globally..."
-          npm install --global @tauri-apps/cli
-          echo "Tauri CLI installed successfully."
+        run: npm install --global @tauri-apps/cli
 
-      # Build Tauri application
       - name: Build Timely
-        run: |
-          echo "Building the Tauri application..."
-          npm run tauri build
-          echo "Build completed."
+        run: npm run tauri build
 
-      # Archive Windows artifacts
       - name: Archive Windows Artifacts
         if: runner.os == 'Windows'
         run: |
           echo "Archiving Windows artifacts..."
           Compress-Archive -Path src-tauri/target/release/bundle/msi/* -DestinationPath timely-windows.zip
-          echo "Windows artifacts archived: timely-windows.zip"
 
-      # Archive macOS artifacts
       - name: Archive macOS Artifacts
         if: runner.os == 'macOS'
         run: |
           echo "Archiving macOS artifacts..."
           zip -r timely-macos.zip src-tauri/target/release/bundle/dmg
-          echo "macOS artifacts archived: timely-macos.zip"
 
-      # Archive Linux artifacts
       - name: Archive Linux Artifacts
         if: runner.os == 'Linux'
         run: |
           echo "Archiving Linux artifacts..."
           zip -r timely-linux.zip src-tauri/target/release/bundle/appimage
-          echo "Linux artifacts archived: timely-linux.zip"
 
-      # Upload build artifacts
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: timely-${{ matrix.os }}
-          path: "timely-*.zip"
-        continue-on-error: true # Prevent failure if no artifacts are uploaded
+          path: timely-*.zip
 
   release:
     name: Create GitHub Release
     needs: build
     runs-on: ubuntu-22.04
     steps:
-      # Log the current working directory and files
-      - name: Log Current Directory
-        run: |
-          echo "Current working directory:"
-          pwd
-          echo "Listing files in the current directory:"
-          ls -al
-
-      # Download and log artifact locations
       - name: Download Artifacts
         uses: actions/download-artifact@v4
         with:
           path: ./artifacts
 
-      - name: Log Artifacts Directory
+      - name: Compress Downloaded Artifacts
         run: |
-          echo "Artifacts downloaded to ./artifacts:"
-          ls -al ./artifacts
+          echo "Compressing downloaded artifacts..."
+          cd ./artifacts
+          for dir in *; do
+            if [ -d "$dir" ]; then
+              echo "Compressing $dir..."
+              zip -r "${dir}.zip" "$dir"
+            fi
+          done
+          echo "Compressed artifacts:"
+          ls -al
 
-      # Create Release
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
