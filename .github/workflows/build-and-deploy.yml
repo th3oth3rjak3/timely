@@ -102,7 +102,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: timely-${{ matrix.os }}
-          path: "*.zip"
+          path: "timely-*.zip"
         continue-on-error: true # Prevent failure if no artifacts are uploaded
 
   release:
