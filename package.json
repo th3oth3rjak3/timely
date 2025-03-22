@@ -21,7 +21,7 @@
     "@tabler/icons-react": "3.17.0",
     "@tanstack/react-query": "^5.62.8",
     "@tanstack/react-query-devtools": "^5.62.8",
-    "@tauri-apps/api": ">=2.0.0",
+    "@tauri-apps/api": "^2.4.0",
     "@tauri-apps/plugin-shell": ">=2.0.0",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
@@ -40,7 +40,7 @@
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@tanstack/eslint-plugin-query": "^5.62.1",
-    "@tauri-apps/cli": ">=2.0.0",
+    "@tauri-apps/cli": "^2.4.0",
     "@types/lodash": "^4.17.10",
     "@types/react": "^18.2.15",
     "@types/react-dom": "^18.2.7",
