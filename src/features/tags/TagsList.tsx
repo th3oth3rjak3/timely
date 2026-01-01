@@ -1,23 +1,7 @@
-import {
-  Button,
-  Group,
-  Modal,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-  TooltipFloating,
-} from "@mantine/core";
+import { Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconEdit,
-  IconPlus,
-  IconSearch,
-  IconTrash,
-  IconTrashX,
-  IconX,
-} from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconSearch, IconTrash, IconTrashX, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useRef } from "react";
@@ -66,7 +50,7 @@ function TagsList() {
       pageSize,
       queryString ?? undefined,
       sortStatus.columnAccessor,
-      sortStatus.direction,
+      sortStatus.direction
     );
   }, [page, pageSize, queryString, sortStatus]);
 
@@ -75,11 +59,7 @@ function TagsList() {
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
   const { data: userSettings, isPending: settingsPending } = useUserSettings();
-  const {
-    data: tags,
-    isPending: tagsPending,
-    refetch: refetchTags,
-  } = useSearchForTags(params);
+  const { data: tags, isPending: tagsPending, refetch: refetchTags } = useSearchForTags(params);
 
   const loading = useMemo(() => {
     return tagsPending || settingsPending;
@@ -153,7 +133,7 @@ function TagsList() {
     tag: TagLike,
     action: TimelyAction,
     recordCount: number,
-    tagSearchParams: TagSearchParams,
+    tagSearchParams: TagSearchParams
   ): boolean => {
     const remainder = recordCount % tagSearchParams.pageSize;
     const lastItemOnThePage = remainder === 1 && tagSearchParams.page > 1;
@@ -175,7 +155,7 @@ function TagsList() {
   const pageShouldChangeAfterDeleteMany = (
     tags: TagLike[],
     recordCount: number,
-    tagSearchParams: TagSearchParams,
+    tagSearchParams: TagSearchParams
   ): boolean => {
     const remainder = recordCount % tagSearchParams.pageSize;
     return remainder <= tags.length && tagSearchParams.page > 1;
@@ -195,9 +175,7 @@ function TagsList() {
   function handleDeleteOneRequested(tag: Tag) {
     modals.openConfirmModal({
       title: "Delete Tag",
-      children: (
-        <Text>{`Are you sure you want to delete tag: ${tag.value}?`}</Text>
-      ),
+      children: <Text>{`Are you sure you want to delete tag: ${tag.value}?`}</Text>,
       confirmProps: {
         variant: colorPalette.variant,
         color: colorPalette.colorName,
@@ -238,13 +216,8 @@ function TagsList() {
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
       onConfirm: async () => {
-        if (
-          pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)
-        ) {
-          const lastPage = findLastPage(
-            tags.totalItemCount - tagList.length,
-            pageSize,
-          );
+        if (pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)) {
+          const lastPage = findLastPage(tags.totalItemCount - tagList.length, pageSize);
           setPage(lastPage);
         }
         await deleteManyTags.mutateAsync(tagList);
@@ -383,8 +356,7 @@ function TagsList() {
             paginationSize="xs"
             paginationActiveBackgroundColor={colorPalette.background}
             paginationActiveTextColor={
-              userSettings?.buttonVariant === "filled" ||
-              userSettings?.buttonVariant === "gradient"
+              userSettings?.buttonVariant === "filled" || userSettings?.buttonVariant === "gradient"
                 ? "white"
                 : colorPalette.color
             }

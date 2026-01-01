@@ -34,8 +34,8 @@ export interface TaskDetailParams {
   onHistoryChanged: () => void;
 }
 
-function TaskDetail(props: TaskDetailParams): JSX.Element {
-  const buttons = (statusDescription: string): JSX.Element => {
+function TaskDetail(props: TaskDetailParams) {
+  const buttons = (statusDescription: string) => {
     const status = statusDescription;
 
     const startButton = (
@@ -196,12 +196,7 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
   return (
     <Grid p="sm">
       <Grid.Col span={12}>
-        <Textarea
-          label="Description"
-          value={props.task.description}
-          autosize
-          readOnly
-        />
+        <Textarea label="Description" value={props.task.description} autosize readOnly />
       </Grid.Col>
       <Grid.Col span={4}>
         <TextInput value={props.task.status} label="Status" readOnly />
@@ -279,16 +274,10 @@ function TaskDetail(props: TaskDetailParams): JSX.Element {
         }
       </Grid.Col>
       <Grid.Col span={12}>
-        <CommentDetails
-          task={props.task}
-          onCommentChanged={props.onCommentChanged}
-        />
+        <CommentDetails task={props.task} onCommentChanged={props.onCommentChanged} />
       </Grid.Col>
       <Grid.Col span={12}>
-        <TaskWorkHistoryDetails
-          task={props.task}
-          onHistoryChanged={props.onHistoryChanged}
-        />
+        <TaskWorkHistoryDetails task={props.task} onHistoryChanged={props.onHistoryChanged} />
       </Grid.Col>
       <Grid.Col span={12}>
         <Group gap={6}>{buttons(props.task.status)}</Group>

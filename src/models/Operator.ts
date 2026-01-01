@@ -16,4 +16,3 @@ export enum Operator {
   Before = "Before",
   After = "After",
 }
-

@@ -43,9 +43,7 @@ export function shouldShowSuccessNotification(
   userSettings: UserSettings
 ): boolean {
   const settingName = actionType.toString();
-  const notificationSetting = userSettings.notificationSettings.find(
-    (s) => s.name === settingName
-  );
+  const notificationSetting = userSettings.notificationSettings.find((s) => s.name === settingName);
   return notificationSetting === undefined || notificationSetting.enabled;
 }
 

@@ -45,21 +45,16 @@ function Settings() {
   const [showGradientOptions, setShowGradientOptions] = useState(
     colorPalette.variant === "gradient"
   );
-  const [gradientDegrees, setGradientDegrees] = useState(
-    colorPalette.gradient.deg
-  );
+  const [gradientDegrees, setGradientDegrees] = useState(colorPalette.gradient.deg);
   const [gradientTo, setGradientTo] = useState(colorPalette.gradient.to);
-  const [controlledVariant, setControlledVariant] = useState(
-    colorPalette.variant
+  const [controlledVariant, setControlledVariant] = useState(colorPalette.variant);
+  const [notificationSettings, setNotificationSettings] = useState<NotificationSetting[]>(
+    userSettings.notificationSettings
   );
-  const [notificationSettings, setNotificationSettings] = useState<
-    NotificationSetting[]
-  >(userSettings.notificationSettings);
 
   const notificationSettingsDirty = useMemo(() => {
     return (
-      JSON.stringify(userSettings.notificationSettings) !==
-      JSON.stringify(notificationSettings)
+      JSON.stringify(userSettings.notificationSettings) !== JSON.stringify(notificationSettings)
     );
   }, [notificationSettings]);
 
@@ -74,10 +69,7 @@ function Settings() {
             if (found === undefined) return;
             found = { ...found };
             found.enabled = event.currentTarget.checked;
-            const updated = [
-              ...notificationSettings.filter((s) => s.id !== found.id),
-              found,
-            ];
+            const updated = [...notificationSettings.filter((s) => s.id !== found.id), found];
             updated.sort((a, b) => a.name.localeCompare(b.name));
             setNotificationSettings(updated);
           }}
@@ -114,15 +106,9 @@ function Settings() {
       gradientTo: colorPalette.gradient.to,
       gradientDegrees: colorPalette.gradient.deg,
       navbarOpened: userSettings.navbarOpened.toString(),
-      defaultTimerHours: TimeSpan.fromSeconds(
-        userSettings.defaultTimer
-      ).hours.toString(),
-      defaultTimerMinutes: TimeSpan.fromSeconds(
-        userSettings.defaultTimer
-      ).minutes.toString(),
-      defaultTimerSeconds: TimeSpan.fromSeconds(
-        userSettings.defaultTimer
-      ).seconds.toString(),
+      defaultTimerHours: TimeSpan.fromSeconds(userSettings.defaultTimer).hours.toString(),
+      defaultTimerMinutes: TimeSpan.fromSeconds(userSettings.defaultTimer).minutes.toString(),
+      defaultTimerSeconds: TimeSpan.fromSeconds(userSettings.defaultTimer).seconds.toString(),
     },
     initialDirty: {
       pageSize: false,
@@ -186,8 +172,7 @@ function Settings() {
 
   const isDirty = useMemo(() => {
     const controlledVariantChanged = controlledVariant !== colorPalette.variant;
-    const gradientDegreesChanged =
-      gradientDegrees !== colorPalette.gradient.deg;
+    const gradientDegreesChanged = gradientDegrees !== colorPalette.gradient.deg;
     const gradientToChanged = gradientTo !== colorPalette.gradient.to;
     return (
       form.isDirty() ||
@@ -224,7 +209,7 @@ function Settings() {
     "white",
   ];
 
-  const gradientSelector: JSX.Element = (
+  const gradientSelector = (
     <Card>
       <Card.Section>
         <Group justify="center">
@@ -238,12 +223,7 @@ function Settings() {
               color={opt}
               key={`color-option-${opt}`}
             >
-              <ActionIcon
-                size="lg"
-                my="sm"
-                color={opt}
-                onClick={() => setGradientTo(opt)}
-              >
+              <ActionIcon size="lg" my="sm" color={opt} onClick={() => setGradientTo(opt)}>
                 {gradientTo === opt ? <IconCheck size={24} /> : null}
               </ActionIcon>
             </MyTooltip>
@@ -253,7 +233,7 @@ function Settings() {
     </Card>
   );
 
-  const gradientDegreeSlider: JSX.Element = (
+  const gradientDegreeSlider = (
     <Slider
       min={0}
       max={360}
@@ -390,12 +370,8 @@ function Settings() {
                     value={controlledVariant}
                   />
                 </Grid.Col>
-                {showGradientOptions ? (
-                  <Grid.Col span={12}>{gradientSelector}</Grid.Col>
-                ) : null}
-                {showGradientOptions ? (
-                  <Grid.Col span={12}>{gradientDegreeSlider}</Grid.Col>
-                ) : null}
+                {showGradientOptions ? <Grid.Col span={12}>{gradientSelector}</Grid.Col> : null}
+                {showGradientOptions ? <Grid.Col span={12}>{gradientDegreeSlider}</Grid.Col> : null}
               </Grid>
             </Stack>
           </Tabs.Panel>

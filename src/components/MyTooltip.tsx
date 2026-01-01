@@ -1,9 +1,4 @@
-import {
-  DefaultMantineColor,
-  FloatingPosition,
-  MantineTransition,
-  Tooltip,
-} from "@mantine/core";
+import { DefaultMantineColor, FloatingPosition, MantineTransition, Tooltip } from "@mantine/core";
 import { ReactNode } from "react";
 import { ColorPalette } from "../hooks/useColorPalette.tsx";
 
@@ -38,8 +33,7 @@ function MyTooltip(props: MyTooltipProps) {
     return "fade";
   };
 
-  const innerColor =
-    props.color !== undefined ? props.color : props.colorPalette.colorName;
+  const innerColor = props.color !== undefined ? props.color : props.colorPalette.colorName;
 
   return (
     <Tooltip

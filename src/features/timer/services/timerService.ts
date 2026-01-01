@@ -42,9 +42,7 @@ if (existingTime !== null && existingInitialTime !== null) {
   remainingTime = Number(existingTime);
   initialTimer = TimeSpan.fromSeconds(Number(existingInitialTime));
   isPaused = true;
-  showInfoNotification(
-    "Your previous timer has been restored and is currently paused."
-  );
+  showInfoNotification("Your previous timer has been restored and is currently paused.");
 }
 
 export const useTimerStore = create<TimerStore>((set, get) => ({

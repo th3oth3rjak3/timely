@@ -1,7 +1,7 @@
-import {MultiSelect} from "@mantine/core";
-import {IconSearch} from "@tabler/icons-react";
-import {useMemo, useState} from "react";
-import {SelectOption} from "../utilities/formUtilities";
+import { MultiSelect } from "@mantine/core";
+import { IconSearch } from "@tabler/icons-react";
+import { useMemo, useState } from "react";
+import { SelectOption } from "../utilities/formUtilities";
 
 export interface MultiSelectFilterProps<T extends SelectOption> {
   options: T[];
@@ -12,12 +12,8 @@ export interface MultiSelectFilterProps<T extends SelectOption> {
   onFiltered: (selected: T[]) => void | Promise<void>;
 }
 
-function MultiSelectFilter<T extends SelectOption>(
-  props: MultiSelectFilterProps<T>
-) {
-  const [selectedItems, setSelectedItems] = useState<T[]>([
-    ...props.initialSelections,
-  ]);
+function MultiSelectFilter<T extends SelectOption>(props: MultiSelectFilterProps<T>) {
+  const [selectedItems, setSelectedItems] = useState<T[]>([...props.initialSelections]);
 
   const [options] = useState<T[]>([...props.options]);
 
@@ -38,14 +34,14 @@ function MultiSelectFilter<T extends SelectOption>(
 
   return (
     <MultiSelect
-      comboboxProps={{withinPortal: false}}
+      comboboxProps={{ withinPortal: false }}
       label={props.label}
       description={props.description}
       data={options}
       value={mappedValues}
       onChange={updateSelectedItems}
       placeholder={props.placeholder}
-      leftSection={<IconSearch size={16}/>}
+      leftSection={<IconSearch size={16} />}
       searchable
       clearable
       onClear={() => clearFilter()}

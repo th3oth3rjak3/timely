@@ -43,15 +43,8 @@ import { TimeSpan } from "../../models/TimeSpan.ts";
 import { Tag, Task } from "../../models/ZodModels.ts";
 import { pageSizeOptions } from "../../state/globalState.ts";
 import { findLastPage } from "../../utilities/dataTableUtilities.ts";
-import {
-  getDayOnlyProps,
-  maybeFormattedDate,
-} from "../../utilities/dateUtilities.ts";
-import {
-  SelectOption,
-  toSelectOptions,
-  validateLength,
-} from "../../utilities/formUtilities.ts";
+import { getDayOnlyProps, maybeFormattedDate } from "../../utilities/dateUtilities.ts";
+import { SelectOption, toSelectOptions, validateLength } from "../../utilities/formUtilities.ts";
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -64,9 +57,7 @@ import {
   useGetAllTags,
   useRemoveTagFromTask,
 } from "../tags/services/tagService.ts";
-import QuickFilterComponent, {
-  TagFilterSelection,
-} from "./QuickFilterComponent.tsx";
+import QuickFilterComponent, { TagFilterSelection } from "./QuickFilterComponent.tsx";
 import {
   TaskLike,
   useCancelTask,
@@ -111,9 +102,7 @@ function TaskList() {
   const query = useTaskStore((store) => store.query);
   const setQuery = useTaskStore((store) => store.setQuery);
   const selectedStatuses = useTaskStore((store) => store.selectedStatuses);
-  const setSelectedStatuses = useTaskStore(
-    (store) => store.setSelectedStatuses,
-  );
+  const setSelectedStatuses = useTaskStore((store) => store.setSelectedStatuses);
   const sortStatus = useTaskStore((store) => store.sortStatus);
   const setSortStatus = useTaskStore((store) => store.setSortStatus);
   const startByFilter = useTaskStore((store) => store.startByFilter);
@@ -149,7 +138,7 @@ function TaskList() {
       sortStatus.direction,
       startByFilter,
       dueByFilter,
-      quickFilter,
+      quickFilter
     );
   }, [
     page,
@@ -163,13 +152,7 @@ function TaskList() {
   ]);
 
   const { showContextMenu, hideContextMenu } = useContextMenu();
-  const {
-    data: tasks,
-    isPending: loading,
-    status,
-    error,
-    refetch,
-  } = useSearchTasks(params);
+  const { data: tasks, isPending: loading, status, error, refetch } = useSearchTasks(params);
 
   if (status === "error" && error !== null) {
     showErrorNotification(error);
@@ -178,7 +161,7 @@ function TaskList() {
   const pageShouldChangeAfterDeleteMany = (
     tasks: TaskLike[],
     recordCount: number,
-    taskSearchParams: TaskSearchParams,
+    taskSearchParams: TaskSearchParams
   ): boolean => {
     const remainder = recordCount % taskSearchParams.pageSize;
     return remainder <= tasks.length && taskSearchParams.page > 1;
@@ -188,36 +171,24 @@ function TaskList() {
     task: TaskLike,
     action: TimelyAction,
     recordCount: number,
-    taskSearchParams: TaskSearchParams,
+    taskSearchParams: TaskSearchParams
   ): boolean => {
     const remainder = recordCount % taskSearchParams.pageSize;
     const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
 
     switch (action) {
       case TimelyAction.CancelTask:
-        return (
-          lastItemOnThePage &&
-          !taskSearchParams.statuses.includes(TaskStatus.Cancelled)
-        );
+        return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Cancelled);
       case TimelyAction.DeleteTask:
         return lastItemOnThePage;
       case TimelyAction.StartTask:
       case TimelyAction.ResumeTask:
       case TimelyAction.ReopenFinishedTask:
-        return (
-          lastItemOnThePage &&
-          !taskSearchParams.statuses.includes(TaskStatus.Doing)
-        );
+        return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Doing);
       case TimelyAction.PauseTask:
-        return (
-          lastItemOnThePage &&
-          !taskSearchParams.statuses.includes(TaskStatus.Paused)
-        );
+        return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Paused);
       case TimelyAction.FinishTask:
-        return (
-          lastItemOnThePage &&
-          !taskSearchParams.statuses.includes(TaskStatus.Done)
-        );
+        return lastItemOnThePage && !taskSearchParams.statuses.includes(TaskStatus.Done);
       case TimelyAction.RestoreCancelledTask:
         return (
           lastItemOnThePage &&
@@ -225,8 +196,7 @@ function TaskList() {
             task.elapsedDuration > 0 &&
             !taskSearchParams.statuses.includes(TaskStatus.Paused) &&
             task.actualStartDate !== null) ||
-            (task.elapsedDuration === 0 &&
-              !taskSearchParams.statuses.includes(TaskStatus.Todo)))
+            (task.elapsedDuration === 0 && !taskSearchParams.statuses.includes(TaskStatus.Todo)))
         );
       case TimelyAction.EditTask:
         return (
@@ -402,11 +372,7 @@ function TaskList() {
   async function refreshTasks() {
     await refetch();
     await refetchTags();
-    showSuccessNotification(
-      TimelyAction.RefreshTasks,
-      userSettings,
-      "So fresh.",
-    );
+    showSuccessNotification(TimelyAction.RefreshTasks, userSettings, "So fresh.");
   }
 
   function handleCancelRequested(task: Task) {
@@ -476,17 +442,8 @@ function TaskList() {
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
       onConfirm: async () => {
-        if (
-          pageShouldChangeAfterDeleteMany(
-            taskList,
-            tasks.totalItemCount,
-            params,
-          )
-        ) {
-          const lastPage = findLastPage(
-            tasks.totalItemCount - taskList.length,
-            pageSize,
-          );
+        if (pageShouldChangeAfterDeleteMany(taskList, tasks.totalItemCount, params)) {
+          const lastPage = findLastPage(tasks.totalItemCount - taskList.length, pageSize);
 
           setPage(lastPage);
         }
@@ -565,13 +522,7 @@ function TaskList() {
     }
 
     if (task.status === TaskStatus.Doing) {
-      return [
-        pauseTaskItem,
-        finishTaskItem,
-        editTaskItem,
-        cancelTaskItem,
-        deleteTaskItem,
-      ];
+      return [pauseTaskItem, finishTaskItem, editTaskItem, cancelTaskItem, deleteTaskItem];
     }
 
     if (task.status === TaskStatus.Done) {
@@ -579,13 +530,7 @@ function TaskList() {
     }
 
     if (task.status === TaskStatus.Paused) {
-      return [
-        resumeTaskItem,
-        finishTaskItem,
-        editTaskItem,
-        cancelTaskItem,
-        deleteTaskItem,
-      ];
+      return [resumeTaskItem, finishTaskItem, editTaskItem, cancelTaskItem, deleteTaskItem];
     }
 
     if (task.status === TaskStatus.Cancelled) {
@@ -597,10 +542,7 @@ function TaskList() {
 
   const onValidNewTaskSubmit = async (newTask: NewTask) => {
     const newItem = { ...newTask };
-    newItem.scheduledStartDate = dayjs(newTask.scheduledStartDate)
-      .startOf("day")
-      .utc()
-      .toDate();
+    newItem.scheduledStartDate = dayjs(newTask.scheduledStartDate).startOf("day").utc().toDate();
 
     newItem.scheduledCompleteDate = dayjs(newTask.scheduledCompleteDate)
       .startOf("day")
@@ -608,9 +550,7 @@ function TaskList() {
       .toDate();
 
     if (newTask.estimatedDuration) {
-      newItem.estimatedDuration = TimeSpan.fromHours(
-        newTask.estimatedDuration,
-      ).totalSeconds;
+      newItem.estimatedDuration = TimeSpan.fromHours(newTask.estimatedDuration).totalSeconds;
     }
     newItem.tags = newTaskTags;
     await createTask.mutateAsync(newItem);
@@ -626,14 +566,10 @@ function TaskList() {
     editForm.clearErrors();
     editFormActions.close();
     if (editedTask.estimatedDuration) {
-      updatedItem.estimatedDuration = TimeSpan.fromHours(
-        editedTask.estimatedDuration,
-      ).totalSeconds;
+      updatedItem.estimatedDuration = TimeSpan.fromHours(editedTask.estimatedDuration).totalSeconds;
     }
 
-    updatedItem.elapsedDuration = TimeSpan.fromHours(
-      editedTask.elapsedDuration,
-    ).totalSeconds;
+    updatedItem.elapsedDuration = TimeSpan.fromHours(editedTask.elapsedDuration).totalSeconds;
 
     updatedItem.scheduledStartDate = dayjs(updatedItem.scheduledStartDate)
       .startOf("day")
@@ -660,8 +596,7 @@ function TaskList() {
       scheduledCompleteDate: task.scheduledCompleteDate,
       actualStartDate: task.actualStartDate,
       actualCompleteDate: task.actualCompleteDate,
-      estimatedDuration:
-        TimeSpan.tryFromSeconds(task.estimatedDuration)?.totalHours ?? null,
+      estimatedDuration: TimeSpan.tryFromSeconds(task.estimatedDuration)?.totalHours ?? null,
       elapsedDuration: TimeSpan.fromSeconds(task.elapsedDuration).totalHours,
       comments: task.comments,
       tags: task.tags ?? editTags,
@@ -708,17 +643,11 @@ function TaskList() {
     }
   }
 
-  function updateTagFilter(
-    filterName: FilterName | null,
-    selection: TagFilterSelection,
-  ) {
+  function updateTagFilter(filterName: FilterName | null, selection: TagFilterSelection) {
     if (filterName === FilterName.Tagged) {
       setPage(1);
       setQuickFilter(
-        QuickFilter.tagged(
-          selection.tags?.map((t) => t.value) ?? null,
-          selection.tagFilter,
-        ),
+        QuickFilter.tagged(selection.tags?.map((t) => t.value) ?? null, selection.tagFilter)
       );
     } else if (filterName === null) {
       setPage(1);
@@ -764,19 +693,15 @@ function TaskList() {
           onFiltered={updateSelectedStatuses}
         />
       ),
-      filtering:
-        !!params.statuses && params.statuses.length !== statusOptions.length,
+      filtering: !!params.statuses && params.statuses.length !== statusOptions.length,
     },
     {
       accessor: "scheduledStartDate",
       width: windowWidth < 800 ? "115px" : "15vw",
       title: "Start By",
       sortable: true,
-      render: (record: Task) =>
-        maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
-      filter: (
-        <DateFilter filter={startByFilter} onRangeChanged={setStartByFilter} />
-      ),
+      render: (record: Task) => maybeFormattedDate(record.scheduledStartDate, "MM/DD/YYYY"),
+      filter: <DateFilter filter={startByFilter} onRangeChanged={setStartByFilter} />,
       filtering: params.startByFilter !== null,
     },
     {
@@ -784,11 +709,8 @@ function TaskList() {
       width: windowWidth < 800 ? "115px" : "15vw",
       title: "Due By",
       sortable: true,
-      render: (record: Task) =>
-        maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
-      filter: (
-        <DateFilter filter={dueByFilter} onRangeChanged={setDueByFilter} />
-      ),
+      render: (record: Task) => maybeFormattedDate(record.scheduledCompleteDate, "MM/DD/YYYY"),
+      filter: <DateFilter filter={dueByFilter} onRangeChanged={setDueByFilter} />,
       filtering: params.dueByFilter !== null,
     },
   ];
@@ -856,8 +778,7 @@ function TaskList() {
           onSortStatusChange={setSortStatus}
           paginationActiveBackgroundColor={colorPalette.background}
           paginationActiveTextColor={
-            userSettings.buttonVariant === "filled" ||
-            userSettings.buttonVariant === "gradient"
+            userSettings.buttonVariant === "filled" || userSettings.buttonVariant === "gradient"
               ? "white"
               : colorPalette.color
           }
@@ -923,10 +844,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={dayjs()}
-              getDayProps={getDayOnlyProps(
-                newForm.getValues().scheduledStartDate,
-                colorPalette,
-              )}
+              getDayProps={getDayOnlyProps(newForm.getValues().scheduledStartDate, colorPalette)}
               label="Start By"
               key={newForm.key("scheduledStartDate")}
               {...newForm.getInputProps("scheduledStartDate")}
@@ -936,10 +854,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={dayjs()}
-              getDayProps={getDayOnlyProps(
-                newForm.getValues().scheduledCompleteDate,
-                colorPalette,
-              )}
+              getDayProps={getDayOnlyProps(newForm.getValues().scheduledCompleteDate, colorPalette)}
               label="Due By"
               key={newForm.key("scheduledCompleteDate")}
               {...newForm.getInputProps("scheduledCompleteDate")}
@@ -1005,10 +920,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().scheduledStartDate}
-              getDayProps={getDayOnlyProps(
-                editForm.getValues().scheduledStartDate,
-                colorPalette,
-              )}
+              getDayProps={getDayOnlyProps(editForm.getValues().scheduledStartDate, colorPalette)}
               label="Start By"
               key={editForm.key("scheduledStartDate")}
               {...editForm.getInputProps("scheduledStartDate")}
@@ -1020,7 +932,7 @@ function TaskList() {
               defaultValue={editForm.getValues().scheduledCompleteDate}
               getDayProps={getDayOnlyProps(
                 editForm.getValues().scheduledCompleteDate,
-                colorPalette,
+                colorPalette
               )}
               label="Due By"
               key={editForm.key("scheduledCompleteDate")}
@@ -1031,10 +943,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualStartDate}
-              getDayProps={getDayOnlyProps(
-                editForm.getValues().actualStartDate,
-                colorPalette,
-              )}
+              getDayProps={getDayOnlyProps(editForm.getValues().actualStartDate, colorPalette)}
               label="Started On"
               key={editForm.key("actualStartDate")}
               {...editForm.getInputProps("actualStartDate")}
@@ -1045,10 +954,7 @@ function TaskList() {
               highlightToday={true}
               clearable
               defaultValue={editForm.getValues().actualCompleteDate}
-              getDayProps={getDayOnlyProps(
-                editForm.getValues().actualCompleteDate,
-                colorPalette,
-              )}
+              getDayProps={getDayOnlyProps(editForm.getValues().actualCompleteDate, colorPalette)}
               label="Finished On"
               key={editForm.key("actualCompleteDate")}
               {...editForm.getInputProps("actualCompleteDate")}

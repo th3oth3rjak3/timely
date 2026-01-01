@@ -12,11 +12,7 @@ import MetricsChart from "./MetricsChart";
 import MetricsFilter from "./MetricsFilter";
 import MetricsSummaryComponent from "./MetricsSummary";
 import { useGetMetrics, useMetricsStore } from "./services/metricsService";
-import {
-  FilterFormInputs,
-  MetricsFilterCriteria,
-  MetricsSearchCriteria,
-} from "./types";
+import { FilterFormInputs, MetricsFilterCriteria, MetricsSearchCriteria } from "./types";
 
 function Metrics() {
   const [filterOpened, filterActions] = useDisclosure(false);
@@ -58,9 +54,7 @@ function Metrics() {
     };
   }, [startDate, endDate, selectedTags]);
 
-  function generateSearchCriteria(
-    filterCriteria: MetricsFilterCriteria
-  ): MetricsSearchCriteria {
+  function generateSearchCriteria(filterCriteria: MetricsFilterCriteria): MetricsSearchCriteria {
     const start = dayjs(filterCriteria.startDate).startOf("day");
     const end = dayjs(filterCriteria.endDate).startOf("day");
 
@@ -131,9 +125,7 @@ function Metrics() {
     </div>
   ) : (
     <Stack gap="sm">
-      <Text size="md">
-        Let&apos;s get started! Pick some filter options to view your data.
-      </Text>
+      <Text size="md">Let&apos;s get started! Pick some filter options to view your data.</Text>
     </Stack>
   );
 

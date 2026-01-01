@@ -1,12 +1,11 @@
-import {Card, Grid, Stack, Text} from "@mantine/core";
-import {StatisticalSummary} from "../../models/ZodModels";
-
+import { Card, Grid, Stack, Text } from "@mantine/core";
+import { StatisticalSummary } from "../../models/ZodModels";
 
 export interface MetricsSummaryProps {
   summary: StatisticalSummary;
 }
 
-const MetricsSummaryComponent = ({summary}: MetricsSummaryProps) => {
+const MetricsSummaryComponent = ({ summary }: MetricsSummaryProps) => {
   return (
     <Grid align="center" justify="center">
       <Grid.Col span={3}>
@@ -14,7 +13,7 @@ const MetricsSummaryComponent = ({summary}: MetricsSummaryProps) => {
           <Stack align="center" justify="center">
             <Text fw={500} td="underline" ta="center">
               Tasks
-              <br/>
+              <br />
               Started
             </Text>
             <Text>{summary.tasksStarted}</Text>
@@ -26,7 +25,7 @@ const MetricsSummaryComponent = ({summary}: MetricsSummaryProps) => {
           <Stack align="center">
             <Text fw={500} td="underline" ta="center">
               Tasks
-              <br/>
+              <br />
               Completed
             </Text>
             <Text>{summary.tasksCompleted}</Text>
@@ -38,7 +37,7 @@ const MetricsSummaryComponent = ({summary}: MetricsSummaryProps) => {
           <Stack align="center">
             <Text fw={500} td="underline" ta="center">
               Tasks
-              <br/>
+              <br />
               Worked
             </Text>
             <Text>{summary.tasksWorked}</Text>
@@ -50,7 +49,7 @@ const MetricsSummaryComponent = ({summary}: MetricsSummaryProps) => {
           <Stack align="center">
             <Text fw={500} td="underline" ta="center">
               Hours
-              <br/>
+              <br />
               Worked
             </Text>
             <Text>{summary.hoursWorked.toFixed(1)}</Text>

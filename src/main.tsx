@@ -18,11 +18,17 @@ import App from "./App";
 
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+const root = document.getElementById("root");
+
+if (root === null) {
+  throw new Error("something is wrong with the index.html file, missing an element with ID 'root'");
+}
+
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />
       <ReactQueryDevtools initialIsOpen={true} buttonPosition="bottom-left" />
     </QueryClientProvider>
-  </React.StrictMode>,
+  </React.StrictMode>
 );

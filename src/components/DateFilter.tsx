@@ -33,10 +33,7 @@ function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
     return dayjs(filter.end).startOf("day").toDate().toISOString();
   }, [filter]);
 
-  const [dateRange, setDateRange] = useState<DatesRangeValue<string>>([
-    startDate,
-    endDate,
-  ]);
+  const [dateRange, setDateRange] = useState<DatesRangeValue<string>>([startDate, endDate]);
 
   useEffect(() => {
     setDateRange([startDate, endDate]);
@@ -82,10 +79,7 @@ function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
               ])
             }
           />
-          <StyledButton
-            label="Clear"
-            onClick={() => updateDateRange([null, null])}
-          />
+          <StyledButton label="Clear" onClick={() => updateDateRange([null, null])} />
         </Group>
       ) : null}
     </Stack>

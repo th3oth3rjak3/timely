@@ -1,7 +1,7 @@
-import {MantineGradient, MantineTheme, useMantineTheme} from "@mantine/core";
-import {useMemo} from "react";
-import {useUserSettings} from "../features/settings/settingsService";
-import {UserSettings} from "../models/ZodModels";
+import { MantineGradient, MantineTheme, useMantineTheme } from "@mantine/core";
+import { useMemo } from "react";
+import { useUserSettings } from "../features/settings/settingsService";
+import { UserSettings } from "../models/ZodModels";
 
 export interface ColorPalette {
   colorName: string;
@@ -16,7 +16,7 @@ export interface ColorPalette {
 
 const useColorPalette = () => {
   const theme = useMantineTheme();
-  const {data: userSettings} = useUserSettings();
+  const { data: userSettings } = useUserSettings();
 
   const withColorVariant = (userSettings: UserSettings): ColorPalette => {
     if (userSettings.colorScheme === undefined) {
@@ -31,11 +31,7 @@ const useColorPalette = () => {
     });
 
     const getGradientFrom = (gradientFrom: string, theme: MantineTheme) => {
-      if (
-        gradientFrom === null ||
-        gradientFrom === undefined ||
-        gradientFrom.trim() === ""
-      ) {
+      if (gradientFrom === null || gradientFrom === undefined || gradientFrom.trim() === "") {
         return theme.defaultGradient.from;
       }
 
@@ -43,11 +39,7 @@ const useColorPalette = () => {
     };
 
     const getGradientTo = (gradientTo: string, theme: MantineTheme) => {
-      if (
-        gradientTo === null ||
-        gradientTo === undefined ||
-        gradientTo.trim() === ""
-      ) {
+      if (gradientTo === null || gradientTo === undefined || gradientTo.trim() === "") {
         return theme.defaultGradient.to;
       }
 

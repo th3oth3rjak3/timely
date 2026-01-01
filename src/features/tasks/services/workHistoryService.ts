@@ -1,14 +1,17 @@
-import {useMutation} from "@tanstack/react-query";
-import {invoke} from "@tauri-apps/api/core";
-import {TimelyAction} from "../../../models/TauriAction";
-import {UserSettings} from "../../../models/ZodModels";
-import {showErrorNotification, showSuccessNotification,} from "../../../utilities/notificationUtilities";
-import {EditTaskWorkHistory, NewTaskWorkHistory} from "../types/Task";
+import { useMutation } from "@tanstack/react-query";
+import { invoke } from "@tauri-apps/api/core";
+import { TimelyAction } from "../../../models/TauriAction";
+import { UserSettings } from "../../../models/ZodModels";
+import {
+  showErrorNotification,
+  showSuccessNotification,
+} from "../../../utilities/notificationUtilities";
+import { EditTaskWorkHistory, NewTaskWorkHistory } from "../types/Task";
 
 export function useAddWorkHistory(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (history: NewTaskWorkHistory) => {
-      await invoke("add_task_work_history", {newTaskWorkHistory: history});
+      await invoke("add_task_work_history", { newTaskWorkHistory: history });
     },
     onSuccess: () => {
       showSuccessNotification(
@@ -24,7 +27,7 @@ export function useAddWorkHistory(userSettings: UserSettings) {
 export function useEditWorkHistory(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (history: EditTaskWorkHistory) => {
-      await invoke("edit_task_work_history", {editTaskWorkHistory: history});
+      await invoke("edit_task_work_history", { editTaskWorkHistory: history });
     },
     onSuccess: () =>
       showSuccessNotification(
@@ -39,7 +42,7 @@ export function useEditWorkHistory(userSettings: UserSettings) {
 export function useDeleteWorkHistory(userSettings: UserSettings) {
   return useMutation({
     mutationFn: async (historyId: number) => {
-      await invoke("delete_task_work_history", {historyId});
+      await invoke("delete_task_work_history", { historyId });
     },
     onSuccess: () =>
       showSuccessNotification(
