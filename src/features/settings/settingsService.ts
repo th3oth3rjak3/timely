@@ -38,10 +38,7 @@ export function useUserSettings() {
   });
 }
 
-export function useUpdateUserSettings(
-  queryClient: QueryClient,
-  action: () => void
-) {
+export function useUpdateUserSettings(queryClient: QueryClient, action: () => void) {
   return useMutation({
     mutationFn: async (userSettings: UserSettings): Promise<void> => {
       await invoke("update_user_settings", { settings: { ...userSettings } });

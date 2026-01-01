@@ -1,5 +1,5 @@
-import {Ordering} from "../../../models/Ordering";
-import {SortDirection} from "../../../models/SortDirection";
+import { Ordering } from "../../../models/Ordering";
+import { SortDirection } from "../../../models/SortDirection";
 
 export interface TagSearchParams {
   page: number;
@@ -13,7 +13,7 @@ export function tagSearchParams(
   pageSize: number,
   queryString?: string,
   sortField?: string,
-  sortDirection?: string,
+  sortDirection?: string
 ): TagSearchParams {
   return {
     page,

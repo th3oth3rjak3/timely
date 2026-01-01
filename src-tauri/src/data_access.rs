@@ -11,9 +11,11 @@ pub struct Data {
 #[cfg(not(debug_assertions))]
 pub async fn establish_connection_pool(path: PathBuf) -> SqlitePool {
     let root_path = path.join("timely.sqlite?mode=rwc");
-    let database_url = root_path.to_str().expect("Database path should exist for application to run.");
+    let database_url = root_path
+        .to_str()
+        .expect("Database path should exist for application to run.");
 
-    println!("{}", &database_url);
+    println!("Database Location: {}", &database_url);
     // Create a connection pool with SQLx
     let pool = SqlitePoolOptions::new()
         .max_connections(5) // You can adjust the max connections to your needs

@@ -128,9 +128,7 @@ export class TimeSpan extends Object {
         this.minutes
       )}m ${padded(this.seconds)}s`;
     } else if (this.hours > 0) {
-      displayValue = `${padded(this.hours)}h ${padded(this.minutes)}m ${padded(
-        this.seconds
-      )}s`;
+      displayValue = `${padded(this.hours)}h ${padded(this.minutes)}m ${padded(this.seconds)}s`;
     } else if (this.minutes > 0) {
       displayValue = `${padded(this.minutes)}m ${padded(this.seconds)}s`;
     } else {

@@ -6,11 +6,7 @@ import {
   mergeMantineTheme,
 } from "@mantine/core";
 import { useEffect, useMemo } from "react";
-import {
-  createBrowserRouter,
-  Navigate,
-  RouterProvider,
-} from "react-router-dom";
+import { createBrowserRouter, Navigate, RouterProvider } from "react-router-dom";
 import "./App.css";
 
 import { ModalsProvider } from "@mantine/modals";
@@ -18,10 +14,7 @@ import { Notifications } from "@mantine/notifications";
 import { ContextMenuProvider } from "mantine-contextmenu";
 import Metrics from "./features/metrics/Metrics";
 import Settings from "./features/settings/Settings";
-import {
-  isDefaultSettings,
-  useUserSettings,
-} from "./features/settings/settingsService";
+import { isDefaultSettings, useUserSettings } from "./features/settings/settingsService";
 import { useTagStore } from "./features/tags/services/tagService";
 import TagsList from "./features/tags/TagsList";
 import { useTaskStore } from "./features/tasks/services/tasksService";
@@ -95,6 +88,7 @@ function App() {
     if (!isDefaultSettings(userSettings)) {
       const customTheme = createTheme({
         primaryColor: userSettings.colorScheme,
+        fontFamily: "Roboto, system-ui, sans-serif",
         defaultGradient: {
           to: userSettings.gradientTo,
           from: userSettings.gradientFrom,

@@ -1,18 +1,14 @@
 use super::models::UpsertAddable;
 use super::{models::MetricsSummary, MetricsBucket, MetricsSearchCriteria, StatisticalSummary};
 use crate::features::tasks::UnixTimestamp;
-use crate::{
-    features::tasks::TaskWorkHistory,
-    query_utils::add_in_expression,
-    Data,
-};
+use crate::{features::tasks::TaskWorkHistory, query_utils::add_in_expression, Data};
 use anyhow_tauri::{bail, IntoTAResult, TAResult};
 use jiff::tz::TimeZone;
+use jiff::Timestamp;
 use sqlx::QueryBuilder;
 use std::collections::HashMap;
 use tap::{Pipe, Tap};
 use tauri::State;
-use jiff::Timestamp;
 
 #[tauri::command]
 pub async fn get_metrics(
@@ -38,8 +34,8 @@ pub async fn get_metrics(
         .into_ta_result()?;
 
     MetricsSummary::new(
-        start_date.clone(),
-        end_date.clone(),
+        *start_date,
+        *end_date,
         search_criteria.tags,
         summary,
         history,
@@ -125,8 +121,7 @@ async fn get_work_history(
 
     // this only gets total hours for a given task during the period.
     // It needs to get hours per task per day for a given period.
-    let mut seconds_per_task_per_day: HashMap<(i64, Timestamp, Timestamp), i32> =
-        HashMap::new();
+    let mut seconds_per_task_per_day: HashMap<(i64, Timestamp, Timestamp), i32> = HashMap::new();
 
     for record in task_work_history.iter() {
         let values = collect_work_history(
@@ -139,7 +134,7 @@ async fn get_work_history(
         values
             .iter()
             .for_each(|(id, start_date, end_date, seconds)| {
-                seconds_per_task_per_day.upsert_add((*id, start_date.clone(), end_date.clone()), *seconds)
+                seconds_per_task_per_day.upsert_add((*id, *start_date, *end_date), *seconds)
             });
     }
 
@@ -148,7 +143,7 @@ async fn get_work_history(
     seconds_per_task_per_day
         .iter()
         .for_each(|((_id, start_date, end_date), seconds)| {
-            aggregated_data.upsert_add((start_date.clone(), end_date.clone()), f64::from(*seconds) / 3_600f64)
+            aggregated_data.upsert_add((*start_date, *end_date), f64::from(*seconds) / 3_600f64)
         });
 
     aggregated_data
@@ -159,7 +154,7 @@ async fn get_work_history(
             hours,
         })
         .collect::<Vec<_>>()
-        .tap_mut(|values| values.sort_by_key(|bucket| bucket.start_date.clone()))
+        .tap_mut(|values| values.sort_by_key(|bucket| bucket.start_date))
         .pipe(anyhow::Ok)
         .into_ta_result()
 }
@@ -229,7 +224,10 @@ async fn count_started_tasks(
 
     builder.push(" AND twh2.start_date <= ");
 
-    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
+    let end_date = end_date
+        .to_zoned(TimeZone::system())
+        .end_of_day()
+        .into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
     builder.push(
         r#" 
@@ -322,7 +320,10 @@ async fn count_completed_tasks(
     builder.push(" AND twh.end_date >= ");
     builder.push_bind(UnixTimestamp::from(start_date));
     builder.push(" AND twh.end_date <= ");
-    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
+    let end_date = end_date
+        .to_zoned(TimeZone::system())
+        .end_of_day()
+        .into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
 
     builder.push(
@@ -383,7 +384,10 @@ async fn count_tasks_worked(
 
     builder.push(" AND twh.start_date <= ");
 
-    let end_date = end_date.to_zoned(TimeZone::system()).end_of_day().into_ta_result()?;
+    let end_date = end_date
+        .to_zoned(TimeZone::system())
+        .end_of_day()
+        .into_ta_result()?;
     builder.push_bind(UnixTimestamp::from(&end_date));
     builder.push(
         r#"
@@ -414,34 +418,60 @@ fn collect_work_history(
 
     for bucket in buckets.iter() {
         // need to figure out how many of the seconds happened each day.
-        let start_of_day = bucket.start_date.clone();
-        let end_of_day = bucket.end_date.clone();
+        let start_of_day = bucket.start_date;
+        let end_of_day = bucket.end_date;
 
-        let history_start = entry_start.clone();
-        let history_end = entry_end.clone();
+        let history_start = entry_start;
+        let history_end = entry_end;
         // case 1: The task was started midway through the day and ended later than today.
-        if history_start >= start_of_day && history_start <= end_of_day && history_end > end_of_day
+        if history_start >= &start_of_day
+            && history_start <= &end_of_day
+            && history_end > &end_of_day
         {
             let elapsed_this_day: i64 = end_of_day.as_second() - history_start.as_second();
-            values.push((*task_id, start_of_day, end_of_day, i32::try_from(elapsed_this_day).expect("should be able to fit seconds in a day into an i32")));
+            values.push((
+                *task_id,
+                start_of_day,
+                end_of_day,
+                i32::try_from(elapsed_this_day)
+                    .expect("should be able to fit seconds in a day into an i32"),
+            ));
         }
         // case 2: The task was started midway through the day and ended during the same day.
-        else if history_start >= start_of_day && history_end <= end_of_day {
+        else if history_start >= &start_of_day && history_end <= &end_of_day {
             let elapsed_this_day = history_end.as_second() - history_start.as_second();
-            values.push((*task_id, start_of_day, end_of_day, i32::try_from(elapsed_this_day).expect("should be able to fit seconds in a day into an i32")));
+            values.push((
+                *task_id,
+                start_of_day,
+                end_of_day,
+                i32::try_from(elapsed_this_day)
+                    .expect("should be able to fit seconds in a day into an i32"),
+            ));
         }
         // case 3: The task ran for the entire day.
-        else if history_start < start_of_day && history_end > end_of_day {
+        else if history_start < &start_of_day && history_end > &end_of_day {
             let elapsed_this_day = end_of_day.as_second() - start_of_day.as_second();
-            values.push((*task_id, start_of_day, end_of_day, i32::try_from(elapsed_this_day).expect("should be able to fit seconds in a day into an i32")));
+            values.push((
+                *task_id,
+                start_of_day,
+                end_of_day,
+                i32::try_from(elapsed_this_day)
+                    .expect("should be able to fit seconds in a day into an i32"),
+            ));
         }
         // case 4: The task started before the start of the day and ended midday.
-        else if history_start <= start_of_day
-            && history_end >= start_of_day
-            && history_end <= end_of_day
+        else if history_start <= &start_of_day
+            && history_end >= &start_of_day
+            && history_end <= &end_of_day
         {
             let elapsed_this_day = history_end.as_second() - start_of_day.as_second();
-            values.push((*task_id, start_of_day, end_of_day, i32::try_from(elapsed_this_day).expect("should be able to fit seconds in a day into an i32")));
+            values.push((
+                *task_id,
+                start_of_day,
+                end_of_day,
+                i32::try_from(elapsed_this_day)
+                    .expect("should be able to fit seconds in a day into an i32"),
+            ));
         }
         // case 5: No work done this day, still need an entry
         else {

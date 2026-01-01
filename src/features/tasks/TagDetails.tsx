@@ -1,5 +1,5 @@
-import {TagsInput} from "@mantine/core";
-import {Tag, Task} from "../../models/ZodModels";
+import { TagsInput } from "@mantine/core";
+import { Tag, Task } from "../../models/ZodModels";
 
 export interface TagDetailsProps {
   task: Task;
@@ -16,12 +16,7 @@ function TagDetails(props: TagDetailsProps) {
   const selectedTags = props.task.tags.map((tag) => tag.value);
 
   return (
-    <TagsInput
-      label="Tags"
-      data={tagOptions}
-      value={selectedTags}
-      readOnly={props.readOnly}
-    />
+    <TagsInput label="Tags" data={tagOptions} value={selectedTags} readOnly={props.readOnly} />
   );
 }
 

@@ -7,11 +7,7 @@ import { IconEdit, IconPlus, IconTrash } from "@tabler/icons-react";
 import dayjs from "dayjs";
 import { sortBy } from "lodash";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
-import {
-  DataTable,
-  DataTableColumn,
-  DataTableSortStatus,
-} from "mantine-datatable";
+import { DataTable, DataTableColumn, DataTableSortStatus } from "mantine-datatable";
 import { useMemo, useState } from "react";
 import StyledActionIcon from "../../components/StyledActionIcon";
 import StyledButton from "../../components/StyledButton";
@@ -39,16 +35,12 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(userSettings.pageSize);
-  const [sortStatus, setSortStatus] = useState<
-    DataTableSortStatus<TaskWorkHistory>
-  >({
+  const [sortStatus, setSortStatus] = useState<DataTableSortStatus<TaskWorkHistory>>({
     columnAccessor: "startDate",
     direction: "desc",
   });
-  const [newWorkHistoryFormOpened, newWorkHistoryFormActions] =
-    useDisclosure(false);
-  const [editWorkHistoryFormOpened, editWorkHistoryFormActions] =
-    useDisclosure(false);
+  const [newWorkHistoryFormOpened, newWorkHistoryFormActions] = useDisclosure(false);
+  const [editWorkHistoryFormOpened, editWorkHistoryFormActions] = useDisclosure(false);
   const colorPalette = useColorPalette();
   const { showContextMenu, hideContextMenu } = useContextMenu();
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
@@ -62,35 +54,26 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
       title: "Start Date",
       sortable: true,
       render: (history) =>
-        dayjs(history.startDate)
-          .startOf("second")
-          .format("MM/DD/YYYY hh:mm:ss A"),
+        dayjs(history.startDate).startOf("second").format("MM/DD/YYYY hh:mm:ss A"),
       sortKey: "startDate",
     },
     {
       accessor: "endDate",
       title: "End Date",
       sortable: true,
-      render: (history) =>
-        dayjs(history.endDate)
-          .startOf("second")
-          .format("MM/DD/YYYY hh:mm:ss A"),
+      render: (history) => dayjs(history.endDate).startOf("second").format("MM/DD/YYYY hh:mm:ss A"),
       sortKey: "endDate",
     },
     {
       accessor: "elapsedDuration",
       title: "Elapsed Duration",
-      render: (history) =>
-        TimeSpan.fromSeconds(history.elapsedDuration).toString(),
+      render: (history) => TimeSpan.fromSeconds(history.elapsedDuration).toString(),
     },
   ];
 
   const records = useMemo(() => {
     if (sortStatus.direction === "desc") {
-      return sortBy(
-        props.task.workHistory,
-        sortStatus.columnAccessor
-      ).reverse();
+      return sortBy(props.task.workHistory, sortStatus.columnAccessor).reverse();
     }
     return sortBy(props.task.workHistory, sortStatus.columnAccessor);
   }, [props, sortStatus]);
@@ -263,8 +246,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
         }
         paginationActiveBackgroundColor={colorPalette.background}
         paginationActiveTextColor={
-          userSettings.buttonVariant === "filled" ||
-          userSettings.buttonVariant === "gradient"
+          userSettings.buttonVariant === "filled" || userSettings.buttonVariant === "gradient"
             ? "white"
             : colorPalette.color
         }
@@ -287,10 +269,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="Start Date"
               {...newWorkHistoryForm.getInputProps("startDate")}
               key={newWorkHistoryForm.key("startDate")}
-              getDayProps={getDayOnlyProps(
-                newWorkHistoryForm.getValues().startDate,
-                colorPalette
-              )}
+              getDayProps={getDayOnlyProps(newWorkHistoryForm.getValues().startDate, colorPalette)}
             />
             <DateTimePicker
               withSeconds
@@ -298,10 +277,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="End Date"
               {...newWorkHistoryForm.getInputProps("endDate")}
               key={newWorkHistoryForm.key("endDate")}
-              getDayProps={getDayOnlyProps(
-                newWorkHistoryForm.getValues().endDate,
-                colorPalette
-              )}
+              getDayProps={getDayOnlyProps(newWorkHistoryForm.getValues().endDate, colorPalette)}
             />
             <TextInput
               label="Elapsed Duration"
@@ -312,11 +288,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               readOnly={true}
             />
             <Group>
-              <StyledButton
-                type="submit"
-                label="Save"
-                tooltipLabel="Save Work History"
-              />
+              <StyledButton type="submit" label="Save" tooltipLabel="Save Work History" />
             </Group>
           </Stack>
         </form>
@@ -336,10 +308,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="Start Date"
               {...editWorkHistoryForm.getInputProps("startDate")}
               key={editWorkHistoryForm.key("startDate")}
-              getDayProps={getDayOnlyProps(
-                editWorkHistoryForm.getValues().startDate,
-                colorPalette
-              )}
+              getDayProps={getDayOnlyProps(editWorkHistoryForm.getValues().startDate, colorPalette)}
             />
             <DateTimePicker
               withSeconds
@@ -347,10 +316,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               label="End Date"
               {...editWorkHistoryForm.getInputProps("endDate")}
               key={editWorkHistoryForm.key("endDate")}
-              getDayProps={getDayOnlyProps(
-                editWorkHistoryForm.getValues().endDate,
-                colorPalette
-              )}
+              getDayProps={getDayOnlyProps(editWorkHistoryForm.getValues().endDate, colorPalette)}
             />
             <TextInput
               label="Elapsed Duration"
@@ -361,11 +327,7 @@ function TaskWorkHistoryDetails(props: TaskWorkHistoryProps) {
               readOnly={true}
             />
             <Group>
-              <StyledButton
-                type="submit"
-                label="Save"
-                tooltipLabel="Save Work History"
-              />
+              <StyledButton type="submit" label="Save" tooltipLabel="Save Work History" />
             </Group>
           </Stack>
         </form>

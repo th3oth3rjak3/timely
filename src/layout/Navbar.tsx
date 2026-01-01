@@ -1,7 +1,14 @@
-import {Stack} from "@mantine/core";
-import {useMediaQuery} from "@mantine/hooks";
-import {Icon, IconAlarm, IconListDetails, IconReportAnalytics, IconSettings, IconTags,} from "@tabler/icons-react";
-import {useLocation, useNavigate} from "react-router-dom";
+import { Stack } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
+import {
+  Icon,
+  IconAlarm,
+  IconListDetails,
+  IconReportAnalytics,
+  IconSettings,
+  IconTags,
+} from "@tabler/icons-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import StyledButton from "../components/StyledButton";
 
 export interface LinkDetail {
@@ -24,7 +31,7 @@ const navLinks: LinkDetail[] = [
     label: "Tasks",
     description: "Tasks Page",
   },
-  {href: "/tags", icon: IconTags, label: "Tags", description: "Tags Page"},
+  { href: "/tags", icon: IconTags, label: "Tags", description: "Tags Page" },
   {
     href: "/metrics",
     icon: IconReportAnalytics,
@@ -72,7 +79,7 @@ function Navbar(props: NavbarProps) {
           props.closeNavMenu();
         }
       }}
-      leftSection={<item.icon size="1.3rem" stroke={1.5}/>}
+      leftSection={<item.icon size="1.3rem" stroke={1.5} />}
       tooltipLabel={item.description}
       tooltipPosition="right"
     />

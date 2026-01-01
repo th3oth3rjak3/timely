@@ -4,12 +4,7 @@ import { DataTableSortStatus } from "mantine-datatable";
 import { create } from "zustand";
 import { PagedData } from "../../../models/PagedData";
 import { TimelyAction } from "../../../models/TauriAction";
-import {
-  PagedTagData,
-  Tag,
-  TagArray,
-  UserSettings,
-} from "../../../models/ZodModels";
+import { PagedTagData, Tag, TagArray, UserSettings } from "../../../models/ZodModels";
 import {
   showErrorNotification,
   showSuccessNotification,
@@ -67,23 +62,16 @@ export function useGetAllTags() {
   });
 }
 
-export function useCreateNewTag(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useCreateNewTag(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (tagName: string) => {
       const tag = await invoke("add_new_tag", { newTag: tagName });
       return tryMap(tag, Tag.parse);
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.AddNewTag,
-        userSettings,
-        "Successfully added tag."
-      );
-      await queryClient.invalidateQueries({ queryKey: "getAllTags" });
-      await queryClient.invalidateQueries({ queryKey: "searchForTags" });
+      showSuccessNotification(TimelyAction.AddNewTag, userSettings, "Successfully added tag.");
+      await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
+      await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -96,11 +84,7 @@ export function useAddTagToTask(userSettings: UserSettings) {
       await invoke("add_tag_to_task", { taskId, tagId: tag.id });
     },
     onSuccess: () => {
-      showSuccessNotification(
-        TimelyAction.AddTagToTask,
-        userSettings,
-        "Successfully added tag."
-      );
+      showSuccessNotification(TimelyAction.AddTagToTask, userSettings, "Successfully added tag.");
     },
     onError: (error) => showErrorNotification(error),
   });
@@ -123,20 +107,13 @@ export function useRemoveTagFromTask(userSettings: UserSettings) {
   });
 }
 
-export function useDeleteTag(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useDeleteTag(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (tag: Tag) => {
       await invoke("delete_tag", { tagId: tag.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.DeleteTag,
-        userSettings,
-        "Successfully deleted tag."
-      );
+      showSuccessNotification(TimelyAction.DeleteTag, userSettings, "Successfully deleted tag.");
       await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
       await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
     },
@@ -144,10 +121,7 @@ export function useDeleteTag(
   });
 }
 
-export function useDeleteManyTags(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useDeleteManyTags(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (tags: Tag[]) => {
       await invoke("delete_many_tags", { tagIds: tags.map((t) => t.id) });
@@ -156,9 +130,7 @@ export function useDeleteManyTags(
       showSuccessNotification(
         TimelyAction.DeleteTag,
         userSettings,
-        `Successfully deleted ${tags.length} tag${
-          tags.length === 1 ? "" : "s"
-        }.`
+        `Successfully deleted ${tags.length} tag${tags.length === 1 ? "" : "s"}.`
       );
       await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
       await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
@@ -188,20 +160,13 @@ export function useSearchForTags(params: TagSearchParams) {
   });
 }
 
-export function useEditTag(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useEditTag(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (tag: Tag) => {
       await invoke("edit_tag", { tag });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.EditTag,
-        userSettings,
-        "Updated tag successfully."
-      );
+      showSuccessNotification(TimelyAction.EditTag, userSettings, "Updated tag successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchForTags"] });
       await queryClient.invalidateQueries({ queryKey: ["getAllTags"] });
     },

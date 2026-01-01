@@ -85,10 +85,7 @@ export function useSearchTasks(params: TaskSearchParams) {
   });
 }
 
-export function useCreateTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useCreateTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: NewTask) => {
       await invoke("create_task", { newTask: task });
@@ -105,20 +102,13 @@ export function useCreateTask(
   });
 }
 
-export function useStartTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useStartTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("start_task", { taskId: task.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.StartTask,
-        userSettings,
-        "Task started successfully."
-      );
+      showSuccessNotification(TimelyAction.StartTask, userSettings, "Task started successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
@@ -127,20 +117,13 @@ export function useStartTask(
   });
 }
 
-export function usePauseTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function usePauseTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("pause_task", { taskId: task.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.PauseTask,
-        userSettings,
-        "Task paused successfully."
-      );
+      showSuccessNotification(TimelyAction.PauseTask, userSettings, "Task paused successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
@@ -149,20 +132,13 @@ export function usePauseTask(
   });
 }
 
-export function useResumeTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useResumeTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("resume_task", { taskId: task.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.ResumeTask,
-        userSettings,
-        "Task resumed successfully."
-      );
+      showSuccessNotification(TimelyAction.ResumeTask, userSettings, "Task resumed successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
@@ -171,20 +147,13 @@ export function useResumeTask(
   });
 }
 
-export function useFinishTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useFinishTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("finish_task", { taskId: task.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.FinishTask,
-        userSettings,
-        "Task finished successfully."
-      );
+      showSuccessNotification(TimelyAction.FinishTask, userSettings, "Task finished successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
@@ -193,10 +162,7 @@ export function useFinishTask(
   });
 }
 
-export function useCancelTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useCancelTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("cancel_task", { taskId: task.id });
@@ -215,10 +181,7 @@ export function useCancelTask(
   });
 }
 
-export function useRestoreTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useRestoreTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("restore_task", { taskId: task.id });
@@ -237,10 +200,7 @@ export function useRestoreTask(
   });
 }
 
-export function useReopenTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useReopenTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("reopen_task", { taskId: task.id });
@@ -259,20 +219,13 @@ export function useReopenTask(
   });
 }
 
-export function useDeleteTask(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useDeleteTask(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (task: Task) => {
       await invoke("delete_task", { taskId: task.id });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.DeleteTask,
-        userSettings,
-        "Task deleted successfully."
-      );
+      showSuccessNotification(TimelyAction.DeleteTask, userSettings, "Task deleted successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
@@ -281,10 +234,7 @@ export function useDeleteTask(
   });
 }
 
-export function useDeleteManyTasks(
-  userSettings: UserSettings,
-  queryClient: QueryClient
-) {
+export function useDeleteManyTasks(userSettings: UserSettings, queryClient: QueryClient) {
   return useMutation({
     mutationFn: async (tasks: Task[]) => {
       await invoke("delete_many_tasks", { taskIds: tasks.map((t) => t.id) });
@@ -310,21 +260,14 @@ export function useEditTask(
 ) {
   return useMutation({
     mutationFn: async (task: EditTask) => {
-      if (
-        !!previousTask &&
-        previousTask.elapsedDuration === task.elapsedDuration
-      ) {
+      if (!!previousTask && previousTask.elapsedDuration === task.elapsedDuration) {
         task.elapsedDuration = null;
       }
 
       await invoke("edit_task", { task });
     },
     onSuccess: async () => {
-      showSuccessNotification(
-        TimelyAction.EditTask,
-        userSettings,
-        "Task updated successfully."
-      );
+      showSuccessNotification(TimelyAction.EditTask, userSettings, "Task updated successfully.");
       await queryClient.invalidateQueries({ queryKey: ["searchTasks"] });
     },
     onError: (error) => {
