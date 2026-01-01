@@ -1,5 +1,5 @@
-import {getSqlColumnFromPropertyName} from "../utilities/dataTableUtilities";
-import {SortDirection} from "./SortDirection";
+import { getSqlColumnFromPropertyName } from "../utilities/dataTableUtilities";
+import { SortDirection } from "./SortDirection";
 
 export class Ordering {
   orderBy: string;
@@ -16,7 +16,7 @@ export class Ordering {
   serialize() {
     return {
       orderBy: this.orderBy,
-      sortDirection: this.sortDirection
-    }
+      sortDirection: this.sortDirection,
+    };
   }
 }

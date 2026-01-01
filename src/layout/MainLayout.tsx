@@ -74,12 +74,7 @@ function MainLayout() {
           >
             {navOpened ? <IconChevronsLeft /> : <IconMenu3 />}
           </StyledActionIcon>
-          <Group
-            justify="space-between"
-            align="center"
-            style={{ flex: 1 }}
-            data-tauri-drag-region
-          >
+          <Group justify="space-between" align="center" style={{ flex: 1 }} data-tauri-drag-region>
             <Text size="xl">Timely</Text>
             <Group justify="flex-end" gap={10}>
               <StyledActionIcon

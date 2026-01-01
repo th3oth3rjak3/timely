@@ -1,10 +1,9 @@
 import dayjs from "dayjs";
-import {DateRangeFilter} from "./DateRangeFilter";
+import { DateRangeFilter } from "./DateRangeFilter";
+import { DatesRangeValue } from "@mantine/dates";
 
-export type DateRange = [Date | null, Date | null];
-
-export function toDateFilter(range: DateRange): DateRangeFilter {
-  const beforeDate = range[0];
+export function toDateFilter(range: DatesRangeValue<string>): DateRangeFilter {
+  const beforeDate = dayjs(range[0]);
   const afterDate = dayjs(range[1]).endOf("day");
 
   return {

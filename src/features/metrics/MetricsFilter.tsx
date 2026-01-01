@@ -1,11 +1,11 @@
-import {Group, Stack, TagsInput} from "@mantine/core";
-import {DatePickerInput} from "@mantine/dates";
-import {FormErrors, useForm} from "@mantine/form";
+import { Group, Stack, TagsInput } from "@mantine/core";
+import { DatePickerInput } from "@mantine/dates";
+import { FormErrors, useForm } from "@mantine/form";
 import StyledButton from "../../components/StyledButton";
 import useColorPalette from "../../hooks/useColorPalette";
-import {Tag} from "../../models/ZodModels";
-import {getDayOnlyProps} from "../../utilities/dateUtilities";
-import {FilterFormInputs, MetricsFilterCriteria} from "./types";
+import { Tag } from "../../models/ZodModels";
+import { getDayOnlyProps } from "../../utilities/dateUtilities";
+import { FilterFormInputs, MetricsFilterCriteria } from "./types";
 
 export interface MetricsFilterProps {
   filterInputs: FilterFormInputs;
@@ -82,9 +82,7 @@ function MetricsFilter({
       onFilterApplied({
         startDate: values.startDate,
         endDate: values.endDate,
-        tags: tagOptions.filter((tagOption) =>
-          values.tags?.includes(tagOption.value)
-        ),
+        tags: tagOptions.filter((tagOption) => values.tags?.includes(tagOption.value)),
       });
     }
   };
@@ -95,10 +93,7 @@ function MetricsFilter({
         <DatePickerInput
           label="Start Date"
           w="300"
-          getDayProps={getDayOnlyProps(
-            filterForm.getValues().startDate ?? null,
-            colorPalette
-          )}
+          getDayProps={getDayOnlyProps(filterForm.getValues().startDate ?? null, colorPalette)}
           {...filterForm.getInputProps("startDate")}
           key={filterForm.key("startDate")}
           highlightToday
@@ -106,10 +101,7 @@ function MetricsFilter({
         <DatePickerInput
           label="End Date"
           w="300"
-          getDayProps={getDayOnlyProps(
-            filterForm.getValues().endDate ?? null,
-            colorPalette
-          )}
+          getDayProps={getDayOnlyProps(filterForm.getValues().endDate ?? null, colorPalette)}
           {...filterForm.getInputProps("endDate")}
           key={filterForm.key("endDate")}
           highlightToday

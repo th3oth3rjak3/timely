@@ -1,13 +1,4 @@
-import {
-  Accordion,
-  Card,
-  Grid,
-  Group,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-} from "@mantine/core";
+import { Accordion, Card, Grid, Group, Select, Stack, Text, TextInput } from "@mantine/core";
 import { IconClock } from "@tabler/icons-react";
 import { useMemo } from "react";
 import StyledButton from "../../components/StyledButton";
@@ -52,17 +43,12 @@ function CountdownTimer() {
             {displayTime}
           </Text>
           <Group mb="sm">
-            <StyledButton
-              label={isActive ? "Pause" : "Start"}
-              onClick={handleTimerToggle}
-            />
+            <StyledButton label={isActive ? "Pause" : "Start"} onClick={handleTimerToggle} />
             <StyledButton label="Reset" onClick={resetTimer} />
           </Group>
           <Accordion variant="contained" w="100%" p="sm">
             <Accordion.Item value="time">
-              <Accordion.Control icon={<IconClock />}>
-                Settings
-              </Accordion.Control>
+              <Accordion.Control icon={<IconClock />}>Settings</Accordion.Control>
               <Accordion.Panel>
                 <Grid>
                   <Grid.Col span={4}>

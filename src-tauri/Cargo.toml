@@ -1,6 +1,6 @@
 [package]
 name = "timely"
-version = "0.1.9"
+version = "0.2.0"
 description = "A robust task management application to keep you timely."
 authors = ["Jake Hathaway <jake.d.hathaway@gmail.com>"]
 edition = "2021"
@@ -19,21 +19,21 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 members = ["./timely_macros"]
 
 [build-dependencies]
-tauri-build = { version = "2.0.3", features = [] }
+tauri-build = { version = "2.5.3", features = [] }
 
 [dependencies]
 timely_macros = { path = "./timely_macros" }
-tauri = { version = "2.1.1", features = [] }
-tauri-plugin-shell = "2.2.0"
+tauri = { version = "2.9.5", features = [] }
+tauri-plugin-shell = "2.3.3"
 serde = { version = "1.0.216", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = "1.0.148"
 serde_repr = "0.1.19"
 dotenvy = "0.15.7"
-sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio"] }
-anyhow = "1.0.95"
+sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
+anyhow = "1.0.100"
 anyhow-tauri = { version = "1.0.0", features = ["show_errs_in_release"] }
 tap = "1.0.1"
-jiff = { version = "0.1.17", features = ["serde"] }
+jiff = { version = "0.2.17", features = ["serde"] }
 
 [profile.release]
 opt-level = 3

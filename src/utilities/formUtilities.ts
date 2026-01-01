@@ -7,27 +7,18 @@ export interface Stringer {
   toString: () => string;
 }
 
-export function toSelectOptions<T extends Stringer>(
-  values: T[],
-  labels: string[]
-): SelectOption[] {
+export function toSelectOptions<T extends Stringer>(values: T[], labels: string[]): SelectOption[] {
   return values.map((v, i) => {
-    return {label: labels[i], value: v.toString()};
+    return { label: labels[i], value: v.toString() };
   });
 }
 
-function lengthLessThanOrEqual(
-  maxValue: number,
-  value?: string | null
-): boolean {
+function lengthLessThanOrEqual(maxValue: number, value?: string | null): boolean {
   if (!value) return false;
   return value.length <= maxValue;
 }
 
-function lengthGreaterThanOrEqual(
-  minValue: number,
-  value: string | null | undefined
-): boolean {
+function lengthGreaterThanOrEqual(minValue: number, value: string | null | undefined): boolean {
   if (!value) return false;
   return value.length >= minValue;
 }
@@ -37,10 +28,7 @@ function lengthBetween(
   minValue: number,
   maxValue: number
 ): boolean {
-  return (
-    lengthLessThanOrEqual(maxValue, value) &&
-    lengthGreaterThanOrEqual(minValue, value)
-  );
+  return lengthLessThanOrEqual(maxValue, value) && lengthGreaterThanOrEqual(minValue, value);
 }
 
 function notNullOrUndefined(value: string | null | undefined): boolean {
@@ -59,11 +47,17 @@ export interface LengthValidation {
 }
 
 /** Validate the length of an input string. When valid, this function returns null, otherwise an error string. */
-export function validateLength({fieldName, value, minValue, maxValue}: LengthValidation): string | null {
+export function validateLength({
+  fieldName,
+  value,
+  minValue,
+  maxValue,
+}: LengthValidation): string | null {
   if (minValue !== null && minValue !== undefined && maxValue !== null && maxValue !== undefined) {
     const valid = lengthBetween(value, minValue, maxValue);
-    if (!valid) return `${fieldName} must be between ${minValue} and ${maxValue} characters in length.`;
-    return null
+    if (!valid)
+      return `${fieldName} must be between ${minValue} and ${maxValue} characters in length.`;
+    return null;
   } else if (minValue !== null && minValue !== undefined) {
     const valid = lengthGreaterThanOrEqual(minValue, value);
     if (!valid) return `${fieldName} must be greater than ${minValue} characters in length.`;

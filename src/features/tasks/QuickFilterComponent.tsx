@@ -1,12 +1,4 @@
-import {
-  Group,
-  Modal,
-  Radio,
-  Select,
-  Stack,
-  TagsInput,
-  Tooltip,
-} from "@mantine/core";
+import { Group, Modal, Radio, Select, Stack, TagsInput, Tooltip } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { IconFilter, IconFilterFilled } from "@tabler/icons-react";
 import { useMemo, useState } from "react";
@@ -21,10 +13,7 @@ import { FilterName, QuickFilter } from "./types/TaskSearchParams";
 export interface TagFilterProps {
   selectedFilter: QuickFilter | null;
   tagOptions: Tag[];
-  onFilter: (
-    filterName: FilterName | null,
-    selections: TagFilterSelection
-  ) => void;
+  onFilter: (filterName: FilterName | null, selections: TagFilterSelection) => void;
 }
 
 export interface TagFilterSelection {
@@ -56,25 +45,19 @@ function QuickFilterComponent(props: TagFilterProps) {
   const [tagFilter, setTagFilter] = useState<string>("all");
 
   const filterOptions: SelectOption[] = Object.entries(FilterName)
-    .map(
-      ([key, value]) =>
-        ({ label: splitAtUpperCase(key), value }) as SelectOption
-    )
+    .map(([key, value]) => ({ label: splitAtUpperCase(key), value }) as SelectOption)
     .slice()
     .sort((a, b) => a.value.localeCompare(b.value));
 
   const validators = {
     tags: (value: string[] | null, option: string | null) => {
       if (option === "tagged") {
-        return value !== null && value.length > 0
-          ? null
-          : "Choose at least one tag";
+        return value !== null && value.length > 0 ? null : "Choose at least one tag";
       }
 
       return null;
     },
-    options: (value: string | null) =>
-      value !== null ? null : "Select an option.",
+    options: (value: string | null) => (value !== null ? null : "Select an option."),
   };
 
   function handleClearFilters() {

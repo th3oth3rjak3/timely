@@ -4,6 +4,9 @@ import "@mantine/core/styles.layer.css";
 import "@mantine/dates/styles.css";
 import "@mantine/dropzone/styles.css";
 import "@mantine/notifications/styles.css";
+import "@mantine/core/styles/baseline.css";
+import "@mantine/core/styles/default-css-variables.css";
+import "@mantine/core/styles/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import "mantine-contextmenu/styles.css";
@@ -15,7 +18,13 @@ import App from "./App";
 
 const queryClient = new QueryClient();
 
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+const root = document.getElementById("root");
+
+if (root === null) {
+  throw new Error("something is wrong with the index.html file, missing an element with ID 'root'");
+}
+
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <App />

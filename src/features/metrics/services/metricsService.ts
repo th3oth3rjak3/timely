@@ -40,11 +40,7 @@ export function useGetMetrics(searchCriteria: MetricsSearchCriteria) {
   return useQuery({
     queryKey: ["getMetrics", searchCriteria],
     queryFn: async () => {
-      if (
-        searchCriteria &&
-        searchCriteria.tags.length &&
-        searchCriteria.buckets.length
-      ) {
+      if (searchCriteria && searchCriteria.tags.length && searchCriteria.buckets.length) {
         const metricsData = await invoke("get_metrics", { searchCriteria });
         return tryMap(metricsData, MetricsSummary.parse) ?? emptyData;
       }

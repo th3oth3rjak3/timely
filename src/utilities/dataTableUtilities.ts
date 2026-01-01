@@ -1,7 +1,7 @@
 export function getSqlColumnFromPropertyName(propertyName: string): string {
   const wordRegex = /[A-Z]?[a-z]+|[0-9]+|[A-Z]+(?![a-z])/g;
   const result = propertyName.match(wordRegex);
-  return result?.map(word => word.toLowerCase()).join("_") ?? propertyName;
+  return result?.map((word) => word.toLowerCase()).join("_") ?? propertyName;
 }
 
 export function findLastPage(totalItemCount: number, pageSize: number): number {

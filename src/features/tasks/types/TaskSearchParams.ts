@@ -1,7 +1,7 @@
-import {DateRangeFilter} from "../../../models/DateRangeFilter";
-import {Ordering} from "../../../models/Ordering";
-import {SortDirection} from "../../../models/SortDirection";
-import {TaskStatus} from "../../../models/TaskStatus";
+import { DateRangeFilter } from "../../../models/DateRangeFilter";
+import { Ordering } from "../../../models/Ordering";
+import { SortDirection } from "../../../models/SortDirection";
+import { TaskStatus } from "../../../models/TaskStatus";
 
 export interface TagFilter {
   tags: string[];
@@ -10,9 +10,9 @@ export interface TagFilter {
 
 export interface TaggedFilter {
   tagged: {
-    tags: string[] | null,
-    tagFilter: string | null,
-  }
+    tags: string[] | null;
+    tagFilter: string | null;
+  };
 }
 
 export enum FilterName {
@@ -40,7 +40,7 @@ export class QuickFilter {
     return filter;
   }
 
-  serialize() : TaggedFilter | string {
+  serialize(): TaggedFilter | string {
     if (this.kind === FilterName.Tagged) {
       return {
         tagged: {

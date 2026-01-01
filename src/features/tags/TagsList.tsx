@@ -1,14 +1,7 @@
 import { Group, Modal, Stack, Text, TextInput } from "@mantine/core";
 import { useForm } from "@mantine/form";
 import { useDisclosure, useMediaQuery } from "@mantine/hooks";
-import {
-  IconEdit,
-  IconPlus,
-  IconSearch,
-  IconTrash,
-  IconTrashX,
-  IconX,
-} from "@tabler/icons-react";
+import { IconEdit, IconPlus, IconSearch, IconTrash, IconTrashX, IconX } from "@tabler/icons-react";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useRef } from "react";
@@ -66,11 +59,7 @@ function TagsList() {
   const isTouchScreen = useMediaQuery("(pointer: coarse)");
 
   const { data: userSettings, isPending: settingsPending } = useUserSettings();
-  const {
-    data: tags,
-    isPending: tagsPending,
-    refetch: refetchTags,
-  } = useSearchForTags(params);
+  const { data: tags, isPending: tagsPending, refetch: refetchTags } = useSearchForTags(params);
 
   const loading = useMemo(() => {
     return tagsPending || settingsPending;
@@ -186,9 +175,7 @@ function TagsList() {
   function handleDeleteOneRequested(tag: Tag) {
     modals.openConfirmModal({
       title: "Delete Tag",
-      children: (
-        <Text>{`Are you sure you want to delete tag: ${tag.value}?`}</Text>
-      ),
+      children: <Text>{`Are you sure you want to delete tag: ${tag.value}?`}</Text>,
       confirmProps: {
         variant: colorPalette.variant,
         color: colorPalette.colorName,
@@ -229,13 +216,8 @@ function TagsList() {
       labels: { confirm: "Confirm", cancel: "Deny" },
       onCancel: () => {},
       onConfirm: async () => {
-        if (
-          pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)
-        ) {
-          const lastPage = findLastPage(
-            tags.totalItemCount - tagList.length,
-            pageSize
-          );
+        if (pageShouldChangeAfterDeleteMany(tagList, tags.totalItemCount, params)) {
+          const lastPage = findLastPage(tags.totalItemCount - tagList.length, pageSize);
           setPage(lastPage);
         }
         await deleteManyTags.mutateAsync(tagList);
@@ -325,118 +307,119 @@ function TagsList() {
   if (loading) return;
 
   return (
-    <Stack m={25}>
-      <Group justify="space-between">
-        <Text size="xl">Tags</Text>
-        <Group>
-          {selectedRecords.length > 0 ? (
+    <>
+      <Stack m={25}>
+        <Group justify="space-between">
+          <Text size="xl">Tags</Text>
+          <Group>
+            {selectedRecords.length > 0 ? (
+              <StyledActionIcon
+                onClick={deleteSelectedTags}
+                tooltipLabel="Delete Selected Tags"
+                tooltipPosition="left"
+              >
+                <IconTrashX />
+              </StyledActionIcon>
+            ) : null}
             <StyledActionIcon
-              onClick={deleteSelectedTags}
-              tooltipLabel="Delete Selected Tags"
+              onClick={() => newFormActions.open()}
+              tooltipLabel="Create New Tag"
               tooltipPosition="left"
             >
-              <IconTrashX />
+              <IconPlus />
             </StyledActionIcon>
-          ) : null}
-          <StyledActionIcon
-            onClick={() => newFormActions.open()}
-            tooltipLabel="Create New Tag"
-            tooltipPosition="left"
-          >
-            <IconPlus />
-          </StyledActionIcon>
+          </Group>
         </Group>
-      </Group>
-      {loading ? (
-        <></>
-      ) : (
-        <DataTable
-          textSelectionDisabled={isTouchScreen}
-          onRowContextMenu={({ record, event }) =>
-            showContextMenu(getContextMenuItems(record))(event)
-          }
-          onScroll={hideContextMenu}
-          withTableBorder
-          withColumnBorders
-          fz="sm"
-          columns={columns}
-          records={tags.data}
-          page={page}
-          totalRecords={tags.totalItemCount}
-          recordsPerPage={pageSize}
-          onPageChange={setPage}
-          recordsPerPageOptions={pageSizeOptions}
-          onRecordsPerPageChange={(size) => updatePageSize(size)}
-          key={"id"}
-          sortStatus={sortStatus}
-          onSortStatusChange={setSortStatus}
-          paginationSize="xs"
-          paginationActiveBackgroundColor={colorPalette.background}
-          paginationActiveTextColor={
-            userSettings?.buttonVariant === "filled" ||
-            userSettings?.buttonVariant === "gradient"
-              ? "white"
-              : colorPalette.color
-          }
-          minHeight={tags.data.length === 0 ? 200 : undefined}
-          noRecordsText="No Tags"
-          selectedRecords={selectedRecords}
-          onSelectedRecordsChange={setSelectedRecords}
-        />
-      )}
-      <Modal
-        opened={newFormOpened}
-        onClose={closeNewForm}
-        title="New Tag"
-        closeOnClickOutside={false}
-        closeOnEscape={false}
-      >
-        <form onSubmit={newForm.onSubmit(onValidNewTagSubmit)}>
-          <Stack gap="sm">
-            <TextInput
-              withAsterisk
-              label="Tag"
-              key={newForm.key("value")}
-              {...newForm.getInputProps("value")}
-            />
-          </Stack>
-          <Group justify="flex-end" mt="md">
-            <StyledButton
-              label="Submit"
-              type="submit"
-              disabled={!newForm.isValid()}
-              tooltipLabel="Submit New Tag"
-            />
-          </Group>
-        </form>
-      </Modal>
-      <Modal
-        opened={editFormOpened}
-        title="Edit Tag"
-        onClose={closeEditForm}
-        closeOnClickOutside={false}
-        closeOnEscape={false}
-      >
-        <form onSubmit={editForm.onSubmit(onValidEditTagSubmit)}>
-          <Stack gap="sm">
-            <TextInput
-              withAsterisk
-              label="Tag"
-              key={editForm.key("value")}
-              {...editForm.getInputProps("value")}
-            />
-          </Stack>
-          <Group justify="flex-end" mt="md">
-            <StyledButton
-              type="submit"
-              label="Submit"
-              disabled={!editForm.isValid()}
-              tooltipLabel="Submit Updated Tag"
-            />
-          </Group>
-        </form>
-      </Modal>
-    </Stack>
+        {loading ? (
+          <></>
+        ) : (
+          <DataTable
+            textSelectionDisabled={isTouchScreen}
+            onRowContextMenu={({ record, event }) =>
+              showContextMenu(getContextMenuItems(record))(event)
+            }
+            onScroll={hideContextMenu}
+            withTableBorder
+            withColumnBorders
+            fz="sm"
+            columns={columns}
+            records={tags.data}
+            page={page}
+            totalRecords={tags.totalItemCount}
+            recordsPerPage={pageSize}
+            onPageChange={setPage}
+            recordsPerPageOptions={pageSizeOptions}
+            onRecordsPerPageChange={(size) => updatePageSize(size)}
+            key={"id"}
+            sortStatus={sortStatus}
+            onSortStatusChange={setSortStatus}
+            paginationSize="xs"
+            paginationActiveBackgroundColor={colorPalette.background}
+            paginationActiveTextColor={
+              userSettings?.buttonVariant === "filled" || userSettings?.buttonVariant === "gradient"
+                ? "white"
+                : colorPalette.color
+            }
+            minHeight={tags.data.length === 0 ? 200 : undefined}
+            noRecordsText="No Tags"
+            selectedRecords={selectedRecords}
+            onSelectedRecordsChange={setSelectedRecords}
+          />
+        )}
+        <Modal
+          opened={newFormOpened}
+          onClose={closeNewForm}
+          title="New Tag"
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+        >
+          <form onSubmit={newForm.onSubmit(onValidNewTagSubmit)}>
+            <Stack gap="sm">
+              <TextInput
+                withAsterisk
+                label="Tag"
+                key={newForm.key("value")}
+                {...newForm.getInputProps("value")}
+              />
+            </Stack>
+            <Group justify="flex-end" mt="md">
+              <StyledButton
+                label="Submit"
+                type="submit"
+                disabled={!newForm.isValid()}
+                tooltipLabel="Submit New Tag"
+              />
+            </Group>
+          </form>
+        </Modal>
+        <Modal
+          opened={editFormOpened}
+          title="Edit Tag"
+          onClose={closeEditForm}
+          closeOnClickOutside={false}
+          closeOnEscape={false}
+        >
+          <form onSubmit={editForm.onSubmit(onValidEditTagSubmit)}>
+            <Stack gap="sm">
+              <TextInput
+                withAsterisk
+                label="Tag"
+                key={editForm.key("value")}
+                {...editForm.getInputProps("value")}
+              />
+            </Stack>
+            <Group justify="flex-end" mt="md">
+              <StyledButton
+                type="submit"
+                label="Submit"
+                disabled={!editForm.isValid()}
+                tooltipLabel="Submit Updated Tag"
+              />
+            </Group>
+          </form>
+        </Modal>
+      </Stack>
+    </>
   );
 }
 
