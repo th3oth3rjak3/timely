@@ -26,6 +26,7 @@ import {
 } from "@tabler/icons-react";
 import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 import { ContextMenuContent, useContextMenu } from "mantine-contextmenu";
 import { DataTable } from "mantine-datatable";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -91,6 +92,8 @@ import {
   taskSearchParams,
 } from "./types/TaskSearchParams.ts";
 
+dayjs.extend(utc);
+
 function TaskList() {
   //#region State
 
@@ -109,7 +112,7 @@ function TaskList() {
   const setQuery = useTaskStore((store) => store.setQuery);
   const selectedStatuses = useTaskStore((store) => store.selectedStatuses);
   const setSelectedStatuses = useTaskStore(
-    (store) => store.setSelectedStatuses
+    (store) => store.setSelectedStatuses,
   );
   const sortStatus = useTaskStore((store) => store.sortStatus);
   const setSortStatus = useTaskStore((store) => store.setSortStatus);
@@ -146,7 +149,7 @@ function TaskList() {
       sortStatus.direction,
       startByFilter,
       dueByFilter,
-      quickFilter
+      quickFilter,
     );
   }, [
     page,
@@ -175,7 +178,7 @@ function TaskList() {
   const pageShouldChangeAfterDeleteMany = (
     tasks: TaskLike[],
     recordCount: number,
-    taskSearchParams: TaskSearchParams
+    taskSearchParams: TaskSearchParams,
   ): boolean => {
     const remainder = recordCount % taskSearchParams.pageSize;
     return remainder <= tasks.length && taskSearchParams.page > 1;
@@ -185,7 +188,7 @@ function TaskList() {
     task: TaskLike,
     action: TimelyAction,
     recordCount: number,
-    taskSearchParams: TaskSearchParams
+    taskSearchParams: TaskSearchParams,
   ): boolean => {
     const remainder = recordCount % taskSearchParams.pageSize;
     const lastItemOnThePage = remainder === 1 && taskSearchParams.page > 1;
@@ -402,7 +405,7 @@ function TaskList() {
     showSuccessNotification(
       TimelyAction.RefreshTasks,
       userSettings,
-      "So fresh."
+      "So fresh.",
     );
   }
 
@@ -477,12 +480,12 @@ function TaskList() {
           pageShouldChangeAfterDeleteMany(
             taskList,
             tasks.totalItemCount,
-            params
+            params,
           )
         ) {
           const lastPage = findLastPage(
             tasks.totalItemCount - taskList.length,
-            pageSize
+            pageSize,
           );
 
           setPage(lastPage);
@@ -594,9 +597,19 @@ function TaskList() {
 
   const onValidNewTaskSubmit = async (newTask: NewTask) => {
     const newItem = { ...newTask };
+    newItem.scheduledStartDate = dayjs(newTask.scheduledStartDate)
+      .startOf("day")
+      .utc()
+      .toDate();
+
+    newItem.scheduledCompleteDate = dayjs(newTask.scheduledCompleteDate)
+      .startOf("day")
+      .utc()
+      .toDate();
+
     if (newTask.estimatedDuration) {
       newItem.estimatedDuration = TimeSpan.fromHours(
-        newTask.estimatedDuration
+        newTask.estimatedDuration,
       ).totalSeconds;
     }
     newItem.tags = newTaskTags;
@@ -614,13 +627,24 @@ function TaskList() {
     editFormActions.close();
     if (editedTask.estimatedDuration) {
       updatedItem.estimatedDuration = TimeSpan.fromHours(
-        editedTask.estimatedDuration
+        editedTask.estimatedDuration,
       ).totalSeconds;
     }
 
     updatedItem.elapsedDuration = TimeSpan.fromHours(
-      editedTask.elapsedDuration
+      editedTask.elapsedDuration,
     ).totalSeconds;
+
+    updatedItem.scheduledStartDate = dayjs(updatedItem.scheduledStartDate)
+      .startOf("day")
+      .utc()
+      .toDate();
+
+    updatedItem.scheduledCompleteDate = dayjs(updatedItem.scheduledCompleteDate)
+      .startOf("day")
+      .utc()
+      .toDate();
+
     handlePageChange(editedTask, TimelyAction.EditTask);
     await editTask.mutateAsync(updatedItem);
   };
@@ -686,15 +710,15 @@ function TaskList() {
 
   function updateTagFilter(
     filterName: FilterName | null,
-    selection: TagFilterSelection
+    selection: TagFilterSelection,
   ) {
     if (filterName === FilterName.Tagged) {
       setPage(1);
       setQuickFilter(
         QuickFilter.tagged(
           selection.tags?.map((t) => t.value) ?? null,
-          selection.tagFilter
-        )
+          selection.tagFilter,
+        ),
       );
     } else if (filterName === null) {
       setPage(1);
@@ -901,7 +925,7 @@ function TaskList() {
               defaultValue={dayjs()}
               getDayProps={getDayOnlyProps(
                 newForm.getValues().scheduledStartDate,
-                colorPalette
+                colorPalette,
               )}
               label="Start By"
               key={newForm.key("scheduledStartDate")}
@@ -914,7 +938,7 @@ function TaskList() {
               defaultValue={dayjs()}
               getDayProps={getDayOnlyProps(
                 newForm.getValues().scheduledCompleteDate,
-                colorPalette
+                colorPalette,
               )}
               label="Due By"
               key={newForm.key("scheduledCompleteDate")}
@@ -983,7 +1007,7 @@ function TaskList() {
               defaultValue={editForm.getValues().scheduledStartDate}
               getDayProps={getDayOnlyProps(
                 editForm.getValues().scheduledStartDate,
-                colorPalette
+                colorPalette,
               )}
               label="Start By"
               key={editForm.key("scheduledStartDate")}
@@ -996,7 +1020,7 @@ function TaskList() {
               defaultValue={editForm.getValues().scheduledCompleteDate}
               getDayProps={getDayOnlyProps(
                 editForm.getValues().scheduledCompleteDate,
-                colorPalette
+                colorPalette,
               )}
               label="Due By"
               key={editForm.key("scheduledCompleteDate")}
@@ -1009,7 +1033,7 @@ function TaskList() {
               defaultValue={editForm.getValues().actualStartDate}
               getDayProps={getDayOnlyProps(
                 editForm.getValues().actualStartDate,
-                colorPalette
+                colorPalette,
               )}
               label="Started On"
               key={editForm.key("actualStartDate")}
@@ -1023,7 +1047,7 @@ function TaskList() {
               defaultValue={editForm.getValues().actualCompleteDate}
               getDayProps={getDayOnlyProps(
                 editForm.getValues().actualCompleteDate,
-                colorPalette
+                colorPalette,
               )}
               label="Finished On"
               key={editForm.key("actualCompleteDate")}

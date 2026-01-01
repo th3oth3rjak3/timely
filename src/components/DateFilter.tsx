@@ -22,7 +22,7 @@ function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
       return null;
     }
 
-    return dayjs(filter.start).startOf("day").toDate().toString();
+    return dayjs(filter.start).startOf("day").toDate().toISOString();
   }, [filter]);
 
   const endDate = useMemo(() => {
@@ -30,7 +30,7 @@ function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
       return null;
     }
 
-    return dayjs(filter.end).startOf("day").toDate().toString();
+    return dayjs(filter.end).startOf("day").toDate().toISOString();
   }, [filter]);
 
   const [dateRange, setDateRange] = useState<DatesRangeValue<string>>([
