@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import {DateRange} from "../models/DateRange";
-import {ColorPalette} from "../hooks/useColorPalette.tsx";
+import { ColorPalette } from "../hooks/useColorPalette.tsx";
+import { DatesRangeValue } from "@mantine/dates";
 
 export function maybeFormattedDate(
   date: Date | null,
@@ -14,7 +14,7 @@ export function maybeFormattedDate(
 }
 
 export const getDayRangeProps =
-  (range: DateRange, colorPalette: ColorPalette) => (day?: Date) => {
+  (range: DatesRangeValue<string>, colorPalette: ColorPalette) => (day?: Date | string) => {
     if (
       !!range &&
       (dayjs(range[0]).isSame(day) || dayjs(range[1]).isSame(day))
@@ -30,7 +30,7 @@ export const getDayRangeProps =
   };
 
 export const getDayOnlyProps =
-  (existing: Date | null, colorPalette: ColorPalette) => (day?: Date) => {
+  (existing: Date | null, colorPalette: ColorPalette) => (day?: Date | string) => {
     if (dayjs(existing).isSame(day, "day")) {
       return {
         style: {

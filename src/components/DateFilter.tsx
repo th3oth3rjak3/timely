@@ -1,11 +1,11 @@
-import {Group, Stack} from "@mantine/core";
-import {DatePicker} from "@mantine/dates";
+import { Group, Stack } from "@mantine/core";
+import { DatePicker, DatesRangeValue } from "@mantine/dates";
 import dayjs from "dayjs";
-import {useEffect, useMemo, useState} from "react";
+import { useEffect, useMemo, useState } from "react";
 import useColorPalette from "../hooks/useColorPalette";
-import {DateRange, toDateFilter as toDateRangeFilter,} from "../models/DateRange";
-import {DateRangeFilter} from "../models/DateRangeFilter";
-import {getDayRangeProps} from "../utilities/dateUtilities";
+import { toDateFilter as toDateRangeFilter } from "../models/DateRange";
+import { DateRangeFilter } from "../models/DateRangeFilter";
+import { getDayRangeProps } from "../utilities/dateUtilities";
 import StyledButton from "./StyledButton";
 
 export interface DateFilterProps {
@@ -14,7 +14,7 @@ export interface DateFilterProps {
   showButtons?: boolean;
 }
 
-function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
+function DateFilter({ onRangeChanged, filter, showButtons }: DateFilterProps) {
   const colorPalette = useColorPalette();
 
   const startDate = useMemo(() => {
@@ -22,7 +22,7 @@ function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
       return null;
     }
 
-    return dayjs(filter.start).startOf("day").toDate();
+    return dayjs(filter.start).startOf("day").toDate().toString();
   }, [filter]);
 
   const endDate = useMemo(() => {
@@ -30,24 +30,27 @@ function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
       return null;
     }
 
-    return dayjs(filter.end).startOf("day").toDate();
+    return dayjs(filter.end).startOf("day").toDate().toString();
   }, [filter]);
 
-  const [dateRange, setDateRange] = useState<DateRange>([startDate, endDate]);
+  const [dateRange, setDateRange] = useState<DatesRangeValue<string>>([
+    startDate,
+    endDate,
+  ]);
 
   useEffect(() => {
     setDateRange([startDate, endDate]);
   }, [startDate, endDate]);
 
-  function isEmptyRange(range: DateRange): boolean {
+  function isEmptyRange(range: DatesRangeValue<string>): boolean {
     return range[0] === null && range[1] === null;
   }
 
-  function isFullRange(range: DateRange): boolean {
+  function isFullRange(range: DatesRangeValue<string>): boolean {
     return range[0] !== null && range[1] !== null;
   }
 
-  function updateDateRange(dates: DateRange) {
+  function updateDateRange(dates: DatesRangeValue<string>) {
     setDateRange(dates);
     if (isEmptyRange(dates)) {
       onRangeChanged(null);
@@ -74,8 +77,8 @@ function DateFilter({onRangeChanged, filter, showButtons}: DateFilterProps) {
             label="Today"
             onClick={() =>
               updateDateRange([
-                dayjs().startOf("day").toDate(),
-                dayjs().endOf("day").toDate(),
+                dayjs().startOf("day").toDate().toString(),
+                dayjs().endOf("day").toDate().toString(),
               ])
             }
           />

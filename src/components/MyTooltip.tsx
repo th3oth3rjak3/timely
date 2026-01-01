@@ -1,17 +1,21 @@
-import {FloatingPosition, MantineTransition, Tooltip} from "@mantine/core";
-import {ReactNode} from "react";
-import {ColorPalette} from "../hooks/useColorPalette.tsx";
+import {
+  DefaultMantineColor,
+  FloatingPosition,
+  MantineTransition,
+  Tooltip,
+} from "@mantine/core";
+import { ReactNode } from "react";
+import { ColorPalette } from "../hooks/useColorPalette.tsx";
 
 export interface MyTooltipProps {
   label: string;
   children: ReactNode;
-  color?: string;
+  color?: DefaultMantineColor;
   colorPalette: ColorPalette;
   position?: FloatingPosition;
 }
 
 function MyTooltip(props: MyTooltipProps) {
-
   const position: FloatingPosition = props.position ?? "top";
 
   const transition = (position: FloatingPosition): MantineTransition => {
@@ -32,17 +36,17 @@ function MyTooltip(props: MyTooltipProps) {
     }
 
     return "fade";
-  }
+  };
 
-  const innerColor = props.color !== undefined ? props.color : props.colorPalette.colorName;
+  const innerColor =
+    props.color !== undefined ? props.color : props.colorPalette.colorName;
 
   return (
     <Tooltip
       label={props.label}
       openDelay={500}
-      transitionProps={{transition: transition(position), duration: 300}}
+      transitionProps={{ transition: transition(position), duration: 300 }}
       color={innerColor}
-      variant={props.colorPalette.variant}
       position={position}
       offset={10}
     >
